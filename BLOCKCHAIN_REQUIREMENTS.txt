@@ -1,0 +1,21 @@
+# Blockchain Integration Requirements
+# Install with: pip install -r BLOCKCHAIN_REQUIREMENTS.txt
+
+# Web3 for Ethereum interaction
+web3==6.11.3
+
+# Account management
+eth-account==0.10.0
+
+# For handling large numbers (wei conversions)
+# Already in requirements.txt but listed for reference
+# decimal - built-in Python module
+
+# Optional: For IPFS metadata storage
+ipfshttpclient==0.8.0a2
+
+# Optional: For contract compilation (if compiling from Python)
+py-solc-x==1.1.1
+
+# Optional: For better blockchain event monitoring
+websockets==12.0

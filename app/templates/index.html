@@ -1,0 +1,1256 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Welcome to Tactizen - Blockchain Nation Simulation Game{% endblock %}
+
+{% block head_extra %}
+<style>
+    /* Reset container for landing page */
+    .main-container {
+        max-width: 1200px;
+        padding: 0 15px !important;
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        padding: 6rem 2rem;
+        border-radius: 24px;
+        margin-bottom: 4rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        text-align: center;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(34, 197, 94, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(34, 197, 94, 0.05) 0%, transparent 70%);
+        animation: pulse 8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .hero-badge {
+        display: inline-block;
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        color: #22c55e;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 0 40px rgba(34, 197, 94, 0.3);
+        position: relative;
+        z-index: 1;
+        line-height: 1.2;
+    }
+
+    .hero-title span {
+        background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-subtitle {
+        font-size: 1.35rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 2.5rem;
+        position: relative;
+        z-index: 1;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+
+    .hero-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-hero-primary {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-hero-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.5);
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: white;
+    }
+
+    .btn-hero-primary:active {
+        transform: translateY(-1px);
+    }
+
+    .btn-hero-secondary {
+        background: transparent;
+        border: 2px solid rgba(34, 197, 94, 0.4);
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        color: #22c55e;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-hero-secondary:hover {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: #22c55e;
+        transform: translateY(-3px);
+        color: #22c55e;
+    }
+
+    /* Stats Section */
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 4rem;
+    }
+
+    @media (max-width: 768px) {
+        .stats-section {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        border-color: rgba(34, 197, 94, 0.3);
+        transform: translateY(-4px);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #22c55e;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+    }
+
+    /* Features Section */
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.15rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 20px;
+        padding: 2.5rem;
+        height: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(34, 197, 94, 0.15), 0 0 30px rgba(34, 197, 94, 0.08);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .feature-icon i {
+        font-size: 2rem;
+        color: #22c55e;
+    }
+
+    .feature-card:hover .feature-icon {
+        background: rgba(34, 197, 94, 0.2);
+        transform: scale(1.1);
+    }
+
+    .feature-title {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+
+    /* Game Features List */
+    .game-features-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 24px;
+        padding: 4rem;
+        margin: 4rem 0;
+    }
+
+    .feature-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .feature-list {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .feature-list-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .feature-list-item:hover {
+        background: rgba(34, 197, 94, 0.05);
+    }
+
+    .feature-list-item i {
+        color: #22c55e;
+        font-size: 1.25rem;
+        margin-top: 0.2rem;
+    }
+
+    .feature-list-item span {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 1.05rem;
+    }
+
+    /* Blockchain Section */
+    .blockchain-section {
+        margin: 4rem 0;
+    }
+
+    .blockchain-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 20px;
+        padding: 3rem;
+        display: flex;
+        align-items: center;
+        gap: 3rem;
+    }
+
+    @media (max-width: 768px) {
+        .blockchain-card {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+
+    .blockchain-icon {
+        flex-shrink: 0;
+        width: 120px;
+        height: 120px;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .blockchain-icon i {
+        font-size: 3.5rem;
+        color: #22c55e;
+    }
+
+    .blockchain-content h3 {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .blockchain-content p {
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 1.1rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+    }
+
+    .blockchain-badges {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .blockchain-badge {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        color: #22c55e;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* MetaMask Setup Section */
+    .metamask-setup-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 24px;
+        padding: 4rem;
+        margin: 4rem 0;
+    }
+
+    .metamask-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .metamask-logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #f6851b 0%, #e4761b 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .metamask-logo i {
+        font-size: 2.5rem;
+        color: white;
+    }
+
+    .metamask-header-text h3 {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .metamask-header-text p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.05rem;
+        margin: 0;
+    }
+
+    .setup-steps {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .setup-step {
+        background: rgba(34, 197, 94, 0.05);
+        border: 1px solid rgba(34, 197, 94, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem 2rem;
+        display: flex;
+        gap: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .setup-step:hover {
+        border-color: rgba(34, 197, 94, 0.3);
+        background: rgba(34, 197, 94, 0.08);
+    }
+
+    .step-number {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .step-content h4 {
+        color: #ffffff;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .step-content p {
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 1rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .step-content a {
+        color: #22c55e;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .step-content a:hover {
+        color: #4ade80;
+        text-decoration: underline;
+    }
+
+    .step-content ul {
+        margin: 0.75rem 0 0 0;
+        padding-left: 1.25rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .step-content ul li {
+        margin-bottom: 0.4rem;
+        font-size: 0.95rem;
+    }
+
+    .step-content .step-note {
+        background: rgba(246, 133, 27, 0.1);
+        border: 1px solid rgba(246, 133, 27, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+        color: #f6851b;
+    }
+
+    .step-content .step-note i {
+        margin-right: 0.5rem;
+    }
+
+    .browser-icons {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+
+    .browser-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.25rem;
+        transition: all 0.2s ease;
+    }
+
+    .browser-icon:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .metamask-cta {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    .btn-metamask {
+        background: linear-gradient(135deg, #f6851b 0%, #e4761b 100%);
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+        border-radius: 12px;
+        color: white;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 20px rgba(246, 133, 27, 0.3);
+    }
+
+    .btn-metamask:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(246, 133, 27, 0.4);
+        color: white;
+    }
+
+    .btn-add-network {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 10px;
+        color: white;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-add-network:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    }
+
+    .btn-add-network:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-add-network.success {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+
+    @media (max-width: 768px) {
+        .metamask-setup-section {
+            padding: 2rem;
+        }
+        .metamask-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        .setup-step {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .step-content ul {
+            text-align: left;
+        }
+        .browser-icons {
+            justify-content: center;
+        }
+    }
+
+    /* Social Links */
+    .social-section {
+        text-align: center;
+        margin: 3rem 0;
+    }
+
+    .social-title {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .social-link {
+        width: 50px;
+        height: 50px;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+        font-size: 1.25rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .social-link:hover {
+        background: rgba(34, 197, 94, 0.2);
+        border-color: #22c55e;
+        transform: translateY(-4px);
+        color: #22c55e;
+    }
+
+    /* Footer */
+    .landing-footer {
+        text-align: center;
+        padding: 2rem 0;
+        border-top: 1px solid rgba(34, 197, 94, 0.1);
+        margin-top: 2rem;
+    }
+
+    .landing-footer p {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Animations */
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+    .delay-6 { animation-delay: 0.6s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        .hero-subtitle {
+            font-size: 1.15rem;
+        }
+        .section-title {
+            font-size: 2rem;
+        }
+        .cta-title {
+            font-size: 2rem;
+        }
+        .game-features-section {
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-badge fade-in-up">
+            <i class="fas fa-cube me-2"></i> Blockchain-Powered Gaming
+        </div>
+        <h1 class="hero-title fade-in-up delay-1">Build Your <span>Virtual Nation</span></h1>
+        <p class="hero-subtitle fade-in-up delay-2">Join a revolutionary nation simulation game where you can build companies, trade resources, engage in politics, and shape the future of your country.</p>
+        <div class="hero-buttons fade-in-up delay-3">
+            <button class="btn-hero-primary connect-wallet-btn">
+                <i class="fas fa-wallet me-2"></i>Connect Wallet to Play
+            </button>
+            <a href="#metamask-guide" class="btn-hero-secondary">
+                <i class="fas fa-question-circle me-2"></i>New to Web3?
+            </a>
+            <a href="{{ url_for('main.game_guide') }}" class="btn-hero-secondary">
+                <i class="fas fa-book me-2"></i>Game Guide
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+        <div class="stat-card fade-in-up delay-1">
+            <div class="stat-number">200+</div>
+            <div class="stat-label">Countries</div>
+        </div>
+        <div class="stat-card fade-in-up delay-2">
+            <div class="stat-number">50+</div>
+            <div class="stat-label">Resources</div>
+        </div>
+        <div class="stat-card fade-in-up delay-3">
+            <div class="stat-number">NFT</div>
+            <div class="stat-label">Powered Items</div>
+        </div>
+        <div class="stat-card fade-in-up delay-4">
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Live Economy</div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="section-header">
+        <h2 class="section-title">Core Features</h2>
+        <p class="section-subtitle">Everything you need to build, trade, and conquer in your virtual nation</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="feature-card fade-in-up delay-1">
+                <div class="feature-icon">
+                    <i class="fas fa-landmark"></i>
+                </div>
+                <h3 class="feature-title">Build Your Nation</h3>
+                <p class="feature-description">Create companies, develop infrastructure, establish laws, and grow your economy from the ground up.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card fade-in-up delay-2">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="feature-title">Dynamic Economy</h3>
+                <p class="feature-description">Trade resources, manage markets, and participate in a player-driven economy with real supply and demand.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card fade-in-up delay-3">
+                <div class="feature-icon">
+                    <i class="fas fa-vote-yea"></i>
+                </div>
+                <h3 class="feature-title">Political System</h3>
+                <p class="feature-description">Run for president, join congress, form parties, and shape your nation's policies through democratic elections.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card fade-in-up delay-4">
+                <div class="feature-icon">
+                    <i class="fas fa-fighter-jet"></i>
+                </div>
+                <h3 class="feature-title">Military & Wars</h3>
+                <p class="feature-description">Build military units, declare wars, and conquer territories. Strategic combat with tanks, helicopters, and rifles.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card fade-in-up delay-5">
+                <div class="feature-icon">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <h3 class="feature-title">Alliances</h3>
+                <p class="feature-description">Form alliances with other nations, negotiate treaties, and work together against common enemies.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card fade-in-up delay-6">
+                <div class="feature-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h3 class="feature-title">Media & News</h3>
+                <p class="feature-description">Create newspapers, publish articles, and influence public opinion. Journalism shapes the political landscape.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Features List -->
+    <div class="game-features-section">
+        <div class="section-header">
+            <h2 class="section-title">What You Can Do</h2>
+            <p class="section-subtitle">A world of possibilities awaits</p>
+        </div>
+        <div class="feature-list">
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Work at companies and earn salary in local currency</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Own and manage multiple companies producing goods</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Train daily to increase your strength and rank</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Study to improve skills and earn more at work</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Travel between regions and explore the world</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Fight in battles and earn military ranks</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Join or create political parties</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Vote in elections and run for office</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Trade on currency and resource markets</span>
+            </div>
+            <div class="feature-list-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Collect and trade NFT items with unique bonuses</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blockchain Section -->
+    <div class="blockchain-section">
+        <div class="blockchain-card">
+            <div class="blockchain-icon">
+                <i class="fas fa-link"></i>
+            </div>
+            <div class="blockchain-content">
+                <h3>Powered by Blockchain Technology</h3>
+                <p>Tactizen leverages blockchain for true ownership of in-game assets. Trade NFTs, verify election results on-chain, and connect your wallet for secure transactions. Your items, your rules.</p>
+                <div class="blockchain-badges">
+                    <span class="blockchain-badge"><i class="fas fa-wallet me-1"></i> MetaMask Support</span>
+                    <span class="blockchain-badge"><i class="fas fa-gem me-1"></i> NFT Items</span>
+                    <span class="blockchain-badge"><i class="fas fa-vote-yea me-1"></i> Verified Elections</span>
+                    <span class="blockchain-badge"><i class="fas fa-coins me-1"></i> ZEN Token</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MetaMask Setup Guide Section -->
+    <div class="metamask-setup-section" id="metamask-guide">
+        <div class="metamask-header">
+            <div class="metamask-logo">
+                <i class="fas fa-fox"></i>
+            </div>
+            <div class="metamask-header-text">
+                <h3>How to Set Up MetaMask Wallet</h3>
+                <p>Follow these simple steps to create your wallet and start playing Tactizen</p>
+            </div>
+        </div>
+
+        <div class="setup-steps">
+            <!-- Step 1: Install MetaMask -->
+            <div class="setup-step fade-in-up">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>Install MetaMask Browser Extension</h4>
+                    <p>MetaMask is a free crypto wallet that works as a browser extension. Visit the official website to download it for your browser:</p>
+                    <div class="browser-icons">
+                        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" class="browser-icon" title="Chrome">
+                            <i class="fab fa-chrome"></i>
+                        </a>
+                        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" class="browser-icon" title="Firefox">
+                            <i class="fab fa-firefox"></i>
+                        </a>
+                        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" class="browser-icon" title="Brave">
+                            <i class="fab fa-brave"></i>
+                        </a>
+                        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" class="browser-icon" title="Edge">
+                            <i class="fab fa-edge"></i>
+                        </a>
+                        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" class="browser-icon" title="Opera">
+                            <i class="fab fa-opera"></i>
+                        </a>
+                    </div>
+                    <div class="step-note">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Only download MetaMask from the official website: <a href="https://metamask.io" target="_blank" rel="noopener noreferrer">metamask.io</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Create Wallet -->
+            <div class="setup-step fade-in-up delay-1">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Create a New Wallet</h4>
+                    <p>After installing the extension, click the MetaMask icon in your browser toolbar and follow the setup wizard:</p>
+                    <ul>
+                        <li>Click "Create a new wallet"</li>
+                        <li>Agree to the terms of use</li>
+                        <li>Create a strong password (at least 8 characters)</li>
+                        <li>This password unlocks MetaMask on your device</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 3: Secure Recovery Phrase -->
+            <div class="setup-step fade-in-up delay-2">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Secure Your Secret Recovery Phrase</h4>
+                    <p>MetaMask will generate a 12-word Secret Recovery Phrase. This is the master key to your wallet:</p>
+                    <ul>
+                        <li>Write down the 12 words in the exact order shown</li>
+                        <li>Store them in a safe, offline location (paper backup recommended)</li>
+                        <li>Never share your recovery phrase with anyone</li>
+                        <li>Never enter it on any website other than MetaMask itself</li>
+                    </ul>
+                    <div class="step-note">
+                        <i class="fas fa-shield-alt"></i>
+                        Anyone with your recovery phrase can access your wallet and all its contents. Keep it secret!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Confirm Recovery Phrase -->
+            <div class="setup-step fade-in-up delay-3">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>Confirm Your Recovery Phrase</h4>
+                    <p>MetaMask will ask you to confirm your recovery phrase by selecting the words in the correct order:</p>
+                    <ul>
+                        <li>Click on each word in the exact sequence you wrote them down</li>
+                        <li>This confirms you've properly backed up your phrase</li>
+                        <li>Once confirmed, your wallet is ready to use!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 5: Connect to Tactizen -->
+            <div class="setup-step fade-in-up delay-4">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h4>Connect to Tactizen</h4>
+                    <p>Now you're ready to play! Simply click the "Connect Wallet" button on this page:</p>
+                    <ul>
+                        <li>Click "Connect Wallet to Play" above</li>
+                        <li>MetaMask will open and ask you to confirm the connection</li>
+                        <li>Click "Connect" to allow Tactizen to see your wallet address</li>
+                        <li>Sign a message to verify you own the wallet (no gas fees!)</li>
+                        <li>You'll be logged in automatically</li>
+                    </ul>
+                    <div class="step-note">
+                        <i class="fas fa-info-circle"></i>
+                        Signing a message is free and proves wallet ownership. It does not give Tactizen access to your funds.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Optional - Add Network -->
+            <div class="setup-step fade-in-up delay-5">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h4>Add Horizen Network (Optional)</h4>
+                    <p>Tactizen uses the Horizen network for blockchain transactions. Click the button below to automatically add it to MetaMask:</p>
+                    <button id="add-network-btn" class="btn-add-network">
+                        <i class="fas fa-plus-circle"></i> Add Horizen Network to MetaMask
+                    </button>
+                    <div class="step-note" style="margin-top: 1rem;">
+                        <i class="fas fa-info-circle"></i>
+                        This is currently a testnet. No real funds are required to play!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="metamask-cta">
+            <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" class="btn-metamask">
+                <i class="fas fa-download"></i>
+                Download MetaMask
+            </a>
+        </div>
+    </div>
+
+    <!-- Social Section -->
+    <div class="social-section">
+        <div class="social-title">Follow Us</div>
+        <div class="social-links">
+            <a href="https://x.com/TactizenMMO" target="_blank" rel="noopener noreferrer" class="social-link" title="Follow us on X (Twitter)">
+                <i class="fab fa-x-twitter"></i>
+            </a>
+            <a href="https://discord.gg/F4uS9zA53d" target="_blank" rel="noopener noreferrer" class="social-link" title="Join our Discord">
+                <i class="fab fa-discord"></i>
+            </a>
+            <a href="#" class="social-link" title="Join our Telegram">
+                <i class="fab fa-telegram"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="landing-footer">
+        <p>Copyright &copy; {{ current_year }} Tactizen. All rights reserved.</p>
+    </div>
+{% endblock main_layout %}
+
+{% block footer %}
+<!-- Footer is included in main_layout -->
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        // Trigger animations on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-up').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Counter animation for stats
+        function animateCounter(element, target, duration = 2000) {
+            const isNumber = !isNaN(target);
+            if (!isNumber) return;
+
+            let start = 0;
+            const increment = target / (duration / 16);
+
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= target) {
+                    element.textContent = target + '+';
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(start) + '+';
+                }
+            }, 16);
+        }
+
+        // Initialize counters when visible
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumbers = entry.target.querySelectorAll('.stat-number');
+                    statNumbers.forEach(stat => {
+                        const text = stat.textContent;
+                        const num = parseInt(text);
+                        if (!isNaN(num)) {
+                            animateCounter(stat, num);
+                        }
+                    });
+                    statsObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        const statsSection = document.querySelector('.stats-section');
+        if (statsSection) {
+            statsObserver.observe(statsSection);
+        }
+
+        // Connect wallet buttons - trigger the navbar wallet connect button
+        document.querySelectorAll('.connect-wallet-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                // Try to find and click the navbar connect button first
+                const navbarBtn = document.getElementById('connectWalletBtn');
+                if (navbarBtn) {
+                    navbarBtn.click();
+                    return;
+                }
+
+                // If navbar button not found, handle wallet connection directly
+                if (typeof window.ethereum === 'undefined') {
+                    alert('Please install MetaMask to connect your wallet.');
+                    return;
+                }
+
+                // Check if ethers.js is loaded (check both global and window.ethers)
+                const ethersLib = (typeof ethers !== 'undefined') ? ethers : window.ethers;
+                if (typeof ethersLib === 'undefined') {
+                    showAlert('A required library (ethers.js) failed to load. Please refresh the page.', 'error');
+                    return;
+                }
+
+                // Prevent multiple connection attempts
+                if (window.isWalletConnecting) {
+                    return;
+                }
+                window.isWalletConnecting = true;
+
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Connecting...';
+                this.disabled = true;
+
+                try {
+                    const provider = new ethersLib.providers.Web3Provider(window.ethereum, "any");
+                    const accounts = await provider.send("eth_requestAccounts", []);
+
+                    if (!accounts || accounts.length === 0) {
+                        throw new Error('Connection refused by user.');
+                    }
+
+                    const signerAddress = accounts[0];
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing...';
+
+                    // Fetch message to sign
+                    const messageResponse = await fetch('/auth/web3_message');
+                    if (!messageResponse.ok) {
+                        throw new Error('Failed to fetch authentication message.');
+                    }
+                    const messageData = await messageResponse.json();
+
+                    // Sign message
+                    const signer = provider.getSigner();
+                    const signature = await signer.signMessage(messageData.message);
+
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+
+                    // Verify signature
+                    const verifyResponse = await fetch('/auth/verify_signature', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: signerAddress, signature: signature })
+                    });
+
+                    const verifyData = await verifyResponse.json();
+
+                    if (verifyResponse.ok && verifyData.success) {
+                        this.innerHTML = '<i class="fas fa-check me-2"></i>Success!';
+                        window.location.href = verifyData.redirect_url || '/dashboard';
+                    } else {
+                        throw new Error(verifyData.error || 'Verification failed.');
+                    }
+                } catch (error) {
+                    console.error('Wallet connection error:', error);
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+
+                    if (error.code === 4001 || error.code === 'ACTION_REJECTED') {
+                        // User rejected - just reset button
+                    } else {
+                        alert('Connection failed: ' + error.message);
+                    }
+                } finally {
+                    window.isWalletConnecting = false;
+                }
+            });
+        });
+
+        // Add Horizen Network button
+        const addNetworkBtn = document.getElementById('add-network-btn');
+        if (addNetworkBtn) {
+            addNetworkBtn.addEventListener('click', async function() {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('Please install MetaMask first to add the network.');
+                    window.open('https://metamask.io/download/', '_blank');
+                    return;
+                }
+
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding Network...';
+                this.disabled = true;
+
+                try {
+                    // Horizen L3 Testnet configuration
+                    const chainId = '0x28751c'; // 2651420 in hex
+
+                    // First try to switch to the network (in case it's already added)
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: chainId }],
+                        });
+                        this.innerHTML = '<i class="fas fa-check"></i> Network Added!';
+                        this.classList.add('success');
+                        return;
+                    } catch (switchError) {
+                        // Network doesn't exist, add it (error code 4902)
+                        if (switchError.code !== 4902) {
+                            throw switchError;
+                        }
+                    }
+
+                    // Add the network
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: chainId,
+                            chainName: 'Horizen L3 Testnet',
+                            nativeCurrency: {
+                                name: 'Ethereum',
+                                symbol: 'ETH',
+                                decimals: 18
+                            },
+                            rpcUrls: ['https://horizen-testnet.rpc.caldera.xyz/http'],
+                            blockExplorerUrls: ['https://horizen-testnet.explorer.caldera.xyz']
+                        }],
+                    });
+
+                    this.innerHTML = '<i class="fas fa-check"></i> Network Added!';
+                    this.classList.add('success');
+
+                } catch (error) {
+                    console.error('Error adding network:', error);
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+
+                    if (error.code === 4001) {
+                        // User rejected - just reset
+                    } else {
+                        alert('Failed to add network: ' + error.message);
+                    }
+                }
+            });
+        }
+    </script>
+{% endblock %}

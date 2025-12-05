@@ -1,0 +1,146 @@
+{% extends "layouts/base.html" %}
+{% import 'bootstrap_wtf.html' as wtf %}
+
+{% block title %}{{ title }} - Tactizen{% endblock %}
+
+{# Override main_layout to center the form #}
+{% block main_layout %}
+<div class="container" style="padding-top: 30px;"> {# Add some top padding #}
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <h1 class="text-center mb-4">{{ title }}</h1>
+            {# **NAME CHANGED HERE** #}
+            <p class="text-center text-muted">Welcome to Tactizen! Please select your starting country and region.</p>
+
+            <div class="card shadow-sm"> {# Added shadow #}
+                <div class="card-body">
+                     {# *** MODIFIED LINE: Explicitly set the action URL *** #}
+                     {{ wtf.quick_form(form, action=url_for('main.choose_citizenship'), button_map={'submit': 'btn btn-primary w-100'}) }}
+                     {# *** END MODIFICATION *** #}
+
+                     {# --- Manual Form Rendering (Example - Also set action explicitly) --- #}
+                     {#
+                    <form method="POST" action="{{ url_for('main.choose_citizenship') }}" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.country.label(class="form-label") }}
+                            {{ form.country(class="form-select" + (" is-invalid" if form.country.errors else "")) }}
+                            {% if form.country.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.country.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.region.label(class="form-label") }}
+                            {{ form.region(class="form-select" + (" is-invalid" if form.region.errors else ""), disabled=True) }}
+                             {% if form.region.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.region.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                             {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                     #}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }} {# Include scripts from base.html #}
+{# Script to dynamically load regions based on country selection #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const countrySelect = document.getElementById('country'); // Default ID from WTForms
+        const regionSelect = document.getElementById('region'); // Default ID from WTForms
+        const regionLabel = document.querySelector('label[for="region"]'); // Label for region
+
+        function updateRegions() {
+            const countryId = countrySelect.value;
+            // Clear existing region options and disable
+            regionSelect.innerHTML = '<option value="" selected>-- Select a Region --</option>'; // Add selected attribute
+            regionSelect.disabled = true;
+             // Check if label exists before adding/removing class
+            if (regionLabel) regionLabel.classList.add('text-muted');
+
+            if (!countryId) {
+                return; // No country selected
+            }
+
+            // Fetch regions for the selected country using the API endpoint
+            fetch(`/api/regions/${countryId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok (${response.status})`);
+                    }
+                    // Check content type before parsing JSON
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        return response.json();
+                    } else {
+                        return response.text().then(text => { throw new Error("Expected JSON, received: "+ text); });
+                    }
+                })
+                .then(data => {
+                    if (data.error) { // Check for application-level error from JSON response
+                        throw new Error(data.error);
+                    }
+                    if (data.regions && data.regions.length > 0) {
+                        // Populate region dropdown
+                        data.regions.forEach(region => {
+                            const option = document.createElement('option');
+                            option.value = region.id;
+                            option.textContent = region.name;
+                            regionSelect.appendChild(option);
+                        });
+                        // Enable region select
+                        regionSelect.disabled = false;
+                         if (regionLabel) regionLabel.classList.remove('text-muted');
+                    } else {
+                         // Handle case where country has no regions
+                         const option = document.createElement('option');
+                         option.textContent = '-- No regions available --';
+                         regionSelect.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching or processing regions:', error);
+                    // Display a user-friendly error in the dropdown
+                    regionSelect.innerHTML = '<option value="">-- Error loading regions --</option>';
+                    regionSelect.disabled = true; // Keep disabled on error
+                     if (regionLabel) regionLabel.classList.add('text-muted'); // Keep label muted
+                });
+        }
+
+        // Add event listener to country select
+        if (countrySelect) {
+            countrySelect.addEventListener('change', updateRegions);
+            // Initial check in case the form is reloaded with a country selected
+            // (e.g., after a validation error on the region field)
+            if (countrySelect.value) {
+                 updateRegions();
+            }
+        } else {
+             console.error("Country select element not found");
+        }
+
+         // Ensure region is disabled initially if no country is selected
+         if (regionSelect && (!countrySelect || !countrySelect.value)) {
+             regionSelect.disabled = true;
+             if (regionLabel) regionLabel.classList.add('text-muted');
+         }
+    });
+</script>
+{% endblock %}

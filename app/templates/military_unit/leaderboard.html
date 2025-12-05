@@ -1,0 +1,317 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Unit Leaderboards - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .leaderboard-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .page-header h2 {
+        color: #22c55e;
+        margin-bottom: 0.5rem;
+    }
+
+    .category-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .category-tab {
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .category-tab:hover {
+        border-color: rgba(34, 197, 94, 0.3);
+        color: #fff;
+    }
+
+    .category-tab.active {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border-color: rgba(34, 197, 94, 0.5);
+        color: #22c55e;
+    }
+
+    .leaderboard-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        overflow: hidden;
+    }
+
+    .leaderboard-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .leaderboard-header i {
+        color: #fbbf24;
+        font-size: 1.25rem;
+    }
+
+    .leaderboard-header h3 {
+        color: #fff;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .leaderboard-table {
+        width: 100%;
+    }
+
+    .leaderboard-row {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        transition: background 0.2s;
+    }
+
+    .leaderboard-row:hover {
+        background: rgba(34, 197, 94, 0.03);
+    }
+
+    .leaderboard-row:last-child {
+        border-bottom: none;
+    }
+
+    .rank-position {
+        width: 50px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .rank-position.gold { color: #fbbf24; }
+    .rank-position.silver { color: #94a3b8; }
+    .rank-position.bronze { color: #cd7f32; }
+    .rank-position.normal { color: rgba(255, 255, 255, 0.4); }
+
+    .unit-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+
+    .unit-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .unit-avatar-placeholder {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: rgba(34, 197, 94, 0.1);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+        font-size: 1.25rem;
+    }
+
+    .unit-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .unit-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .unit-country {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .unit-country img {
+        width: 16px;
+        height: 11px;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+
+    .unit-stats {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .stat-block {
+        text-align: right;
+        min-width: 100px;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #22c55e;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.yellow { color: #fbbf24; }
+    .stat-value.purple { color: #a855f7; }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="leaderboard-container">
+    <div class="page-header">
+        <h2><i class="fas fa-trophy me-2"></i>Unit Leaderboards</h2>
+        <p class="text-muted mb-0">Top military units ranked by performance</p>
+    </div>
+
+    <div class="category-tabs">
+        <a href="{{ url_for('military_unit.leaderboard', category='damage') }}" class="category-tab {% if category == 'damage' %}active{% endif %}">
+            <i class="fas fa-fire me-1"></i>Total Damage
+        </a>
+        <a href="{{ url_for('military_unit.leaderboard', category='battles') }}" class="category-tab {% if category == 'battles' %}active{% endif %}">
+            <i class="fas fa-trophy me-1"></i>Battles Won
+        </a>
+        <a href="{{ url_for('military_unit.leaderboard', category='contracts') }}" class="category-tab {% if category == 'contracts' %}active{% endif %}">
+            <i class="fas fa-file-contract me-1"></i>Contracts
+        </a>
+    </div>
+
+    <div class="leaderboard-card">
+        <div class="leaderboard-header">
+            <i class="fas fa-crown"></i>
+            <h3>
+                {% if category == 'damage' %}
+                Top Units by Damage
+                {% elif category == 'battles' %}
+                Top Units by Battles Won
+                {% else %}
+                Top Units by Contracts Completed
+                {% endif %}
+            </h3>
+        </div>
+
+        {% if units %}
+        <div class="leaderboard-table">
+            {% for unit in units %}
+            <div class="leaderboard-row" onclick="window.location='{{ url_for('military_unit.detail', unit_id=unit.id) }}'" style="cursor: pointer;">
+                <div class="rank-position {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% else %}normal{% endif %}">
+                    {% if loop.index <= 3 %}
+                    <i class="fas fa-medal"></i>
+                    {% else %}
+                    #{{ loop.index }}
+                    {% endif %}
+                </div>
+
+                <div class="unit-info">
+                    {% if unit.avatar %}
+                        <img src="{{ url_for('static', filename='avatars/units/unit_' + unit.id|string + '.png') }}" alt="{{ unit.name }}" class="unit-avatar">
+                    {% else %}
+                        <div class="unit-avatar-placeholder">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                    {% endif %}
+
+                    <div class="unit-details">
+                        <div class="unit-name">{{ unit.name }}</div>
+                        <div class="unit-country">
+                            {% if unit.country and unit.country.flag_code %}
+                            <img src="{{ url_for('static', filename='images/country-flags/' + unit.country.flag_code + '.png') }}" alt="{{ unit.country.name }}">
+                            {% endif %}
+                            {{ unit.country.name if unit.country else 'Unknown' }} &bull; {{ unit.member_count }} members
+                        </div>
+                    </div>
+                </div>
+
+                <div class="unit-stats">
+                    {% if category == 'damage' %}
+                    <div class="stat-block">
+                        <div class="stat-value">{{ "{:,.0f}".format(unit.total_damage) }}</div>
+                        <div class="stat-label">Damage</div>
+                    </div>
+                    {% elif category == 'battles' %}
+                    <div class="stat-block">
+                        <div class="stat-value yellow">{{ unit.battles_won }}</div>
+                        <div class="stat-label">Wins</div>
+                    </div>
+                    {% else %}
+                    <div class="stat-block">
+                        <div class="stat-value purple">{{ unit.contracts_completed }}</div>
+                        <div class="stat-label">Contracts</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-trophy"></i>
+            <h4>No Units Yet</h4>
+            <p>Be the first to create a military unit!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="text-center mt-3">
+        <a href="{{ url_for('military_unit.browse') }}" class="text-muted">
+            <i class="fas fa-arrow-left me-1"></i>Back to Units
+        </a>
+    </div>
+</div>
+</div>
+{% endblock %}

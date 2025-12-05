@@ -1,0 +1,802 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    /* Page-specific styles for dashboard */
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* Dashboard content container - separate from user info panel */
+    .dashboard-content-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #0a0e1a;
+    }
+
+    .event-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .event-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .event-card-header {
+        background: rgba(34, 197, 94, 0.1);
+        padding: 1.25rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        font-weight: 600;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.1rem;
+    }
+
+    .event-card-header i {
+        color: #22c55e;
+        filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.5));
+    }
+
+    .event-card-body {
+        padding: 1rem;
+    }
+
+    .event-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .event-item {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+        transition: all 0.3s ease;
+        color: #ffffff;
+        cursor: pointer;
+    }
+
+    .event-item:last-child {
+        border-bottom: none;
+    }
+
+    .event-item:hover {
+        background: rgba(34, 197, 94, 0.05);
+        padding-left: 1.5rem;
+    }
+
+    .article-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .article-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .article-title {
+        color: #ffffff;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 1.15rem;
+    }
+
+    .article-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    /* Election card animations */
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .active-election-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2);
+    }
+
+    .active-election-card a.btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <!-- Events Section -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="event-card">
+                <div class="event-card-header">
+                    <i class="fas fa-flag"></i>Country Events
+                </div>
+                <div class="event-card-body">
+                    {% if country_laws or country_battles %}
+                        <ul class="event-list">
+                            {% for law in country_laws %}
+                            <li class="event-item" onclick="window.location.href='{{ url_for('government.view_law', law_id=law.id) }}'">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="fas fa-scroll text-info mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="text-white">
+                                            {% if law.law_type.value == 'declare_war' %}
+                                                <span class="badge bg-danger me-1">War</span> Declaration of War
+                                            {% elif law.law_type.value == 'mutual_protection_pact' %}
+                                                <span class="badge bg-primary me-1">MPP</span> Mutual Protection Pact
+                                            {% elif law.law_type.value == 'import_tax' %}
+                                                <span class="badge bg-warning text-dark me-1">Tax</span> Import Tax Change
+                                            {% elif law.law_type.value == 'salary_tax' %}
+                                                <span class="badge bg-warning text-dark me-1">Tax</span> Salary Tax Change
+                                            {% elif law.law_type.value == 'income_tax' %}
+                                                <span class="badge bg-warning text-dark me-1">Tax</span> Income Tax Change
+                                            {% elif law.law_type.value == 'print_currency' %}
+                                                <span class="badge bg-success me-1">Finance</span> Print Currency
+                                            {% elif law.law_type.value == 'military_budget' %}
+                                                <span class="badge bg-secondary me-1">Budget</span> Military Budget
+                                            {% else %}
+                                                <span class="badge bg-info me-1">Law</span> {{ law.law_type.value.replace('_', ' ').title() }}
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>Voting ends {{ law.voting_end.strftime('%b %d, %H:%M') }}
+                                            <span class="ms-2">
+                                                <i class="fas fa-thumbs-up text-success me-1"></i>{{ law.votes_for }}
+                                                <i class="fas fa-thumbs-down text-danger ms-2 me-1"></i>{{ law.votes_against }}
+                                            </span>
+                                        </small>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
+                            </li>
+                            {% endfor %}
+
+                            {% for battle in country_battles %}
+                            <li class="event-item" onclick="window.location.href='{{ url_for('main.battle_screen', battle_id=battle.id) }}'">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="fas fa-shield-alt text-danger mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="text-white">
+                                            <span class="badge bg-danger me-1">Battle</span>
+                                            {{ battle.region.name }}
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-crosshairs me-1"></i>
+                                            {{ battle.war.attacker_country.name }} vs {{ battle.war.defender_country.name }}
+                                            <span class="ms-2">
+                                                <i class="fas fa-clock me-1"></i>Round {{ battle.current_round }}/3
+                                            </span>
+                                        </small>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div style="width: 50px; height: 50px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-check-circle" style="color: rgba(34, 197, 94, 0.5); font-size: 1.25rem;"></i>
+                            </div>
+                            <p class="text-muted mb-0" style="font-size: 0.9rem;">No active events in your country</p>
+                            <small class="text-muted">Laws and battles will appear here</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="event-card">
+                <div class="event-card-header">
+                    <i class="fas fa-globe"></i>International Events
+                </div>
+                <div class="event-card-body">
+                    {% if international_wars %}
+                        <ul class="event-list">
+                            {% for war in international_wars %}
+                            <li class="event-item" onclick="window.location.href='{{ url_for('main.war_detail', war_id=war.id) }}'">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="fas fa-fire text-danger mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="text-white">
+                                            <span class="badge bg-danger me-1">War</span>
+                                            {{ war.attacker_country.name }} vs {{ war.defender_country.name }}
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>Started {{ war.started_at.strftime('%b %d, %H:%M') }}
+                                            {% if war.get_active_battle() %}
+                                            <span class="ms-2 text-warning">
+                                                <i class="fas fa-crosshairs me-1"></i>Battle Active
+                                            </span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div style="width: 50px; height: 50px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-globe" style="color: rgba(34, 197, 94, 0.5); font-size: 1.25rem;"></i>
+                            </div>
+                            <p class="text-muted mb-0" style="font-size: 0.9rem;">No international events</p>
+                            <small class="text-muted">Active wars will appear here</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Articles Section -->
+    <div class="row mb-3">
+        <!-- Latest Articles (Left Column - Half Screen Width) -->
+        <div class="col-md-6">
+            <div class="event-card" style="height: 100%;">
+                <div class="event-card-header">
+                    <i class="fas fa-newspaper"></i>Latest Articles
+                </div>
+                <div class="event-card-body" style="max-height: 450px; overflow-y: auto;">
+                    <ul class="nav nav-tabs mb-3" id="articlesTabs" role="tablist" style="position: sticky; top: 0; background: #0f1419; z-index: 10; padding-bottom: 0.5rem;">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="country-tab" data-bs-toggle="tab" data-bs-target="#country" type="button" role="tab">
+                                <i class="fas fa-flag"></i> My Country
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="top-tab" data-bs-toggle="tab" data-bs-target="#top" type="button" role="tab">
+                                <i class="fas fa-fire"></i> Top
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="international-tab" data-bs-toggle="tab" data-bs-target="#international" type="button" role="tab">
+                                <i class="fas fa-globe"></i> International
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="subscribed-tab" data-bs-toggle="tab" data-bs-target="#subscribed" type="button" role="tab">
+                                <i class="fas fa-bookmark"></i> Subscribed
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="articlesTabContent">
+                        <!-- Latest Country Articles -->
+                        <div class="tab-pane fade show active" id="country" role="tabpanel">
+                            {% if latest_country_articles %}
+                                {% for article in latest_country_articles %}
+                                    <a href="{{ url_for('main.view_article', newspaper_id=article.newspaper_id, article_id=article.id) }}" class="text-decoration-none">
+                                        <div class="article-card" style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            {% if article.newspaper.avatar %}
+                                                <img src="{{ url_for('static', filename='avatars/newspapers/' + article.newspaper.id|string + '.png') }}"
+                                                     alt="{{ article.newspaper.name }}"
+                                                     style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                            {% else %}
+                                                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(34, 197, 94, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                                    <i class="fas fa-newspaper" style="color: #22c55e; font-size: 1.2rem;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div style="flex: 1; min-width: 0;">
+                                                <h5 class="article-title" style="margin-bottom: 0.25rem;">{{ article.title }}</h5>
+                                                <p class="article-meta">
+                                                    <i class="fas fa-newspaper me-1"></i>{{ article.newspaper.name }}
+                                                    <span class="ms-2"><i class="fas fa-user me-1"></i>{{ article.author.username }}</span>
+                                                    <span class="ms-2"><i class="fas fa-thumbs-up me-1"></i>{{ article.vote_count }}</span>
+                                                    <span class="ms-2"><i class="fas fa-comments me-1"></i>{{ article.comment_count }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No recent articles from your country.</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Top Country Articles -->
+                        <div class="tab-pane fade" id="top" role="tabpanel">
+                            {% if top_country_articles %}
+                                {% for article in top_country_articles %}
+                                    <a href="{{ url_for('main.view_article', newspaper_id=article.newspaper_id, article_id=article.id) }}" class="text-decoration-none">
+                                        <div class="article-card" style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            {% if article.newspaper.avatar %}
+                                                <img src="{{ url_for('static', filename='avatars/newspapers/' + article.newspaper.id|string + '.png') }}"
+                                                     alt="{{ article.newspaper.name }}"
+                                                     style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                            {% else %}
+                                                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(34, 197, 94, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                                    <i class="fas fa-newspaper" style="color: #22c55e; font-size: 1.2rem;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div style="flex: 1; min-width: 0;">
+                                                <h5 class="article-title" style="margin-bottom: 0.25rem;">{{ article.title }}</h5>
+                                                <p class="article-meta">
+                                                    <i class="fas fa-newspaper me-1"></i>{{ article.newspaper.name }}
+                                                    <span class="ms-2"><i class="fas fa-user me-1"></i>{{ article.author.username }}</span>
+                                                    <span class="ms-2"><i class="fas fa-thumbs-up me-1"></i>{{ article.vote_count }}</span>
+                                                    <span class="ms-2"><i class="fas fa-comments me-1"></i>{{ article.comment_count }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No top articles from your country yet.</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- International Articles -->
+                        <div class="tab-pane fade" id="international" role="tabpanel">
+                            {% if international_articles %}
+                                {% for article in international_articles %}
+                                    <a href="{{ url_for('main.view_article', newspaper_id=article.newspaper_id, article_id=article.id) }}" class="text-decoration-none">
+                                        <div class="article-card" style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            {% if article.newspaper.avatar %}
+                                                <img src="{{ url_for('static', filename='avatars/newspapers/' + article.newspaper.id|string + '.png') }}"
+                                                     alt="{{ article.newspaper.name }}"
+                                                     style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                            {% else %}
+                                                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(34, 197, 94, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                                    <i class="fas fa-newspaper" style="color: #22c55e; font-size: 1.2rem;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div style="flex: 1; min-width: 0;">
+                                                <h5 class="article-title" style="margin-bottom: 0.25rem;">{{ article.title }}</h5>
+                                                <p class="article-meta">
+                                                    <i class="fas fa-newspaper me-1"></i>{{ article.newspaper.name }}
+                                                    <span class="ms-2"><i class="fas fa-flag me-1"></i>{{ article.newspaper.country.name }}</span>
+                                                    <span class="ms-2"><i class="fas fa-user me-1"></i>{{ article.author.username }}</span>
+                                                    <span class="ms-2"><i class="fas fa-thumbs-up me-1"></i>{{ article.vote_count }}</span>
+                                                    <span class="ms-2"><i class="fas fa-comments me-1"></i>{{ article.comment_count }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No international articles yet.</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Subscribed Articles -->
+                        <div class="tab-pane fade" id="subscribed" role="tabpanel">
+                            {% if subscribed_articles %}
+                                {% for article in subscribed_articles %}
+                                    <a href="{{ url_for('main.view_article', newspaper_id=article.newspaper_id, article_id=article.id) }}" class="text-decoration-none">
+                                        <div class="article-card" style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            {% if article.newspaper.avatar %}
+                                                <img src="{{ url_for('static', filename='avatars/newspapers/' + article.newspaper.id|string + '.png') }}"
+                                                     alt="{{ article.newspaper.name }}"
+                                                     style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                            {% else %}
+                                                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(34, 197, 94, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                                    <i class="fas fa-newspaper" style="color: #22c55e; font-size: 1.2rem;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div style="flex: 1; min-width: 0;">
+                                                <h5 class="article-title" style="margin-bottom: 0.25rem;">{{ article.title }}</h5>
+                                                <p class="article-meta">
+                                                    <i class="fas fa-newspaper me-1"></i>{{ article.newspaper.name }}
+                                                    <span class="ms-2"><i class="fas fa-user me-1"></i>{{ article.author.username }}</span>
+                                                    <span class="ms-2"><i class="fas fa-thumbs-up me-1"></i>{{ article.vote_count }}</span>
+                                                    <span class="ms-2"><i class="fas fa-comments me-1"></i>{{ article.comment_count }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No articles from your subscribed newspapers. Subscribe to newspapers to see their articles here!</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Elections Section (Right Column - Half Screen Width) -->
+        <div class="col-md-6">
+            <div class="event-card" style="height: 100%;">
+                <div class="event-card-header">
+                    <i class="fas fa-vote-yea"></i>Elections
+                </div>
+                <div class="event-card-body">
+                    {% if active_government_election %}
+                        <!-- Active Government Election (Presidential or Congressional) -->
+                        <div class="active-election-card" style="background: linear-gradient(145deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.08) 100%); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; position: relative; overflow: hidden;">
+                            <!-- Animated pulse border effect -->
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, #f59e0b, transparent); animation: shimmer 2s infinite;"></div>
+
+                            <!-- Header row with icon and status -->
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 44px; height: 44px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.15) 100%); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                        {% if active_government_election_type == 'presidential' %}
+                                            <i class="fas fa-crown" style="font-size: 1.25rem; color: #f59e0b;"></i>
+                                        {% else %}
+                                            <i class="fas fa-landmark" style="font-size: 1.25rem; color: #8b5cf6;"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h4 style="color: #ffffff; font-weight: 700; font-size: 1.1rem; margin: 0; line-height: 1.2;">
+                                            {% if active_government_election_type == 'presidential' %}
+                                                Presidential Election
+                                            {% else %}
+                                                Congressional Election
+                                            {% endif %}
+                                        </h4>
+                                        <span style="color: #f59e0b; font-size: 0.8rem; font-weight: 500;">{{ current_user.citizenship.name }}</span>
+                                    </div>
+                                </div>
+                                <div style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.4); padding: 0.3rem 0.65rem; border-radius: 20px; display: flex; align-items: center; gap: 0.35rem;">
+                                    <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse-dot 1.5s infinite;"></span>
+                                    <span style="color: #22c55e; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Voting</span>
+                                </div>
+                            </div>
+
+                            <!-- Countdown Timer -->
+                            <div style="background: rgba(0, 0, 0, 0.25); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                                <div style="text-align: center; margin-bottom: 0.5rem;">
+                                    <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Time Remaining</span>
+                                </div>
+                                <div id="gov-election-countdown" style="display: flex; justify-content: center; gap: 0.75rem;" data-end-time="{{ active_government_election.voting_end.isoformat() }}">
+                                    <div style="text-align: center;">
+                                        <div class="countdown-hours" style="font-size: 1.75rem; font-weight: 700; color: #f59e0b; line-height: 1;">--</div>
+                                        <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px;">Hours</div>
+                                    </div>
+                                    <div style="color: #f59e0b; font-size: 1.5rem; font-weight: 300; opacity: 0.5;">:</div>
+                                    <div style="text-align: center;">
+                                        <div class="countdown-minutes" style="font-size: 1.75rem; font-weight: 700; color: #f59e0b; line-height: 1;">--</div>
+                                        <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px;">Mins</div>
+                                    </div>
+                                    <div style="color: #f59e0b; font-size: 1.5rem; font-weight: 300; opacity: 0.5;">:</div>
+                                    <div style="text-align: center;">
+                                        <div class="countdown-seconds" style="font-size: 1.75rem; font-weight: 700; color: #f59e0b; line-height: 1;">--</div>
+                                        <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px;">Secs</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stats row -->
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                <div style="flex: 1; background: rgba(255, 255, 255, 0.04); border-radius: 8px; padding: 0.6rem; text-align: center;">
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">{{ active_government_election.candidates|selectattr('status.value', 'equalto', 'approved')|list|length }}</div>
+                                    <div style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.5);">Candidates</div>
+                                </div>
+                                <div style="flex: 1; background: rgba(255, 255, 255, 0.04); border-radius: 8px; padding: 0.6rem; text-align: center;">
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">{{ active_government_election.votes.count() }}</div>
+                                    <div style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.5);">Votes Cast</div>
+                                </div>
+                            </div>
+
+                            <!-- Vote Button -->
+                            <a href="{{ url_for('government.election_detail', election_id=active_government_election.id) }}" class="btn" style="width: 100%; padding: 0.75rem; font-weight: 600; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; font-size: 1rem; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); transition: all 0.2s ease;">
+                                <i class="fas fa-vote-yea"></i>
+                                <span>Cast Your Vote</span>
+                                <i class="fas fa-arrow-right" style="font-size: 0.85rem; opacity: 0.8;"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {% if active_election and current_user.party %}
+                        <!-- Active Party Election -->
+                        <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%); border: 2px solid rgba(59, 130, 246, 0.4); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+                            <div style="text-align: center; margin-bottom: 1rem;">
+                                <div style="width: 60px; height: 60px; background: rgba(59, 130, 246, 0.2); border: 2px solid rgba(59, 130, 246, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                    <i class="fas fa-vote-yea" style="font-size: 1.75rem; color: #3b82f6;"></i>
+                                </div>
+                                <h4 style="color: #3b82f6; font-weight: 700; font-size: 1.25rem; margin-bottom: 0.5rem;">
+                                    Party Election in Progress!
+                                </h4>
+                            </div>
+
+                            <div style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                                <div style="color: rgba(255, 255, 255, 0.9); margin-bottom: 0.5rem; text-align: center;">
+                                    <div style="font-size: 1rem; margin-bottom: 0.25rem;">
+                                        Your party <strong style="color: #3b82f6;">{{ current_user.party.name }}</strong> is holding elections
+                                    </div>
+                                    <div style="color: rgba(255, 255, 255, 0.7); font-size: 0.85rem;">
+                                        <i class="fas fa-clock me-1"></i>
+                                        Ends {{ active_election.end_time.strftime('%B %d, %Y at %I:%M %p UTC') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                                <a href="{{ url_for('party.vote', party_id=current_user.party.id) }}" class="btn btn-primary" style="width: 100%; padding: 0.625rem; font-weight: 600; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; font-size: 0.95rem;">
+                                    <i class="fas fa-vote-yea me-2"></i>Cast Your Vote
+                                </a>
+                                <a href="{{ url_for('party.detail', party_id=current_user.party.id) }}" class="btn btn-outline-primary" style="width: 100%; padding: 0.625rem; font-weight: 600; border-color: rgba(59, 130, 246, 0.5); color: #3b82f6; font-size: 0.95rem;">
+                                    <i class="fas fa-eye me-2"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if not active_government_election and not active_election %}
+                        <!-- No Active Elections -->
+                        <div style="text-align: center; padding: 1.5rem;">
+                            <div style="width: 60px; height: 60px; background: rgba(34, 197, 94, 0.1); border: 2px solid rgba(34, 197, 94, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-calendar-alt" style="font-size: 1.75rem; color: #22c55e;"></i>
+                            </div>
+                            <h5 style="color: rgba(255, 255, 255, 0.9); font-weight: 600; margin-bottom: 0.75rem;">
+                                No Active Elections
+                            </h5>
+                            <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.95rem; margin-bottom: 0;">
+                                There are no active elections at the moment.
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    {% if next_election and next_election_type and (not active_government_election or next_election != active_government_election) %}
+                        <!-- Next Scheduled Election (from database) - only show if not already displayed as active -->
+                        <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.03) 100%); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden;">
+                            <!-- Decorative accent -->
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #22c55e, rgba(34, 197, 94, 0.3));"></div>
+
+                            <!-- Header with icon -->
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="fas fa-calendar-check" style="color: #22c55e; font-size: 1.25rem;"></i>
+                                </div>
+                                <div>
+                                    <h5 style="color: #22c55e; font-weight: 700; margin: 0; font-size: 1.1rem; letter-spacing: 0.3px;">
+                                        Upcoming Election
+                                    </h5>
+                                    <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.8rem;">Mark your calendar</span>
+                                </div>
+                            </div>
+
+                            <!-- Election Details Card -->
+                            <div style="background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 1.25rem;">
+                                {% if next_election_type == 'party' %}
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-users" style="color: #f59e0b; font-size: 0.9rem;"></i>
+                                        <span style="color: #f59e0b; font-weight: 600; font-size: 0.95rem;">Presidential Election</span>
+                                    </div>
+                                    <p style="color: rgba(255, 255, 255, 0.9); font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem;">
+                                        {{ current_user.party.name }}
+                                    </p>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; color: rgba(255, 255, 255, 0.6); font-size: 0.875rem;">
+                                        <i class="fas fa-clock" style="font-size: 0.8rem;"></i>
+                                        <span>Starts {{ next_election.start_time.strftime('%B %d, %Y at %I:%M %p UTC') }}</span>
+                                    </div>
+                                {% elif next_election_type == 'presidential' %}
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-crown" style="color: #f59e0b; font-size: 0.9rem;"></i>
+                                        <span style="color: #f59e0b; font-weight: 600; font-size: 0.95rem;">Presidential Election</span>
+                                    </div>
+                                    <p style="color: rgba(255, 255, 255, 0.9); font-size: 1rem; font-weight: 500; margin-bottom: 1rem;">
+                                        {{ current_user.citizenship.name }}
+                                    </p>
+                                    <!-- Timeline -->
+                                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            <div style="width: 24px; height: 24px; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                <i class="fas fa-clipboard-list" style="color: #22c55e; font-size: 0.65rem;"></i>
+                                            </div>
+                                            <div>
+                                                <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Nominations</span>
+                                                <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">{{ next_election.nominations_start.strftime('%b %d') }} - {{ next_election.nominations_end.strftime('%b %d') }}</p>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            <div style="width: 24px; height: 24px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                <i class="fas fa-vote-yea" style="color: #3b82f6; font-size: 0.65rem;"></i>
+                                            </div>
+                                            <div>
+                                                <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Voting</span>
+                                                <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">{{ next_election.voting_start.strftime('%b %d') }} - {{ next_election.voting_end.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% elif next_election_type == 'congressional' %}
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-landmark" style="color: #8b5cf6; font-size: 0.9rem;"></i>
+                                        <span style="color: #8b5cf6; font-weight: 600; font-size: 0.95rem;">Congressional Election</span>
+                                    </div>
+                                    <p style="color: rgba(255, 255, 255, 0.9); font-size: 1rem; font-weight: 500; margin-bottom: 1rem;">
+                                        {{ current_user.citizenship.name }}
+                                    </p>
+                                    <!-- Timeline -->
+                                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            <div style="width: 24px; height: 24px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                <i class="fas fa-clipboard-list" style="color: #8b5cf6; font-size: 0.65rem;"></i>
+                                            </div>
+                                            <div>
+                                                <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Applications</span>
+                                                <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">{{ next_election.nominations_start.strftime('%b %d') }} - {{ next_election.nominations_end.strftime('%b %d') }}</p>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            <div style="width: 24px; height: 24px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                <i class="fas fa-vote-yea" style="color: #3b82f6; font-size: 0.65rem;"></i>
+                                            </div>
+                                            <div>
+                                                <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Voting</span>
+                                                <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">{{ next_election.voting_start.strftime('%b %d') }} - {{ next_election.voting_end.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% elif next_election_info and next_election_type %}
+                        <!-- Next Scheduled Election (calculated, not in DB yet) -->
+                        <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.03) 100%); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden;">
+                            <!-- Decorative accent -->
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #22c55e, rgba(34, 197, 94, 0.3));"></div>
+
+                            <!-- Header with icon -->
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="fas fa-calendar-check" style="color: #22c55e; font-size: 1.25rem;"></i>
+                                </div>
+                                <div>
+                                    <h5 style="color: #22c55e; font-weight: 700; margin: 0; font-size: 1.1rem; letter-spacing: 0.3px;">
+                                        Upcoming Election
+                                    </h5>
+                                    <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.8rem;">Mark your calendar</span>
+                                </div>
+                            </div>
+
+                            <!-- Election Details Card -->
+                            <div style="background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 1.25rem;">
+                                {% if next_election_info.type == 'presidential' %}
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-crown" style="color: #f59e0b; font-size: 0.9rem;"></i>
+                                        <span style="color: #f59e0b; font-weight: 600; font-size: 0.95rem;">Presidential Election</span>
+                                    </div>
+                                    <p style="color: rgba(255, 255, 255, 0.9); font-size: 1rem; font-weight: 500; margin-bottom: 1rem;">
+                                        {{ next_election_info.country.name }}
+                                    </p>
+                                    <!-- Timeline -->
+                                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            <div style="width: 24px; height: 24px; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                <i class="fas fa-clipboard-list" style="color: #22c55e; font-size: 0.65rem;"></i>
+                                            </div>
+                                            <div>
+                                                <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Nominations</span>
+                                                <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">{{ next_election_info.nominations_start.strftime('%b %d') }} - {{ next_election_info.voting_start.strftime('%b %d') }}</p>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            <div style="width: 24px; height: 24px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                <i class="fas fa-vote-yea" style="color: #3b82f6; font-size: 0.65rem;"></i>
+                                            </div>
+                                            <div>
+                                                <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Voting</span>
+                                                <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">{{ next_election_info.voting_start.strftime('%b %d') }} - {{ next_election_info.voting_end.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% elif next_election_info.type == 'congressional' %}
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-landmark" style="color: #8b5cf6; font-size: 0.9rem;"></i>
+                                        <span style="color: #8b5cf6; font-weight: 600; font-size: 0.95rem;">Congressional Election</span>
+                                    </div>
+                                    <p style="color: rgba(255, 255, 255, 0.9); font-size: 1rem; font-weight: 500; margin-bottom: 1rem;">
+                                        {{ next_election_info.country.name }}
+                                    </p>
+                                    <!-- Timeline -->
+                                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            <div style="width: 24px; height: 24px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                <i class="fas fa-clipboard-list" style="color: #8b5cf6; font-size: 0.65rem;"></i>
+                                            </div>
+                                            <div>
+                                                <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Applications</span>
+                                                <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">{{ next_election_info.nominations_start.strftime('%b %d') }} - {{ next_election_info.voting_start.strftime('%b %d') }}</p>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                            <div style="width: 24px; height: 24px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                                <i class="fas fa-vote-yea" style="color: #3b82f6; font-size: 0.65rem;"></i>
+                                            </div>
+                                            <div>
+                                                <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Voting</span>
+                                                <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">{{ next_election_info.voting_start.strftime('%b %d') }} - {{ next_election_info.voting_end.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% elif not active_election and not active_government_election %}
+                        <!-- No Upcoming Elections -->
+                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                            <i class="fas fa-calendar-times" style="color: rgba(255, 255, 255, 0.3); font-size: 1.5rem; margin-bottom: 0.75rem;"></i>
+                            <p style="color: rgba(255, 255, 255, 0.5); margin: 0; font-size: 0.9rem;">
+                                No upcoming elections scheduled at this time.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Election countdown timer
+function initElectionCountdown() {
+    const countdownEl = document.getElementById('gov-election-countdown');
+    if (!countdownEl) return;
+
+    const endTimeStr = countdownEl.dataset.endTime;
+    if (!endTimeStr) return;
+
+    // Parse the end time (assuming UTC)
+    const endTime = new Date(endTimeStr + 'Z');
+
+    function updateCountdown() {
+        const now = new Date();
+        const diff = endTime - now;
+
+        if (diff <= 0) {
+            // Election ended
+            countdownEl.innerHTML = '<div style="color: #f59e0b; font-weight: 600;">Voting has ended</div>';
+            return;
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        const hoursEl = countdownEl.querySelector('.countdown-hours');
+        const minutesEl = countdownEl.querySelector('.countdown-minutes');
+        const secondsEl = countdownEl.querySelector('.countdown-seconds');
+
+        if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
+        if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
+        if (secondsEl) secondsEl.textContent = seconds.toString().padStart(2, '0');
+    }
+
+    // Update immediately and then every second
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initElectionCountdown);
+</script>
+{% endblock %}

@@ -1,0 +1,288 @@
+{% extends "layouts/base.html" %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            {# Law Details Card #}
+            <div class="card mb-4" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(34, 197, 94, 0.3);">
+                <div class="card-header" style="background: rgba(34, 197, 94, 0.1); border-bottom: 1px solid rgba(34, 197, 94, 0.3);">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 class="mb-1 text-white">
+                                <i class="fas fa-gavel me-2"></i>Law Proposal #{{ law.id }}
+                            </h3>
+                            <p class="text-muted mb-0">
+                                Proposed by
+                                <a href="{{ url_for('main.view_profile', username=law.proposed_by.username) }}" class="text-success">
+                                    {{ law.proposed_by.username }}
+                                </a>
+                                on {{ law.created_at.strftime('%B %d, %Y at %H:%M') }}
+                            </p>
+                        </div>
+                        <span class="badge
+                            {% if law.status.name == 'VOTING' %}bg-primary
+                            {% elif law.status.name == 'PASSED' %}bg-success
+                            {% elif law.status.name == 'REJECTED' %}bg-danger
+                            {% else %}bg-secondary{% endif %}">
+                            {{ law.status.value.title() }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h4 class="text-white mb-3">
+                        {% if law.law_type.name == 'DECLARE_WAR' %}
+                            <i class="fas fa-bomb text-danger me-2"></i>Declare War
+                        {% elif law.law_type.name == 'MUTUAL_PROTECTION_PACT' %}
+                            <i class="fas fa-handshake text-info me-2"></i>Mutual Protection Pact (Legacy)
+                        {% elif law.law_type.name == 'NON_AGGRESSION_PACT' %}
+                            <i class="fas fa-dove text-info me-2"></i>Non-Aggression Pact (Legacy)
+                        {% elif law.law_type.name == 'ALLIANCE_INVITE' %}
+                            <i class="fas fa-handshake text-success me-2"></i>Alliance Invitation
+                        {% elif law.law_type.name == 'ALLIANCE_JOIN' %}
+                            <i class="fas fa-user-plus text-success me-2"></i>Join Alliance
+                        {% elif law.law_type.name == 'ALLIANCE_KICK' %}
+                            <i class="fas fa-user-minus text-danger me-2"></i>Alliance Kick
+                        {% elif law.law_type.name == 'ALLIANCE_LEAVE' %}
+                            <i class="fas fa-door-open text-warning me-2"></i>Leave Alliance
+                        {% elif law.law_type.name == 'ALLIANCE_DISSOLVE' %}
+                            <i class="fas fa-skull-crossbones text-danger me-2"></i>Dissolve Alliance
+                        {% elif law.law_type.name == 'MILITARY_BUDGET' %}
+                            <i class="fas fa-shield-alt text-warning me-2"></i>Military Budget Allocation
+                        {% elif law.law_type.name == 'PRINT_CURRENCY' %}
+                            <i class="fas fa-money-bill-wave text-success me-2"></i>Print Local Currency
+                        {% elif law.law_type.name == 'IMPORT_TAX' %}
+                            <i class="fas fa-percentage text-warning me-2"></i>Import Tax
+                        {% elif law.law_type.name == 'SALARY_TAX' %}
+                            <i class="fas fa-percentage text-warning me-2"></i>Salary Tax
+                        {% elif law.law_type.name == 'INCOME_TAX' %}
+                            <i class="fas fa-percentage text-warning me-2"></i>Income Tax
+                        {% endif %}
+                    </h4>
+
+                    {# Law Details #}
+                    <div class="mb-4">
+                        {% if law.law_type.name == 'DECLARE_WAR' %}
+                            <p class="text-white">Declare war against:
+                                <strong class="text-danger">
+                                    {% if target_country %}
+                                        <a href="{{ url_for('main.country', slug=target_country.slug) }}" class="text-danger text-decoration-none">
+                                            {% if target_country.flag_code %}
+                                                <img src="https://flagcdn.com/w20/{{ target_country.flag_code }}.png" alt="" class="me-1" style="height: 14px;" onerror="this.style.display='none'">
+                                            {% endif %}
+                                            {{ target_country.name }}
+                                        </a>
+                                    {% else %}
+                                        Unknown Country
+                                    {% endif %}
+                                </strong>
+                            </p>
+
+                        {% elif law.law_type.name in ['MUTUAL_PROTECTION_PACT', 'NON_AGGRESSION_PACT'] %}
+                            <p class="text-white">
+                                {% if law.law_type.name == 'MUTUAL_PROTECTION_PACT' %}
+                                    Form mutual protection pact with:
+                                {% else %}
+                                    Sign non-aggression pact with:
+                                {% endif %}
+                                <strong class="text-info">
+                                    {% if ally_country %}
+                                        <a href="{{ url_for('main.country', slug=ally_country.slug) }}" class="text-info text-decoration-none">
+                                            {% if ally_country.flag_code %}
+                                                <img src="https://flagcdn.com/w20/{{ ally_country.flag_code }}.png" alt="" class="me-1" style="height: 14px;" onerror="this.style.display='none'">
+                                            {% endif %}
+                                            {{ ally_country.name }}
+                                        </a>
+                                    {% else %}
+                                        Unknown Country
+                                    {% endif %}
+                                </strong>
+                            </p>
+
+                        {% elif law.law_type.name == 'MILITARY_BUDGET' %}
+                            <p class="text-white">Allocate <strong class="text-warning">{{ law.law_details.get('amount') }} {% if law.law_details.get('currency_type') == 'gold' %}Gold{% else %}{{ law.country.currency_code }}{% endif %}</strong> to the military budget</p>
+
+                        {% elif law.law_type.name == 'PRINT_CURRENCY' %}
+                            <p class="text-white">
+                                Convert <strong class="text-warning">{{ law.law_details.get('gold_amount') }} Gold</strong> to
+                                <strong class="text-success">{{ law.law_details.get('currency_amount') }} {{ law.country.currency_code }}</strong>
+                            </p>
+                            <small class="text-muted">Exchange rate: 1 Gold = 200 {{ law.country.currency_code }}</small>
+
+                        {% elif law.law_type.name in ['IMPORT_TAX', 'SALARY_TAX', 'INCOME_TAX'] %}
+                            {% set rate = law.law_details.get('rate') * 100 %}
+                            <p class="text-white">
+                                Set
+                                {% if law.law_type.name == 'IMPORT_TAX' %}import tax
+                                {% elif law.law_type.name == 'SALARY_TAX' %}salary tax
+                                {% else %}income tax{% endif %}
+                                to <strong class="text-warning">{{ rate }}%</strong>
+                            </p>
+
+                        {% elif law.law_type.name == 'ALLIANCE_INVITE' %}
+                            <p class="text-white">
+                                Invite country to join alliance:
+                                <strong class="text-success">{{ law.law_details.get('invited_country_name', 'Unknown') }}</strong>
+                            </p>
+                            <small class="text-muted">Alliance: {{ law.law_details.get('alliance_name', 'Unknown') }}</small>
+
+                        {% elif law.law_type.name == 'ALLIANCE_JOIN' %}
+                            <p class="text-white">
+                                Accept invitation to join alliance:
+                                <strong class="text-success">{{ law.law_details.get('alliance_name', 'Unknown') }}</strong>
+                            </p>
+                            <small class="text-muted">Invited by: {{ law.law_details.get('inviting_country_name', 'Unknown') }}</small>
+
+                        {% elif law.law_type.name == 'ALLIANCE_KICK' %}
+                            <p class="text-white">
+                                Kick country from alliance:
+                                <strong class="text-danger">{{ law.law_details.get('target_country_name', 'Unknown') }}</strong>
+                            </p>
+                            <small class="text-muted">Alliance: {{ law.law_details.get('alliance_name', 'Unknown') }}</small>
+
+                        {% elif law.law_type.name == 'ALLIANCE_LEAVE' %}
+                            <p class="text-white">
+                                Leave alliance:
+                                <strong class="text-warning">{{ law.law_details.get('alliance_name', 'Unknown') }}</strong>
+                            </p>
+                            <small class="text-muted">24h delay after approval</small>
+
+                        {% elif law.law_type.name == 'ALLIANCE_DISSOLVE' %}
+                            <p class="text-white">
+                                Dissolve alliance:
+                                <strong class="text-danger">{{ law.law_details.get('alliance_name', 'Unknown') }}</strong>
+                            </p>
+                            <small class="text-muted">All member congresses must approve</small>
+                        {% endif %}
+                    </div>
+
+                    {# Voting Timeline #}
+                    {% if law.status.name == 'VOTING' %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-clock me-2"></i>
+                        <strong>Voting Period:</strong>
+                        {{ law.voting_start.strftime('%b %d, %H:%M') }} - {{ law.voting_end.strftime('%b %d, %H:%M') }}
+                        <br>
+                        <small>Time remaining:
+                            {% set remaining = (law.voting_end - now_utc).total_seconds() %}
+                            {% if remaining > 0 %}
+                                {{ (remaining // 3600)|int }} hours {{ ((remaining % 3600) // 60)|int }} minutes
+                            {% else %}
+                                Voting closed
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Voting Card #}
+            {% if law.status.name == 'VOTING' and can_vote %}
+            <div class="card mb-4" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(34, 197, 94, 0.3);">
+                <div class="card-header" style="background: rgba(34, 197, 94, 0.1); border-bottom: 1px solid rgba(34, 197, 94, 0.3);">
+                    <h4 class="mb-0 text-white"><i class="fas fa-vote-yea me-2"></i>Cast Your Vote</h4>
+                </div>
+                <div class="card-body">
+                    {% if user_vote %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            You voted <strong>{{ 'FOR' if user_vote.vote else 'AGAINST' }}</strong> this law on {{ user_vote.voted_at.strftime('%B %d at %H:%M') }}
+                        </div>
+                    {% else %}
+                        <p class="text-white mb-3">As {{ 'President' if current_user.is_president_of(law.country_id) else 'Congress Member' }}, you can vote on this law:</p>
+                        <form method="POST" action="{{ url_for('government.vote_on_law', law_id=law.id) }}" class="d-flex gap-3">
+                            {{ form.hidden_tag() if form else '' }}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" name="vote" value="for" class="btn btn-success flex-fill">
+                                <i class="fas fa-thumbs-up me-2"></i>Vote FOR
+                            </button>
+                            <button type="submit" name="vote" value="against" class="btn btn-danger flex-fill">
+                                <i class="fas fa-thumbs-down me-2"></i>Vote AGAINST
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {# Voting Results Sidebar #}
+        <div class="col-lg-4">
+            <div class="card" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(34, 197, 94, 0.3);">
+                <div class="card-header" style="background: rgba(34, 197, 94, 0.1); border-bottom: 1px solid rgba(34, 197, 94, 0.3);">
+                    <h4 class="mb-0 text-white"><i class="fas fa-chart-bar me-2"></i>Voting Results</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-success"><i class="fas fa-thumbs-up me-1"></i>For</span>
+                            <strong class="text-success">{{ law.votes_for }}</strong>
+                        </div>
+                        <div class="progress mb-3" style="height: 30px; background: #0f1419;">
+                            {% set total = law.votes_for + law.votes_against %}
+                            {% set for_percent = (law.votes_for / total * 100) if total > 0 else 0 %}
+                            <div class="progress-bar bg-success" style="width: {{ for_percent }}%">
+                                {{ for_percent|round(1) }}%
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-danger"><i class="fas fa-thumbs-down me-1"></i>Against</span>
+                            <strong class="text-danger">{{ law.votes_against }}</strong>
+                        </div>
+                        <div class="progress mb-3" style="height: 30px; background: #0f1419;">
+                            {% set against_percent = (law.votes_against / total * 100) if total > 0 else 0 %}
+                            <div class="progress-bar bg-danger" style="width: {{ against_percent }}%">
+                                {{ against_percent|round(1) }}%
+                            </div>
+                        </div>
+
+                        <div class="text-center p-3" style="background: rgba(34, 197, 94, 0.05); border-radius: 8px;">
+                            <div class="text-muted small mb-1">Total Votes</div>
+                            <div class="text-white fs-3 fw-bold">{{ law.total_votes }} / 21</div>
+                            <small class="text-muted">President + 20 Congress Members</small>
+                        </div>
+                    </div>
+
+                    {% if law.status.name in ['PASSED', 'REJECTED'] %}
+                    <div class="alert alert-{{ 'success' if law.passed else 'danger' }}">
+                        <i class="fas fa-{{ 'check-circle' if law.passed else 'times-circle' }} me-2"></i>
+                        Law {{ 'PASSED' if law.passed else 'REJECTED' }}
+                    </div>
+                    {% endif %}
+
+                    {# Vote List #}
+                    <h5 class="text-white mt-4 mb-3">Votes Cast ({{ votes|length }})</h5>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        {% for vote in votes %}
+                        <div class="d-flex justify-content-between align-items-center p-2 mb-2"
+                             style="background: rgba({{ '34, 197, 94' if vote.vote else '239, 68, 68' }}, 0.1); border-radius: 6px; border-left: 3px solid {{ '#22c55e' if vote.vote else '#ef4444' }};">
+                            <div>
+                                <a href="{{ url_for('main.view_profile', username=vote.voter.username) }}"
+                                   class="text-white text-decoration-none fw-bold">
+                                    {{ vote.voter.username }}
+                                </a>
+                                <div class="text-muted small">
+                                    {{ 'President' if vote.voter_role == 'president' else 'Congress' }}
+                                    • {{ vote.voted_at.strftime('%b %d, %H:%M') }}
+                                </div>
+                            </div>
+                            <span class="badge bg-{{ 'success' if vote.vote else 'danger' }}">
+                                {{ 'FOR' if vote.vote else 'AGAINST' }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_layout %}

@@ -1,0 +1,614 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Alliances - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .alliances-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        color: #22c55e;
+        font-size: 1.75rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #22c55e;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .action-link:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .btn-create {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.25rem;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-create:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        transform: translateY(-1px);
+        color: #fff;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1rem 1.25rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #22c55e;
+        line-height: 1.2;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.yellow { color: #fbbf24; }
+    .stat-value.purple { color: #a855f7; }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+
+    /* Your Alliance Section */
+    .your-alliance-section {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .your-alliance-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .your-alliance-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .your-alliance-name {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .your-alliance-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .leader-icon {
+        color: #fbbf24;
+    }
+
+    .your-alliance-members {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .btn-view-alliance {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.2);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        border-radius: 8px;
+        color: #22c55e;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-view-alliance:hover {
+        background: rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+    }
+
+    /* Section */
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1.1rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Alliance Cards */
+    .alliances-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .alliances-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .alliance-card {
+        background: rgba(26, 31, 46, 0.6);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .alliance-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .alliance-card.is-yours {
+        border-color: rgba(34, 197, 94, 0.4);
+        background: rgba(34, 197, 94, 0.05);
+    }
+
+    .alliance-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .alliance-name {
+        color: #fff;
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .alliance-name a {
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .alliance-name a:hover {
+        color: #22c55e;
+    }
+
+    .alliance-leader {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .alliance-leader .leader-icon {
+        color: #fbbf24;
+        font-size: 0.8rem;
+    }
+
+    .member-count-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(59, 130, 246, 0.15);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        min-width: 60px;
+    }
+
+    .member-count-value {
+        color: #3b82f6;
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .member-count-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.15rem;
+    }
+
+    .alliance-members {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex: 1;
+    }
+
+    .member-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.35rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .member-badge img {
+        width: 18px;
+        height: 12px;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+
+    .member-badge.is-leader {
+        background: rgba(251, 191, 36, 0.15);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .member-badge .crown {
+        color: #fbbf24;
+        font-size: 0.7rem;
+    }
+
+    .alliance-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .alliance-date {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.75rem;
+    }
+
+    .btn-view-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.75rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 6px;
+        color: #22c55e;
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-view-sm:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .yours-badge {
+        display: inline-block;
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-left: 0.5rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.2);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-title {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state-desc {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* No Alliance CTA */
+    .no-alliance-cta {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .no-alliance-cta-title {
+        color: #3b82f6;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .no-alliance-cta-desc {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="alliances-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span>&#129309;</span>
+            Military Alliances
+        </h1>
+        <div class="header-actions">
+            <a href="{{ url_for('government.president', country_id=current_user.citizenship_id) }}" class="action-link">
+                Government
+            </a>
+            {% if not user_alliance and current_user.is_president_of(current_user.citizenship_id) %}
+            <a href="{{ url_for('government.create_alliance') }}" class="btn-create">
+                <span>+</span> Create Alliance
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value">{{ alliances|length }}</div>
+            <div class="stat-label">Total Alliances</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value blue">
+                {% if user_alliance %}{{ user_alliance.member_count }}{% else %}0{% endif %}
+            </div>
+            <div class="stat-label">Allied Nations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value yellow">5</div>
+            <div class="stat-label">Max Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value purple">{% if user_alliance %}Yes{% else %}No{% endif %}</div>
+            <div class="stat-label">In Alliance</div>
+        </div>
+    </div>
+
+    <!-- Your Alliance Section -->
+    {% if user_alliance %}
+    <div class="your-alliance-section">
+        <div class="your-alliance-header">
+            <div>
+                <span class="your-alliance-badge">
+                    <span>&#11088;</span> Your Alliance
+                </span>
+                <div class="your-alliance-name">{{ user_alliance.name }}</div>
+                <div class="your-alliance-meta">
+                    <span class="meta-item">
+                        <span>&#128101;</span>
+                        {{ user_alliance.member_count }}/5 Members
+                    </span>
+                    <span class="meta-item">
+                        <span class="leader-icon">&#128081;</span>
+                        Led by {{ user_alliance.leader_country.name }}
+                    </span>
+                    <span class="meta-item">
+                        <span>&#128197;</span>
+                        Founded {{ user_alliance.created_at.strftime('%b %d, %Y') }}
+                    </span>
+                </div>
+            </div>
+            <a href="{{ url_for('government.view_alliance', alliance_id=user_alliance.id) }}" class="btn-view-alliance">
+                <span>&#128065;</span> Manage Alliance
+            </a>
+        </div>
+        <div class="your-alliance-members">
+            {% for member in user_alliance.get_active_members() %}
+            <span class="member-badge {% if member.id == user_alliance.leader_country_id %}is-leader{% endif %}">
+                <img src="{{ url_for('static', filename='images/country-flags/' + member.flag_code + '.png') }}" alt="{{ member.name }}" onerror="this.style.display='none'">
+                {{ member.name }}
+                {% if member.id == user_alliance.leader_country_id %}
+                <span class="crown">&#128081;</span>
+                {% endif %}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <!-- No Alliance CTA -->
+    <div class="no-alliance-cta">
+        <div class="no-alliance-cta-title">Your Country is Not in an Alliance</div>
+        <div class="no-alliance-cta-desc">
+            {% if current_user.is_president_of(current_user.citizenship_id) %}
+            As President, you can create a new alliance or wait for an invitation from an existing one.
+            {% else %}
+            Only the President can create or accept alliance invitations.
+            {% endif %}
+        </div>
+        {% if current_user.is_president_of(current_user.citizenship_id) %}
+        <a href="{{ url_for('government.create_alliance') }}" class="btn-create">
+            <span>+</span> Create New Alliance
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- All Alliances -->
+    <div class="section">
+        <h2 class="section-title">
+            <span>&#127760;</span>
+            All Alliances
+        </h2>
+
+        {% if alliances %}
+        <div class="alliances-grid">
+            {% for alliance in alliances %}
+            <div class="alliance-card {% if user_alliance and alliance.id == user_alliance.id %}is-yours{% endif %}">
+                <div class="alliance-card-header">
+                    <div>
+                        <div class="alliance-name">
+                            <a href="{{ url_for('government.view_alliance', alliance_id=alliance.id) }}">
+                                {{ alliance.name }}
+                            </a>
+                            {% if user_alliance and alliance.id == user_alliance.id %}
+                            <span class="yours-badge">Yours</span>
+                            {% endif %}
+                        </div>
+                        <div class="alliance-leader">
+                            <span class="leader-icon">&#128081;</span>
+                            {{ alliance.leader_country.name }}
+                        </div>
+                    </div>
+                    <div class="member-count-badge">
+                        <span class="member-count-value">{{ alliance.member_count }}</span>
+                        <span class="member-count-label">/ 5</span>
+                    </div>
+                </div>
+
+                <div class="alliance-members">
+                    {% for member in alliance.get_active_members() %}
+                    <span class="member-badge {% if member.id == alliance.leader_country_id %}is-leader{% endif %}">
+                        <img src="{{ url_for('static', filename='images/country-flags/' + member.flag_code + '.png') }}" alt="{{ member.name }}" onerror="this.style.display='none'">
+                        {{ member.name }}
+                        {% if member.id == alliance.leader_country_id %}
+                        <span class="crown">&#128081;</span>
+                        {% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+
+                <div class="alliance-card-footer">
+                    <span class="alliance-date">
+                        Founded {{ alliance.created_at.strftime('%b %d, %Y') }}
+                    </span>
+                    <a href="{{ url_for('government.view_alliance', alliance_id=alliance.id) }}" class="btn-view-sm">
+                        View <span>&#8594;</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">&#129309;</div>
+            <div class="empty-state-title">No Alliances Yet</div>
+            <div class="empty-state-desc">
+                No military alliances have been formed in the world.<br>
+                Be the first to unite nations under a common banner!
+            </div>
+            {% if current_user.is_president_of(current_user.citizenship_id) and not user_alliance %}
+            <a href="{{ url_for('government.create_alliance') }}" class="btn-create">
+                <span>+</span> Create the First Alliance
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}

@@ -1,0 +1,398 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ title }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .messages-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .messages-header h2 {
+        color: #22c55e;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .nav-tabs {
+        border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+        margin-bottom: 2rem;
+    }
+
+    .nav-tabs .nav-link {
+        color: rgba(255, 255, 255, 0.6);
+        border: none;
+        padding: 1rem 2rem;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #22c55e;
+        border: none;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+        border: none;
+        border-bottom: 3px solid #22c55e;
+    }
+
+    .conversation-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .conversation-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .conversation-card.unread {
+        border-color: rgba(34, 197, 94, 0.5);
+        background: linear-gradient(135deg, #1a2e1f 0%, #0f1914 100%);
+    }
+
+    .user-avatar-small {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .unread-badge {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        min-width: 24px;
+        text-align: center;
+    }
+
+    .alert-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .alert-card.unread {
+        border-left: 4px solid #22c55e;
+        background: linear-gradient(135deg, #1a2e1f 0%, #0f1914 100%);
+    }
+
+    .alert-card.priority-important {
+        border-left-color: #fbbf24;
+    }
+
+    .alert-card.priority-urgent {
+        border-left-color: #ef4444;
+    }
+
+    .alert-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .alert-icon.priority-important {
+        background: rgba(251, 191, 36, 0.1);
+        border-color: rgba(251, 191, 36, 0.3);
+        color: #fbbf24;
+    }
+
+    .alert-icon.priority-urgent {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #16a34a 0%, #15803d 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <div class="messages-header">
+            <div class="text-center">
+                <h2 class="mb-2">{% if tab == 'alerts' %}Alerts{% else %}Messages{% endif %}</h2>
+                <p class="text-muted mb-0">{% if tab == 'alerts' %}System notifications and announcements{% else %}Your private conversations{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link {% if tab == 'messages' %}active{% endif %}" href="{{ url_for('main.messages', tab='messages') }}">
+                    <i class="fas fa-envelope me-2"></i>Messages
+                    {% if current_user.unread_message_count > 0 %}
+                        <span class="badge bg-danger ms-2">{{ current_user.unread_message_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if tab == 'alerts' %}active{% endif %}" href="{{ url_for('main.messages', tab='alerts') }}">
+                    <i class="fas fa-bell me-2"></i>Alerts
+                    {% if current_user.unread_alert_count > 0 %}
+                        <span class="badge bg-danger ms-2">{{ current_user.unread_alert_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+        </ul>
+
+        <!-- Messages Tab Content -->
+        {% if tab == 'messages' %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-white mb-0">Conversations</h4>
+                <a href="{{ url_for('main.compose_message') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>New Message
+                </a>
+            </div>
+
+            {% if conversations %}
+                {% for conv in conversations %}
+                <a href="{{ url_for('main.message_thread', user_id=conv.partner.id) }}" class="text-decoration-none">
+                    <div class="conversation-card {% if conv.unread_count > 0 %}unread{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + conv.partner.id|string + '.png') if conv.partner.avatar else url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                                 alt="{{ conv.partner.username }}" class="user-avatar-small me-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h5 class="mb-0 text-white">{{ conv.partner.username }}</h5>
+                                    <small class="text-muted">{{ conv.latest_message.created_at.strftime('%b %d, %H:%M') }}</small>
+                                </div>
+                                <p class="mb-0 text-muted" style="font-size: 0.9rem;">
+                                    {% if conv.latest_message.sender_id == current_user.id %}
+                                        <span class="text-success">You:</span>
+                                    {% endif %}
+                                    {{ conv.latest_message.content[:80] }}{% if conv.latest_message.content|length > 80 %}...{% endif %}
+                                </p>
+                            </div>
+                            {% if conv.unread_count > 0 %}
+                            <span class="unread-badge ms-3">{{ conv.unread_count }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4 class="text-white mt-3">No Messages Yet</h4>
+                    <p>Start a conversation by composing a new message.</p>
+                    <a href="{{ url_for('main.compose_message') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus me-2"></i>Compose Message
+                    </a>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <!-- Alerts Tab Content -->
+        {% if tab == 'alerts' %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-white mb-0">Your Alerts</h4>
+                <div>
+                    {% if alerts and current_user.unread_alert_count > 0 %}
+                    <form method="POST" action="{{ url_for('main.mark_all_alerts_read') }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-check-double me-2"></i>Mark All Read
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if alerts %}
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteAllAlertsModal">
+                        <i class="fas fa-trash me-2"></i>Delete All
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if alerts %}
+                {% for alert in alerts %}
+                <div class="alert-card {% if not alert.is_read %}unread{% endif %} priority-{{ alert.priority.value }}"
+                     data-alert-id="{{ alert.id }}">
+                    <div class="d-flex">
+                        <div class="alert-icon priority-{{ alert.priority.value }} me-3">
+                            <i class="fas {{ alert.icon }}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="mb-0 text-white">{{ alert.title }}</h5>
+                                <small class="text-muted">{{ alert.created_at.strftime('%b %d, %H:%M') }}</small>
+                            </div>
+                            <p class="mb-2 text-muted">{{ alert.content }}</p>
+                            {% if alert.link_url %}
+                            <a href="{{ alert.link_url }}" class="btn btn-sm btn-primary">
+                                {{ alert.link_text or 'View' }}
+                            </a>
+                            {% endif %}
+                            {% if not alert.is_read %}
+                            <button class="btn btn-sm btn-outline-success ms-2 mark-read-btn" data-alert-id="{{ alert.id }}">
+                                <i class="fas fa-check me-1"></i>Mark Read
+                            </button>
+                            {% endif %}
+                            <button type="button" class="btn btn-sm btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteAlertModal{{ alert.id }}">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Alert Modal for Alert {{ alert.id }} -->
+                <div class="modal fade" id="deleteAlertModal{{ alert.id }}" tabindex="-1" aria-labelledby="deleteAlertModalLabel{{ alert.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+                            <div class="modal-header" style="border-bottom: 1px solid rgba(34, 197, 94, 0.2);">
+                                <h5 class="modal-title text-white" id="deleteAlertModalLabel{{ alert.id }}">
+                                    <i class="fas fa-trash me-2"></i>Delete Alert
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-white">
+                                <p class="mb-0">Are you sure you want to delete this alert?</p>
+                            </div>
+                            <div class="modal-footer" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <form method="POST" action="{{ url_for('main.delete_alert', alert_id=alert.id) }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bell-slash"></i>
+                    <h4 class="text-white mt-3">No Alerts</h4>
+                    <p>You're all caught up! No new notifications.</p>
+                </div>
+            {% endif %}
+
+            <!-- Delete All Alerts Modal -->
+            {% if alerts %}
+            <div class="modal fade" id="deleteAllAlertsModal" tabindex="-1" aria-labelledby="deleteAllAlertsModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+                        <div class="modal-header" style="border-bottom: 1px solid rgba(34, 197, 94, 0.2);">
+                            <h5 class="modal-title text-white" id="deleteAllAlertsModalLabel">
+                                <i class="fas fa-trash me-2"></i>Delete All Alerts
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-white">
+                            <p class="mb-0">Are you sure you want to delete all alerts? This cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form method="POST" action="{{ url_for('main.delete_all_alerts') }}" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>Delete All
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% if tab == 'alerts' %}
+<script>
+// Mark alert as read via AJAX
+document.querySelectorAll('.mark-read-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const alertId = this.dataset.alertId;
+
+        fetch(`/alerts/mark-read/${alertId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const alertCard = document.querySelector(`[data-alert-id="${alertId}"]`);
+                alertCard.classList.remove('unread');
+                this.remove();
+                location.reload(); // Reload to update badge counts
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
+
+// Prevent body scroll when modals are closed
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', function () {
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

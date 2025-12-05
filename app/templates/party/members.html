@@ -1,0 +1,476 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ party.name }} - Members - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* Page Header */
+    .page-hero {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #22c55e 100%);
+    }
+
+    .page-hero-content {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .party-logo-wrapper {
+        flex-shrink: 0;
+    }
+
+    .party-logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 3px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .party-logo-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border: 3px solid rgba(34, 197, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #22c55e;
+    }
+
+    .page-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .page-subtitle i {
+        color: #22c55e;
+    }
+
+    .back-btn {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .back-btn:hover {
+        background: rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.5);
+        color: #22c55e;
+    }
+
+    /* Section Cards */
+    .section-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-body {
+        padding: 1.25rem;
+    }
+
+    /* Member Grid */
+    .member-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1rem;
+    }
+
+    /* Member Card */
+    .member-card {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .member-card:hover {
+        background: rgba(34, 197, 94, 0.05);
+        border-color: rgba(34, 197, 94, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .member-card.is-president {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .member-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .member-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(34, 197, 94, 0.3);
+        flex-shrink: 0;
+    }
+
+    .member-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .member-name {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .member-name a {
+        color: #ffffff;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .member-name a:hover {
+        color: #22c55e;
+    }
+
+    .president-tag {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #000;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .member-country {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .member-country img {
+        width: 18px;
+        height: 12px;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+
+    /* Member Stats */
+    .member-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .stat-item {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .stat-label i {
+        color: #22c55e;
+        font-size: 0.75rem;
+    }
+
+    .stat-value {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-hero-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .page-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .member-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+<div class="main-container">
+    <!-- Page Header -->
+    <div class="page-hero">
+        <div class="page-hero-content">
+            <div class="party-logo-wrapper">
+                {% if party.logo_path %}
+                    <img src="{{ url_for('static', filename=party.logo_path) }}" alt="{{ party.name }}" class="party-logo">
+                {% else %}
+                    <div class="party-logo-placeholder">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="page-info">
+                <h1 class="page-title">{{ party.name }} - Members</h1>
+                <p class="page-subtitle">
+                    <i class="fas fa-users"></i>
+                    {{ total_members }} member{{ 's' if total_members != 1 else '' }} total
+                </p>
+            </div>
+
+            <a href="{{ url_for('party.detail', party_id=party.id) }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>Back to Party
+            </a>
+        </div>
+    </div>
+
+    <!-- President Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title"><i class="fas fa-crown"></i> Party President</h3>
+        </div>
+        <div class="section-body">
+            <div class="member-grid">
+                <div class="member-card is-president">
+                    <div class="member-header">
+                        {% if president.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + president.id|string + '.png') }}?v={{ range(1, 10000)|random }}"
+                                 alt="{{ president.username }}" class="member-avatar">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                                 alt="{{ president.username }}" class="member-avatar">
+                        {% endif %}
+                        <div class="member-info">
+                            <div class="member-name">
+                                <a href="{{ url_for('main.view_profile', username=president.username) }}">
+                                    {{ president.username }}
+                                </a>
+                                <span class="president-tag">
+                                    <i class="fas fa-crown"></i>President
+                                </span>
+                            </div>
+                            {% if president.citizenship %}
+                            <div class="member-country">
+                                {% if president.citizenship.flag_code %}
+                                <img src="{{ url_for('static', filename='images/country-flags/' + president.citizenship.flag_code + '.png') }}"
+                                     alt="{{ president.citizenship.name }}">
+                                {% endif %}
+                                {{ president.citizenship.name }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="member-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-level-up-alt"></i>Level
+                            </div>
+                            <div class="stat-value">{{ president.level }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-star"></i>Experience
+                            </div>
+                            <div class="stat-value">{{ president.experience|int|default(0) }} XP</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-calendar"></i>Joined Party
+                            </div>
+                            <div class="stat-value">{{ president.party_membership.joined_at.strftime('%b %d, %Y') if president.party_membership else 'N/A' }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-clock"></i>Account Age
+                            </div>
+                            <div class="stat-value">{{ ((now_utc - president.created_at).days // 30) if president.created_at else 0 }} months</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other Members Section -->
+    {% if other_members %}
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title"><i class="fas fa-users"></i> Party Members ({{ other_members|length }})</h3>
+        </div>
+        <div class="section-body">
+            <div class="member-grid">
+                {% for member in other_members %}
+                <div class="member-card">
+                    <div class="member-header">
+                        {% if member.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + member.id|string + '.png') }}?v={{ range(1, 10000)|random }}"
+                                 alt="{{ member.username }}" class="member-avatar">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                                 alt="{{ member.username }}" class="member-avatar">
+                        {% endif %}
+                        <div class="member-info">
+                            <div class="member-name">
+                                <a href="{{ url_for('main.view_profile', username=member.username) }}">
+                                    {{ member.username }}
+                                </a>
+                            </div>
+                            {% if member.citizenship %}
+                            <div class="member-country">
+                                {% if member.citizenship.flag_code %}
+                                <img src="{{ url_for('static', filename='images/country-flags/' + member.citizenship.flag_code + '.png') }}"
+                                     alt="{{ member.citizenship.name }}">
+                                {% endif %}
+                                {{ member.citizenship.name }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="member-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-level-up-alt"></i>Level
+                            </div>
+                            <div class="stat-value">{{ member.level }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-star"></i>Experience
+                            </div>
+                            <div class="stat-value">{{ member.experience|int|default(0) }} XP</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-calendar"></i>Joined Party
+                            </div>
+                            <div class="stat-value">{{ member.party_membership.joined_at.strftime('%b %d, %Y') if member.party_membership else 'N/A' }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-clock"></i>Account Age
+                            </div>
+                            <div class="stat-value">{{ ((now_utc - member.created_at).days // 30) if member.created_at else 0 }} months</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title"><i class="fas fa-users"></i> Party Members</h3>
+        </div>
+        <div class="section-body">
+            <div style="text-align: center; padding: 2rem; color: rgba(255, 255, 255, 0.5);">
+                <i class="fas fa-user-friends" style="font-size: 2.5rem; margin-bottom: 1rem; display: block; color: rgba(34, 197, 94, 0.3);"></i>
+                <p style="margin: 0;">No other members yet. The president is the only member.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

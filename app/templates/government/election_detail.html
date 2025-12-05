@@ -1,0 +1,1265 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ title }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .election-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+
+    /* Header Card */
+    .election-header-card {
+        background: linear-gradient(145deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 20px;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .election-header-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #f59e0b, #d97706, #f59e0b);
+    }
+
+    .election-header-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .election-title-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .election-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+        border: 2px solid rgba(245, 158, 11, 0.4);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .election-icon i {
+        font-size: 1.5rem;
+        color: #f59e0b;
+    }
+
+    .election-title h1 {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .election-title .country-name {
+        color: #f59e0b;
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.voting {
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: #22c55e;
+    }
+
+    .status-badge.voting .pulse-dot {
+        width: 6px;
+        height: 6px;
+        background: #22c55e;
+        border-radius: 50%;
+        animation: pulse-dot 1.5s infinite;
+    }
+
+    .status-badge.nominations, .status-badge.applications {
+        background: rgba(251, 191, 36, 0.15);
+        border: 1px solid rgba(251, 191, 36, 0.4);
+        color: #fbbf24;
+    }
+
+    .status-badge.completed {
+        background: rgba(107, 114, 128, 0.15);
+        border: 1px solid rgba(107, 114, 128, 0.4);
+        color: #9ca3af;
+    }
+
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* Countdown Section */
+    .countdown-section {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .countdown-label {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+    }
+
+    .countdown-display {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .countdown-unit {
+        text-align: center;
+        min-width: 60px;
+    }
+
+    .countdown-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #f59e0b;
+        line-height: 1;
+    }
+
+    .countdown-unit-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+
+    .countdown-separator {
+        color: #f59e0b;
+        font-size: 1.75rem;
+        font-weight: 300;
+        opacity: 0.5;
+        line-height: 1;
+    }
+
+    /* Timeline */
+    .timeline-section {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        padding: 0 1rem;
+    }
+
+    .timeline-section::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 60px;
+        right: 60px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+    }
+
+    .timeline-phase {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .timeline-dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-dot.completed {
+        background: rgba(34, 197, 94, 0.2);
+        border: 2px solid #22c55e;
+    }
+
+    .timeline-dot.completed i {
+        color: #22c55e;
+    }
+
+    .timeline-dot.active {
+        background: rgba(245, 158, 11, 0.2);
+        border: 2px solid #f59e0b;
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+    }
+
+    .timeline-dot.active i {
+        color: #f59e0b;
+    }
+
+    .timeline-dot.pending {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .timeline-dot.pending i {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .timeline-phase-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0.25rem;
+    }
+
+    .timeline-phase-date {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Stats Row */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(145deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.35rem;
+    }
+
+    /* Section Card */
+    .section-card {
+        background: linear-gradient(145deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #ffffff;
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .section-title i {
+        color: #22c55e;
+    }
+
+    /* Candidate Cards */
+    .candidates-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .candidate-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .candidate-card:hover {
+        border-color: rgba(34, 197, 94, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .candidate-card.leading {
+        border-color: rgba(245, 158, 11, 0.4);
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .candidate-card.voted {
+        border-color: rgba(34, 197, 94, 0.4);
+        background: rgba(34, 197, 94, 0.08);
+    }
+
+    .candidate-main {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .candidate-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .candidate-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .candidate-avatar i {
+        font-size: 1.25rem;
+        color: #22c55e;
+    }
+
+    .candidate-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .candidate-name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .candidate-name a {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+    }
+
+    .candidate-name a:hover {
+        color: #22c55e;
+    }
+
+    .candidate-rank {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .candidate-rank.first {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+
+    .candidate-rank.second {
+        background: rgba(156, 163, 175, 0.3);
+        color: #9ca3af;
+    }
+
+    .candidate-rank.third {
+        background: rgba(180, 83, 9, 0.3);
+        color: #d97706;
+    }
+
+    .candidate-party {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .candidate-party i {
+        margin-right: 0.25rem;
+    }
+
+    .candidate-stats {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .candidate-votes {
+        text-align: right;
+    }
+
+    .candidate-votes-count {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .candidate-votes-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+    }
+
+    .vote-percentage {
+        width: 80px;
+    }
+
+    .vote-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 0.25rem;
+    }
+
+    .vote-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.5s ease;
+    }
+
+    .vote-bar-fill.leading {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .vote-bar-fill.normal {
+        background: linear-gradient(90deg, #22c55e, #4ade80);
+    }
+
+    .vote-percent-text {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-align: right;
+    }
+
+    /* Vote Button */
+    .vote-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .vote-btn.primary {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+    }
+
+    .vote-btn.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+    }
+
+    .voted-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: #22c55e;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* Alert Boxes */
+    .alert-box {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-box.info {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .alert-box.info i {
+        color: #3b82f6;
+    }
+
+    .alert-box.success {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .alert-box.success i {
+        color: #22c55e;
+    }
+
+    .alert-box-content {
+        flex: 1;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+    .empty-state-icon i {
+        font-size: 1.5rem;
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .empty-state-text {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.95rem;
+    }
+
+    /* Back Button */
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+
+    /* Nomination Cards Grid */
+    .nomination-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .nomination-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .nomination-card:hover {
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .nomination-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+    }
+
+    .nomination-avatar i {
+        font-size: 1.5rem;
+        color: #22c55e;
+    }
+
+    .nomination-name {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .nomination-name a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .nomination-name a:hover {
+        color: #22c55e;
+    }
+
+    .nomination-level {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .nominate-btn {
+        width: 100%;
+        padding: 0.6rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .nominate-btn:hover {
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        background: linear-gradient(145deg, #1a1f2e 0%, #0f1419 100%) !important;
+        border: 1px solid rgba(34, 197, 94, 0.3) !important;
+        border-radius: 16px !important;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 1.25rem 1.5rem !important;
+    }
+
+    .modal-title {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+
+    .modal-body {
+        padding: 1.5rem !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 1rem 1.5rem !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .election-header-top {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .stats-row {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .timeline-section {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0;
+        }
+
+        .timeline-section::before {
+            display: none;
+        }
+
+        .timeline-phase {
+            flex-direction: row;
+            gap: 1rem;
+        }
+
+        .candidate-stats {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+<div class="election-container">
+    <!-- Header Card -->
+    <div class="election-header-card">
+        <div class="election-header-top">
+            <div class="election-title-section">
+                <div class="election-icon">
+                    {% if election.election_type.value == 'presidential' %}
+                        <i class="fas fa-crown"></i>
+                    {% else %}
+                        <i class="fas fa-landmark"></i>
+                    {% endif %}
+                </div>
+                <div class="election-title">
+                    <h1>
+                        {% if election.election_type.value == 'presidential' %}
+                            Presidential Election
+                        {% else %}
+                            Congressional Election
+                        {% endif %}
+                    </h1>
+                    <div class="country-name">
+                        <i class="fas fa-flag me-1"></i>{{ election.country.name }}
+                    </div>
+                </div>
+            </div>
+            <div class="status-badge {{ election.status.value }}">
+                {% if election.status.value == 'voting' %}
+                    <span class="pulse-dot"></span>
+                {% endif %}
+                {{ election.status.value|upper }}
+            </div>
+        </div>
+
+        {% if election.status.value == 'voting' %}
+        <!-- Countdown Timer -->
+        <div class="countdown-section">
+            <div class="countdown-label">Voting Ends In</div>
+            <div class="countdown-display" id="election-countdown" data-end-time="{{ election.voting_end.isoformat() }}">
+                <div class="countdown-unit">
+                    <div class="countdown-value countdown-hours">--</div>
+                    <div class="countdown-unit-label">Hours</div>
+                </div>
+                <div class="countdown-separator">:</div>
+                <div class="countdown-unit">
+                    <div class="countdown-value countdown-minutes">--</div>
+                    <div class="countdown-unit-label">Minutes</div>
+                </div>
+                <div class="countdown-separator">:</div>
+                <div class="countdown-unit">
+                    <div class="countdown-value countdown-seconds">--</div>
+                    <div class="countdown-unit-label">Seconds</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Timeline -->
+        <div class="timeline-section">
+            <div class="timeline-phase">
+                <div class="timeline-dot {% if election.status.value in ['voting', 'completed'] %}completed{% elif election.status.value in ['nominations', 'applications'] %}active{% else %}pending{% endif %}">
+                    {% if election.status.value in ['voting', 'completed'] %}
+                        <i class="fas fa-check"></i>
+                    {% else %}
+                        <i class="fas fa-clipboard-list"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-phase-name">
+                    {% if election.election_type.value == 'presidential' %}Nominations{% else %}Applications{% endif %}
+                </div>
+                <div class="timeline-phase-date">{{ election.nominations_start.strftime('%b %d') }} - {{ election.nominations_end.strftime('%b %d') }}</div>
+            </div>
+            <div class="timeline-phase">
+                <div class="timeline-dot {% if election.status.value == 'completed' %}completed{% elif election.status.value == 'voting' %}active{% else %}pending{% endif %}">
+                    {% if election.status.value == 'completed' %}
+                        <i class="fas fa-check"></i>
+                    {% else %}
+                        <i class="fas fa-vote-yea"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-phase-name">Voting</div>
+                <div class="timeline-phase-date">{{ election.voting_start.strftime('%b %d') }} - {{ election.voting_end.strftime('%b %d') }}</div>
+            </div>
+            <div class="timeline-phase">
+                <div class="timeline-dot {% if election.status.value == 'completed' %}completed{% else %}pending{% endif %}">
+                    {% if election.status.value == 'completed' %}
+                        <i class="fas fa-check"></i>
+                    {% else %}
+                        <i class="fas fa-flag-checkered"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-phase-name">Results</div>
+                <div class="timeline-phase-date">{{ election.term_start.strftime('%b %d, %Y') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ candidates|selectattr('status.value', 'equalto', 'approved')|list|length }}</div>
+            <div class="stat-label">Candidates</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ election.votes.count() }}</div>
+            <div class="stat-label">Votes Cast</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ election.term_start.strftime('%b %Y') }}</div>
+            <div class="stat-label">Term</div>
+        </div>
+    </div>
+
+    <!-- User Candidacy Alert -->
+    {% if user_candidacy %}
+    <div class="alert-box success">
+        <i class="fas fa-star fa-lg"></i>
+        <div class="alert-box-content">
+            <strong>You are a candidate in this election!</strong><br>
+            <span style="font-size: 0.85rem; opacity: 0.8;">
+                Status: {{ user_candidacy.status.value|upper }}
+                {% if user_candidacy.votes_received > 0 %}
+                    &bull; Votes received: {{ user_candidacy.votes_received }}
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Vote Alert -->
+    {% if user_vote %}
+    <div class="alert-box success">
+        <i class="fas fa-check-circle fa-lg"></i>
+        <div class="alert-box-content">
+            You voted for <strong>{{ user_vote.candidate.user.username }}</strong>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Nomination/Application Section -->
+    {% if (can_nominate or can_apply) and not user_candidacy %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-user-plus"></i>
+                {% if election.election_type.value == 'presidential' %}
+                    Nominate a Candidate
+                {% else %}
+                    Run for Congress
+                {% endif %}
+            </h2>
+        </div>
+
+        {% if election.election_type.value == 'presidential' and can_nominate %}
+        <div class="alert-box info" style="margin-bottom: 1.25rem;">
+            <i class="fas fa-info-circle"></i>
+            <div class="alert-box-content">
+                As party president, you can nominate one member of your party to run for president.
+            </div>
+        </div>
+
+        {% if party_members %}
+        <div class="nomination-grid">
+            {% for member in party_members %}
+            <div class="nomination-card">
+                <div class="nomination-avatar">
+                    {% if member.avatar %}
+                        <img src="{{ url_for('static', filename='uploads/avatars/' ~ member.id|string ~ '.png') }}" alt="{{ member.username }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 14px;">
+                    {% else %}
+                        <i class="fas fa-user"></i>
+                    {% endif %}
+                </div>
+                <div class="nomination-name">
+                    <a href="{{ url_for('main.view_profile', username=member.username) }}">{{ member.username }}</a>
+                </div>
+                <div class="nomination-level">Level {{ member.level }} &bull; {{ '{:,}'.format(member.experience|int) }} XP</div>
+                <button type="button" class="nominate-btn" data-bs-toggle="modal" data-bs-target="#nominateModal{{ member.id }}">
+                    <i class="fas fa-crown me-1"></i>Nominate
+                </button>
+
+                <!-- Nomination Modal -->
+                <div class="modal fade" id="nominateModal{{ member.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-crown me-2" style="color: #f59e0b;"></i>Confirm Nomination
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Nominate <strong style="color: #22c55e;">{{ member.username }}</strong> for Country President?</p>
+                                <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0;">
+                                    <i class="fas fa-info-circle me-1"></i>You can only nominate one candidate per election.
+                                </p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <form method="POST" action="{{ url_for('government.nominate', election_id=election.id, user_id=member.id) }}" style="margin: 0;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="vote-btn primary">
+                                        <i class="fas fa-check"></i>Confirm
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-users-slash"></i>
+            </div>
+            <p class="empty-state-text">No eligible party members found. Members must be citizens of {{ election.country.name }}.</p>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {% if election.election_type.value == 'congressional' and can_apply %}
+        <div class="alert-box info" style="margin-bottom: 1.25rem;">
+            <i class="fas fa-info-circle"></i>
+            <div class="alert-box-content">
+                {% if can_nominate %}
+                    As party president, you can apply to run for congress or approve/reject applications from other members.
+                {% else %}
+                    Apply to run for congress. Your application will need approval from your party president.
+                {% endif %}
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('government.apply', election_id=election.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="vote-btn primary">
+                <i class="fas fa-hand-paper"></i>Apply for Congress
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Candidates Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-users"></i>
+                Candidates
+            </h2>
+            {% if candidates %}
+            <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">{{ candidates|selectattr('status.value', 'equalto', 'approved')|list|length }} running</span>
+            {% endif %}
+        </div>
+
+        {% if candidates %}
+        {% set approved_candidates = candidates|selectattr('status.value', 'equalto', 'approved')|list %}
+        {% set total_votes = approved_candidates|sum(attribute='votes_received') %}
+        <div class="candidates-list">
+            {% for candidate in candidates %}
+            {% set is_leading = loop.first and candidate.votes_received > 0 %}
+            {% set is_voted = user_vote and user_vote.candidate_id == candidate.id %}
+            <div class="candidate-card {% if is_leading %}leading{% endif %} {% if is_voted %}voted{% endif %}">
+                <div class="candidate-main">
+                    <div class="candidate-avatar">
+                        {% if candidate.user.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' ~ candidate.user.id|string ~ '.png') }}" alt="{{ candidate.user.username }}">
+                        {% else %}
+                            <i class="fas fa-user"></i>
+                        {% endif %}
+                    </div>
+                    <div class="candidate-info">
+                        <div class="candidate-name">
+                            {% if loop.index <= 3 and candidate.status.value == 'approved' %}
+                            <span class="candidate-rank {% if loop.index == 1 %}first{% elif loop.index == 2 %}second{% else %}third{% endif %}">
+                                {{ loop.index }}
+                            </span>
+                            {% endif %}
+                            <a href="{{ url_for('main.view_profile', username=candidate.user.username) }}">{{ candidate.user.username }}</a>
+                            {% if candidate.status.value == 'pending' %}
+                                <span style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">PENDING</span>
+                            {% endif %}
+                            {% if is_voted %}
+                                <span class="voted-badge"><i class="fas fa-check"></i>Your Vote</span>
+                            {% endif %}
+                        </div>
+                        <div class="candidate-party">
+                            <i class="fas fa-flag"></i>{{ candidate.party.name }}
+                        </div>
+                    </div>
+                    <div class="candidate-stats">
+                        {% if election.status.value in ['voting', 'completed'] and candidate.status.value == 'approved' %}
+                        <div class="vote-percentage">
+                            <div class="vote-bar">
+                                {% set percent = (candidate.votes_received / total_votes * 100) if total_votes > 0 else 0 %}
+                                <div class="vote-bar-fill {% if is_leading %}leading{% else %}normal{% endif %}" style="width: {{ percent }}%;"></div>
+                            </div>
+                            <div class="vote-percent-text">{{ "%.1f"|format(percent) }}%</div>
+                        </div>
+                        <div class="candidate-votes">
+                            <div class="candidate-votes-count">{{ candidate.votes_received }}</div>
+                            <div class="candidate-votes-label">votes</div>
+                        </div>
+                        {% endif %}
+
+                        {% if election.status.value == 'voting' and not user_vote and current_user.citizenship_id == election.country_id and candidate.status.value == 'approved' %}
+                        <button type="button" class="vote-btn primary" data-bs-toggle="modal" data-bs-target="#voteModal{{ candidate.id }}">
+                            <i class="fas fa-vote-yea"></i>Vote
+                        </button>
+
+                        <!-- Vote Confirmation Modal with Blockchain Signing -->
+                        <div class="modal fade" id="voteModal{{ candidate.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-vote-yea me-2" style="color: #22c55e;"></i>Confirm Your Vote
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Vote for <strong style="color: #22c55e;">{{ candidate.user.username }}</strong>?</p>
+                                        <div class="alert-box info" style="margin: 1rem 0;">
+                                            <i class="fas fa-wallet"></i>
+                                            <div class="alert-box-content" style="font-size: 0.85rem;">
+                                                <strong>Blockchain Verification Required</strong><br>
+                                                Your vote will be cryptographically signed with your wallet for tamper-proof election integrity.
+                                            </div>
+                                        </div>
+                                        <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0;">
+                                            <i class="fas fa-exclamation-triangle me-1" style="color: #f59e0b;"></i>This action cannot be undone. You can only vote once.
+                                        </p>
+                                        <div id="voteStatus{{ candidate.id }}" style="margin-top: 1rem; display: none;"></div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="vote-btn primary" id="confirmVoteBtn{{ candidate.id }}"
+                                                onclick="signAndVote({{ election.id }}, {{ candidate.id }}, '{{ 'country_president' if election.election_type.value == 'presidential' else 'congress' }}', '{{ candidate.user.username }}')">
+                                            <i class="fas fa-signature me-1"></i>Sign & Vote
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if can_nominate and candidate.status.value == 'pending' and current_user.party and current_user.party.id == candidate.party_id %}
+                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 0.5rem;">
+                    <form method="POST" action="{{ url_for('government.approve_candidate', election_id=election.id, candidate_id=candidate.id) }}" style="margin: 0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="vote-btn primary">
+                            <i class="fas fa-check"></i>Approve
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('government.reject_candidate', election_id=election.id, candidate_id=candidate.id) }}" style="margin: 0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="vote-btn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                            <i class="fas fa-times"></i>Reject
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-user-slash"></i>
+            </div>
+            <p class="empty-state-text">No candidates have been nominated yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Back Button -->
+    <div style="text-align: center;">
+        <a href="{{ url_for('government.elections') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>Back to Elections
+        </a>
+    </div>
+</div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/ethers.umd.min.js') }}"></script>
+<script>
+// Election countdown timer
+function initElectionCountdown() {
+    const countdownEl = document.getElementById('election-countdown');
+    if (!countdownEl) return;
+
+    const endTimeStr = countdownEl.dataset.endTime;
+    if (!endTimeStr) return;
+
+    const endTime = new Date(endTimeStr + 'Z');
+
+    function updateCountdown() {
+        const now = new Date();
+        const diff = endTime - now;
+
+        if (diff <= 0) {
+            countdownEl.innerHTML = '<div style="color: #f59e0b; font-weight: 600; font-size: 1.25rem;">Voting has ended</div>';
+            return;
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        const hoursEl = countdownEl.querySelector('.countdown-hours');
+        const minutesEl = countdownEl.querySelector('.countdown-minutes');
+        const secondsEl = countdownEl.querySelector('.countdown-seconds');
+
+        if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
+        if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
+        if (secondsEl) secondsEl.textContent = seconds.toString().padStart(2, '0');
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+}
+
+// Blockchain voting function
+async function signAndVote(electionId, candidateId, electionType, candidateName) {
+    const statusEl = document.getElementById('voteStatus' + candidateId);
+    const confirmBtn = document.getElementById('confirmVoteBtn' + candidateId);
+
+    function showStatus(message, isError = false, isSuccess = false) {
+        statusEl.style.display = 'block';
+        statusEl.className = isError ? 'alert alert-danger' : (isSuccess ? 'alert alert-success' : 'alert alert-info');
+        statusEl.innerHTML = message;
+    }
+
+    // Check for MetaMask
+    if (typeof window.ethereum === 'undefined') {
+        showStatus('<i class="fas fa-exclamation-circle me-2"></i>MetaMask not detected. Please install MetaMask to vote.', true);
+        return;
+    }
+
+    // Check for ethers.js
+    const ethersLib = (typeof ethers !== 'undefined') ? ethers : window.ethers;
+    if (typeof ethersLib === 'undefined') {
+        showStatus('<i class="fas fa-exclamation-circle me-2"></i>Required library not loaded. Please refresh the page.', true);
+        return;
+    }
+
+    confirmBtn.disabled = true;
+    showStatus('<i class="fas fa-spinner fa-spin me-2"></i>Connecting to wallet...');
+
+    try {
+        // Connect to MetaMask
+        const provider = new ethersLib.providers.Web3Provider(window.ethereum, "any");
+        const accounts = await provider.send("eth_requestAccounts", []);
+
+        if (!accounts || accounts.length === 0) {
+            showStatus('<i class="fas fa-exclamation-circle me-2"></i>Connection refused by user.', true);
+            confirmBtn.disabled = false;
+            return;
+        }
+
+        const walletAddress = accounts[0];
+        showStatus('<i class="fas fa-spinner fa-spin me-2"></i>Please sign the vote message in MetaMask...');
+
+        // Create the vote message
+        const timestamp = Math.floor(Date.now() / 1000);
+        const voteMessage = `TACTIZEN ELECTION VOTE\n\nElection Type: ${electionType}\nElection ID: ${electionId}\nCandidate ID: ${candidateId}\nVoter Wallet: ${walletAddress}\nTimestamp: ${timestamp}\n\nBy signing this message, I confirm my vote for candidate ${candidateName} in this election.`;
+
+        // Request signature
+        const signer = provider.getSigner();
+        let signature;
+        try {
+            signature = await signer.signMessage(voteMessage);
+        } catch (signError) {
+            if (signError.code === 4001 || signError.code === 'ACTION_REJECTED') {
+                showStatus('<i class="fas fa-exclamation-circle me-2"></i>Signature request cancelled.', true);
+            } else {
+                showStatus('<i class="fas fa-exclamation-circle me-2"></i>Signing failed: ' + signError.message, true);
+            }
+            confirmBtn.disabled = false;
+            return;
+        }
+
+        showStatus('<i class="fas fa-spinner fa-spin me-2"></i>Submitting vote to blockchain verification...');
+
+        // Submit vote to backend
+        const response = await fetch(`/government/election/${electionId}/vote/${candidateId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                wallet_address: walletAddress,
+                vote_message: voteMessage,
+                vote_signature: signature
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showStatus('<i class="fas fa-check-circle me-2"></i>' + data.message + ' Reloading...', false, true);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showStatus('<i class="fas fa-exclamation-circle me-2"></i>' + (data.error || 'Vote failed. Please try again.'), true);
+            confirmBtn.disabled = false;
+        }
+
+    } catch (error) {
+        console.error('Vote error:', error);
+        showStatus('<i class="fas fa-exclamation-circle me-2"></i>Error: ' + error.message, true);
+        confirmBtn.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initElectionCountdown);
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Support Tickets{% endblock %}
+
+{% block app_content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white mb-0"><i class="fas fa-ticket-alt me-2"></i>My Support Tickets</h2>
+        <a href="{{ url_for('support.create_ticket') }}" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i> New Ticket
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label text-muted">Status</label>
+                    <select name="status" class="form-select bg-dark text-white border-secondary">
+                        <option value="">All Statuses</option>
+                        {% for status in TicketStatus %}
+                        <option value="{{ status.value }}" {% if status_filter == status.value %}selected{% endif %}>
+                            {{ status.value.replace('_', ' ').title() }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-success">
+                        <i class="fas fa-filter me-1"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tickets List -->
+    {% if tickets.items %}
+    <div class="list-group">
+        {% for ticket in tickets.items %}
+        <a href="{{ url_for('support.view_ticket', ticket_id=ticket.id) }}"
+           class="list-group-item list-group-item-action"
+           style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.2); margin-bottom: 8px; border-radius: 8px;">
+            <div class="d-flex w-100 justify-content-between align-items-start">
+                <div>
+                    <h5 class="mb-1 text-white">
+                        <span class="text-success">{{ ticket.ticket_number }}</span> - {{ ticket.subject }}
+                    </h5>
+                    <p class="mb-1 text-muted small">
+                        <span class="badge bg-secondary me-2">{{ ticket.category.value.replace('_', ' ').title() }}</span>
+                        Created {{ ticket.created_at.strftime('%b %d, %Y at %H:%M') }}
+                    </p>
+                </div>
+                <div class="text-end">
+                    {% if ticket.status == TicketStatus.OPEN %}
+                    <span class="badge bg-primary">Open</span>
+                    {% elif ticket.status == TicketStatus.IN_PROGRESS %}
+                    <span class="badge bg-info">In Progress</span>
+                    {% elif ticket.status == TicketStatus.AWAITING_RESPONSE %}
+                    <span class="badge bg-warning text-dark">Awaiting Response</span>
+                    {% elif ticket.status == TicketStatus.RESOLVED %}
+                    <span class="badge bg-success">Resolved</span>
+                    {% elif ticket.status == TicketStatus.CLOSED %}
+                    <span class="badge bg-secondary">Closed</span>
+                    {% elif ticket.status == TicketStatus.ARCHIVED %}
+                    <span class="badge bg-dark">Archived</span>
+                    {% endif %}
+
+                    {% if ticket.rating %}
+                    <div class="mt-1">
+                        {% for i in range(5) %}
+                        <i class="fas fa-star {% if i < ticket.rating %}text-warning{% else %}text-muted{% endif %}" style="font-size: 0.8rem;"></i>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if tickets.pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if tickets.has_prev %}
+            <li class="page-item">
+                <a class="page-link bg-dark text-success border-secondary"
+                   href="{{ url_for('support.my_tickets', page=tickets.prev_num, status=status_filter) }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in tickets.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                <li class="page-item {% if page_num == tickets.page %}active{% endif %}">
+                    <a class="page-link {% if page_num == tickets.page %}bg-success border-success{% else %}bg-dark text-success border-secondary{% endif %}"
+                       href="{{ url_for('support.my_tickets', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link bg-dark border-secondary">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if tickets.has_next %}
+            <li class="page-item">
+                <a class="page-link bg-dark text-success border-secondary"
+                   href="{{ url_for('support.my_tickets', page=tickets.next_num, status=status_filter) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5" style="background: #1a1f2e; border-radius: 8px;">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <p class="text-muted">No tickets found.</p>
+        <a href="{{ url_for('support.create_ticket') }}" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i> Create Your First Ticket
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

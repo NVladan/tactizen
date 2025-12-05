@@ -1,0 +1,277 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Training - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .training-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.7), rgba(15, 20, 25, 0.7)), url('{{ url_for("static", filename="images/buildings/traininggrounds.png") }}');
+        background-size: cover;
+        background-position: center;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .time-info-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1.5rem;
+    }
+
+    .hours-remaining {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #22c55e;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .skill-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1rem;
+    }
+
+    .hour-slider {
+        width: 100%;
+        height: 8px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        outline: none;
+        -webkit-appearance: none;
+    }
+
+    .hour-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #22c55e;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .hour-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #22c55e;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .hour-display {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #22c55e;
+        text-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+    }
+
+    .btn-train {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+        color: white;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-train:hover:not(:disabled) {
+        background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .btn-train:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Tab Navigation Header -->
+        <ul class="nav nav-tabs mb-4" id="myPlacesTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('company.my_companies') }}"><i class="fas fa-building me-1"></i>Companies</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('main.training') }}"><i class="fas fa-dumbbell me-1"></i>Training Grounds</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.study') }}"><i class="fas fa-graduation-cap me-1"></i>Study</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.storage') }}"><i class="fas fa-warehouse me-1"></i>Storage</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.travel') }}"><i class="fas fa-plane me-1"></i>Travel</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.residence') }}"><i class="fas fa-home me-1"></i>Residence</a>
+          </li>
+        </ul>
+
+        <!-- Training Header -->
+        <div class="training-header text-center">
+            <h2 class="mb-3" style="color: #22c55e;">Training Grounds</h2>
+            <p class="text-muted mb-0">Allocate hours to train your military skills</p>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Time Info & Skills -->
+            <div class="col-lg-5">
+                <!-- Time Information -->
+                <div class="time-info-card">
+                    <div class="text-center mb-3">
+                        <h5 class="text-white mb-2">Hours Remaining Today</h5>
+                        <div class="hours-remaining">{{ remaining_hours }}/24</div>
+                        <p class="text-muted mt-2 mb-0">
+                            <i class="fas fa-clock me-1"></i>Resets in: <span class="text-success">{{ time_remaining }}</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Current Skills -->
+                <div class="skill-card">
+                    <h5 class="text-white mb-3">Your Military Skills</h5>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="mb-2">
+                                <i class="fas fa-fist-raised fa-2x" style="color: #22c55e;"></i>
+                            </div>
+                            <div class="text-white fw-bold">{{ skills.infantry|round(2) }}</div>
+                            <div class="text-muted small">Infantry</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="mb-2">
+                                <i class="fas fa-shield-alt fa-2x" style="color: #22c55e;"></i>
+                            </div>
+                            <div class="text-white fw-bold">{{ skills.armoured|round(2) }}</div>
+                            <div class="text-muted small">Armoured</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="mb-2">
+                                <i class="fas fa-crosshairs fa-2x" style="color: #22c55e;"></i>
+                            </div>
+                            <div class="text-white fw-bold">{{ skills.aviation|round(2) }}</div>
+                            <div class="text-muted small">Aviation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Allocation History -->
+                {% if allocation.hours_training > 0 %}
+                <div class="skill-card">
+                    <h6 class="text-white mb-2">Today's Training</h6>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-check-circle text-success me-1"></i>
+                        Trained <strong>{{ allocation.training_skill }}</strong> for <strong>{{ allocation.hours_training }}</strong> hours
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Training Form -->
+            <div class="col-lg-7">
+                <div class="skill-card">
+                    <h4 class="text-white mb-4">Allocate Training Hours</h4>
+
+                    <form method="POST" action="{{ url_for('main.training') }}" id="training-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <!-- Skill Selection -->
+                        <div class="mb-4">
+                            <label class="form-label text-white">Select Skill to Train</label>
+                            <select name="skill_type" class="form-select" required>
+                                <option value="">Choose skill...</option>
+                                <option value="infantry">Infantry (+0.01 per hour)</option>
+                                <option value="armoured">Armoured (+0.01 per hour)</option>
+                                <option value="aviation">Aviation (+0.01 per hour)</option>
+                            </select>
+                        </div>
+
+                        <!-- Hours Slider -->
+                        <div class="mb-4">
+                            <label class="form-label text-white">Hours to Allocate (Max: 12)</label>
+                            <div class="text-center mb-3">
+                                <div class="hour-display" id="hour-display">1</div>
+                                <div class="text-muted">hours</div>
+                            </div>
+                            <input type="range" class="hour-slider" name="hours" id="hour-slider" min="1" max="12" value="1" step="1">
+                            <div class="d-flex justify-content-between text-muted small mt-1">
+                                <span>1h</span>
+                                <span>12h</span>
+                            </div>
+                        </div>
+
+                        <!-- Cost Summary -->
+                        <div class="mb-4 p-3" style="background: rgba(34, 197, 94, 0.05); border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.2);">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="text-muted small">Energy Cost</div>
+                                    <div class="text-warning fw-bold" id="energy-cost">2</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Skill Gain</div>
+                                    <div class="text-success fw-bold" id="skill-gain">+0.01</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn-train" {% if remaining_hours == 0 %}disabled{% endif %}>
+                                {% if remaining_hours > 0 %}
+                                    <i class="fas fa-dumbbell me-2"></i>Start Training
+                                {% else %}
+                                    <i class="fas fa-clock me-2"></i>No Hours Remaining
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update hour display and costs when slider changes
+    const slider = document.getElementById('hour-slider');
+    const hourDisplay = document.getElementById('hour-display');
+    const energyCost = document.getElementById('energy-cost');
+    const skillGain = document.getElementById('skill-gain');
+
+    slider.addEventListener('input', function() {
+        const hours = parseInt(this.value);
+        hourDisplay.textContent = hours;
+        energyCost.textContent = hours * 2;  // 2 energy per hour
+        skillGain.textContent = '+' + (hours * 0.01).toFixed(2);
+    });
+</script>
+{% endblock %}

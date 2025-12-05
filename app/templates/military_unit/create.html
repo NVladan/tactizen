@@ -1,0 +1,202 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Create Military Unit - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .create-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h2 {
+        color: #22c55e;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        color: #22c55e;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+    }
+
+    .form-control:focus {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: #22c55e;
+        box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.25);
+        color: #fff;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .form-text {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .cost-info {
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .cost-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(251, 191, 36, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fbbf24;
+        font-size: 1.5rem;
+    }
+
+    .cost-details h4 {
+        color: #fbbf24;
+        margin: 0 0 0.25rem 0;
+        font-size: 1rem;
+    }
+
+    .cost-details p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .info-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .info-list li:last-child {
+        border-bottom: none;
+    }
+
+    .info-list i {
+        color: #22c55e;
+        width: 20px;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 0.875rem;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="create-container">
+        <div class="page-header">
+            <h2><i class="fas fa-shield-alt me-2"></i>Create Military Unit</h2>
+            <p class="text-muted">Form your own regiment and lead soldiers into battle</p>
+        </div>
+
+        <div class="form-card">
+            <div class="cost-info">
+                <div class="cost-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="cost-details">
+                    <h4>Creation Cost: 20 Gold</h4>
+                    <p>Your balance: {{ "{:,.2f}".format(current_user.gold) }} Gold</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('military_unit.create') }}">
+                {{ form.hidden_tag() }}
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Unit Name</label>
+                    {{ form.name(class="form-control", placeholder="Enter your unit's name") }}
+                    {% if form.name.errors %}
+                        {% for error in form.name.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Description (Optional)</label>
+                    {{ form.description(class="form-control", rows="5", placeholder="Describe your unit's mission, values, and goals...") }}
+                    <div class="form-text">You can add a description and avatar after creation.</div>
+                    {% if form.description.errors %}
+                        {% for error in form.description.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">What You Get</label>
+                    <ul class="info-list">
+                        <li><i class="fas fa-check"></i>Command up to 50 soldiers</li>
+                        <li><i class="fas fa-check"></i>Unit inventory for weapons and supplies</li>
+                        <li><i class="fas fa-check"></i>Apply for bounty contracts from Ministers</li>
+                        <li><i class="fas fa-check"></i>Private message board for your members</li>
+                        <li><i class="fas fa-check"></i>Earn achievements and climb leaderboards</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-submit">
+                    <i class="fas fa-plus-circle me-2"></i>{{ form.submit.label.text }}
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <a href="{{ url_for('military_unit.browse') }}" class="text-muted">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Units
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

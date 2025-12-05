@@ -1,0 +1,42 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-template">
+                <h1 class="display-1 text-info">
+                    <i class="fas fa-lock"></i> 401
+                </h1>
+                <h2 class="mb-4">Authentication Required</h2>
+                <div class="error-details mb-4">
+                    <p class="lead">You need to be logged in to access this page.</p>
+                    <p>Please sign in with your wallet to continue.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg me-2">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-template {
+    padding: 40px 15px;
+    text-align: center;
+}
+.error-template h1 {
+    font-size: 8em;
+    font-weight: bold;
+}
+.error-details {
+    margin-top: 20px;
+}
+</style>
+{% endblock %}

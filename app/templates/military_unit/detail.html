@@ -1,0 +1,1043 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ unit.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .unit-content-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Unit Hero Header */
+    .unit-hero {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .unit-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #22c55e 100%);
+    }
+
+    .unit-hero-content {
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+    }
+
+    .unit-avatar-wrapper {
+        flex-shrink: 0;
+    }
+
+    .unit-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 3px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .unit-avatar-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border: 3px solid rgba(34, 197, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #22c55e;
+    }
+
+    .unit-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .unit-title-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .unit-name {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0;
+    }
+
+    .country-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .country-badge img {
+        width: 20px;
+        height: 14px;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+
+    .unit-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+
+    .unit-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .unit-meta-item i {
+        color: #22c55e;
+        width: 16px;
+    }
+
+    .unit-meta-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .unit-meta-item a:hover {
+        color: #22c55e;
+    }
+
+    .unit-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .stats-bar {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .stats-bar {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #22c55e;
+        line-height: 1.2;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.yellow { color: #fbbf24; }
+    .stat-value.purple { color: #a855f7; }
+    .stat-value.red { color: #ef4444; }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+
+    /* Grid Layout */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Section Cards */
+    .section-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-body {
+        padding: 1.25rem;
+    }
+
+    /* Active Contract Banner */
+    .contract-banner {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .contract-banner-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .contract-banner-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3b82f6;
+        font-size: 1.25rem;
+    }
+
+    .contract-banner-title {
+        color: #3b82f6;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .progress-bar-container {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        height: 24px;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+        border-radius: 10px;
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    /* Member List */
+    .member-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .member-card {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .member-card:hover {
+        background: rgba(34, 197, 94, 0.05);
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    .member-card.is-commander {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .member-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        flex-shrink: 0;
+    }
+
+    .member-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .member-name {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .rank-tag {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .rank-tag.commander {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #000;
+    }
+
+    .rank-tag.officer {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #fff;
+    }
+
+    .rank-tag.soldier {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .rank-tag.recruit {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .member-meta {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .member-meta i {
+        color: #22c55e;
+        margin-right: 0.25rem;
+    }
+
+    .member-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Applications */
+    .application-card {
+        background: rgba(251, 191, 36, 0.05);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .applicant-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .applicant-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    /* Messages */
+    .message-item {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .message-item:last-child {
+        border-bottom: none;
+    }
+
+    .message-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .message-author {
+        color: #22c55e;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .message-time {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.75rem;
+    }
+
+    .message-content {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* Achievements */
+    .achievement-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .achievement-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        padding: 0.5rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #fbbf24;
+    }
+
+    /* Reviews */
+    .review-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .review-item:last-child {
+        border-bottom: none;
+    }
+
+    .review-stars {
+        color: #fbbf24;
+        margin-bottom: 0.25rem;
+    }
+
+    .review-meta {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+    }
+
+    /* Sidebar */
+    .sidebar-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .sidebar-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .sidebar-title {
+        color: #22c55e;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .sidebar-body {
+        padding: 1rem;
+    }
+
+    /* Commander Card */
+    .commander-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: rgba(34, 197, 94, 0.05);
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .commander-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .commander-info h4 {
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .commander-info p {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    /* Description */
+    .description-content {
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .unit-hero-content {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .unit-meta {
+            justify-content: center;
+        }
+
+        .unit-actions {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="unit-content-container">
+    <!-- Unit Hero Header -->
+    <div class="unit-hero">
+        <div class="unit-hero-content">
+            <div class="unit-avatar-wrapper">
+                {% if unit.avatar %}
+                    <img src="{{ url_for('static', filename='avatars/units/unit_' + unit.id|string + '.png') }}?v={{ range(1, 10000)|random }}" alt="{{ unit.name }}" class="unit-avatar">
+                {% else %}
+                    <div class="unit-avatar-placeholder">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="unit-info">
+                <div class="unit-title-row">
+                    <h1 class="unit-name">{{ unit.name }} <small class="text-muted" style="font-size: 0.5em;">#{{ unit.id }}</small></h1>
+                    {% if unit.country %}
+                    <span class="country-badge">
+                        {% if unit.country.flag_code %}
+                        <img src="{{ url_for('static', filename='images/country-flags/' + unit.country.flag_code + '.png') }}" alt="{{ unit.country.name }}">
+                        {% endif %}
+                        {{ unit.country.name }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="unit-meta">
+                    <div class="unit-meta-item">
+                        <i class="fas fa-users"></i>
+                        <span>{{ members|length }}/50 members</span>
+                    </div>
+                    <div class="unit-meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Founded {{ unit.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    {% if unit.average_rating %}
+                    <div class="unit-meta-item">
+                        <i class="fas fa-star" style="color: #fbbf24;"></i>
+                        <span>{{ "%.1f"|format(unit.average_rating) }} ({{ unit.review_count }} reviews)</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="unit-actions">
+                    {% if is_commander %}
+                        <a href="{{ url_for('military_unit.edit', unit_id=unit.id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Edit Unit
+                        </a>
+                        <a href="{{ url_for('military_unit.inventory', unit_id=unit.id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-boxes me-1"></i>Inventory
+                        </a>
+                        <a href="{{ url_for('military_unit.transfer_command', unit_id=unit.id) }}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-exchange-alt me-1"></i>Transfer Command
+                        </a>
+                    {% elif user_membership %}
+                        <a href="{{ url_for('military_unit.inventory', unit_id=unit.id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-boxes me-1"></i>Inventory
+                        </a>
+                        <form method="POST" action="{{ url_for('military_unit.leave', unit_id=unit.id) }}" style="display: inline;" id="leave-unit-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn btn-outline-danger btn-sm" id="leave-unit-btn">
+                                <i class="fas fa-sign-out-alt me-1"></i>Leave Unit
+                            </button>
+                        </form>
+                    {% elif can_apply and not has_pending_application %}
+                        <form method="POST" action="{{ url_for('military_unit.apply', unit_id=unit.id) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-user-plus me-1"></i>Apply to Join
+                            </button>
+                        </form>
+                    {% elif has_pending_application %}
+                        <span class="btn btn-secondary btn-sm disabled">
+                            <i class="fas fa-clock me-1"></i>Application Pending
+                        </span>
+                    {% endif %}
+                    <a href="{{ url_for('military_unit.browse') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>All Units
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value">{{ members|length }}</div>
+            <div class="stat-label">Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value blue">{{ "{:,.0f}".format(unit.total_damage) }}</div>
+            <div class="stat-label">Total Damage</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value yellow">{{ unit.battles_won }}</div>
+            <div class="stat-label">Battles Won</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value purple">{{ unit.contracts_completed }}</div>
+            <div class="stat-label">Contracts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "{:,.2f}".format(unit.treasury) }}</div>
+            <div class="stat-label">Treasury</div>
+        </div>
+    </div>
+
+    <!-- Active Contract Banner -->
+    {% if active_contract %}
+    <div class="contract-banner">
+        <div class="contract-banner-header">
+            <div class="contract-banner-icon">
+                <i class="fas fa-file-contract"></i>
+            </div>
+            <div>
+                <h3 class="contract-banner-title">Active Bounty Contract</h3>
+                <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 0.85rem;">
+                    Battle #{{ active_contract.contract.battle_id }} - {{ "{:,.0f}".format(active_contract.contract.damage_required) }} damage required
+                </p>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: {{ active_contract.progress_percent }}%;">
+                {{ "%.1f"|format(active_contract.progress_percent) }}% ({{ "{:,.0f}".format(active_contract.damage_dealt) }} / {{ "{:,.0f}".format(active_contract.contract.damage_required) }})
+            </div>
+        </div>
+        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 0.75rem; margin-bottom: 0;">
+            <i class="fas fa-coins me-1" style="color: #fbbf24;"></i>
+            Reward: {{ "{:,.2f}".format(active_contract.contract.payment_amount) }} {{ active_contract.contract.country.currency_code if active_contract.contract.country else 'Currency' }}
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+        <!-- Left Column -->
+        <div class="main-column">
+            <!-- About Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-info-circle"></i> About</h3>
+                    {% if is_commander %}
+                    <a href="{{ url_for('military_unit.edit', unit_id=unit.id) }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="section-body">
+                    {% if unit.description %}
+                        <div class="description-content">{{ unit.description }}</div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-file-alt"></i>
+                            <p>No description available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pending Applications (Commander/Officers only) -->
+            {% if (is_commander or is_officer) and pending_applications %}
+            <div class="section-card" style="border-color: rgba(251, 191, 36, 0.3);">
+                <div class="section-header" style="background: rgba(251, 191, 36, 0.1);">
+                    <h3 class="section-title" style="color: #fbbf24;"><i class="fas fa-user-plus"></i> Pending Applications ({{ pending_applications|length }})</h3>
+                </div>
+                <div class="section-body">
+                    {% for app in pending_applications %}
+                    <div class="application-card">
+                        <div class="applicant-info">
+                            {% if app.user.avatar %}
+                                <img src="{{ url_for('static', filename='uploads/avatars/' + app.user.id|string + '.png') }}" alt="{{ app.user.username }}" class="applicant-avatar">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="{{ app.user.username }}" class="applicant-avatar">
+                            {% endif %}
+                            <div>
+                                <div style="color: #fff; font-weight: 600;">{{ app.user.username }}</div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">Level {{ app.user.level }} - Applied {{ app.created_at.strftime('%b %d') }}</div>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ url_for('military_unit.process_application', unit_id=unit.id, app_id=app.id) }}" style="display: flex; gap: 0.5rem;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Members Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-users"></i> Members ({{ members|length }}/50)</h3>
+                </div>
+                <div class="section-body">
+                    <div class="member-grid">
+                        {% for member in members %}
+                        <div class="member-card {% if member.user_id == unit.commander_id %}is-commander{% endif %}">
+                            {% if member.user.avatar %}
+                                <img src="{{ url_for('static', filename='uploads/avatars/' + member.user.id|string + '.png') }}?v={{ range(1, 10000)|random }}" alt="{{ member.user.username }}" class="member-avatar">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="{{ member.user.username }}" class="member-avatar">
+                            {% endif %}
+
+                            <div class="member-details">
+                                <div class="member-name">
+                                    {{ member.user.username }}
+                                    <span class="rank-tag {{ member.rank.value }}">{{ member.rank.value|title }}</span>
+                                </div>
+                                <div class="member-meta">
+                                    <i class="fas fa-star"></i> Level {{ member.user.level }} &bull; {{ "{:,.0f}".format(member.damage_dealt) }} damage
+                                </div>
+                            </div>
+
+                            {% if is_commander and member.user_id != unit.commander_id %}
+                            <div class="member-actions">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark">
+                                        <li>
+                                            <form method="POST" action="{{ url_for('military_unit.promote_member', unit_id=unit.id, user_id=member.user_id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <input type="hidden" name="rank" value="officer">
+                                                <button type="submit" class="dropdown-item"><i class="fas fa-chevron-up me-2"></i>Make Officer</button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form method="POST" action="{{ url_for('military_unit.promote_member', unit_id=unit.id, user_id=member.user_id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <input type="hidden" name="rank" value="soldier">
+                                                <button type="submit" class="dropdown-item"><i class="fas fa-minus me-2"></i>Make Soldier</button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form method="POST" action="{{ url_for('military_unit.promote_member', unit_id=unit.id, user_id=member.user_id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <input type="hidden" name="rank" value="recruit">
+                                                <button type="submit" class="dropdown-item"><i class="fas fa-chevron-down me-2"></i>Make Recruit</button>
+                                            </form>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="POST" action="{{ url_for('military_unit.kick_member', unit_id=unit.id, user_id=member.user_id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="dropdown-item text-danger"><i class="fas fa-user-times me-2"></i>Kick</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Board (Members Only) -->
+            {% if user_membership %}
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-comments"></i> Message Board</h3>
+                    <a href="{{ url_for('military_unit.messages', unit_id=unit.id) }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                        View All
+                    </a>
+                </div>
+                <div class="section-body">
+                    {% if recent_messages %}
+                        {% for msg in recent_messages[:5] %}
+                        <div class="message-item">
+                            <div class="message-header">
+                                {% if msg.user.avatar %}
+                                    <img src="{{ url_for('static', filename='uploads/avatars/' + msg.user.id|string + '.png') }}" alt="{{ msg.user.username }}" class="message-avatar">
+                                {% else %}
+                                    <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="{{ msg.user.username }}" class="message-avatar">
+                                {% endif %}
+                                <span class="message-author">{{ msg.user.username }}</span>
+                                <span class="message-time">{{ msg.created_at.strftime('%b %d, %H:%M') }}</span>
+                            </div>
+                            <div class="message-content">{{ msg.content[:200] }}{% if msg.content|length > 200 %}...{% endif %}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-comments"></i>
+                            <p>No messages yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="sidebar-column">
+            <!-- Commander Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h4 class="sidebar-title"><i class="fas fa-crown"></i> Commander</h4>
+                </div>
+                <div class="sidebar-body">
+                    <div class="commander-card">
+                        {% if unit.commander.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + unit.commander.id|string + '.png') }}?v={{ range(1, 10000)|random }}" alt="{{ unit.commander.username }}" class="commander-avatar">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="{{ unit.commander.username }}" class="commander-avatar">
+                        {% endif %}
+                        <div class="commander-info">
+                            <h4>{{ unit.commander.username }}</h4>
+                            <p><i class="fas fa-star me-1" style="color: #22c55e;"></i>Level {{ unit.commander.level }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            {% if achievements %}
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h4 class="sidebar-title"><i class="fas fa-trophy"></i> Achievements</h4>
+                </div>
+                <div class="sidebar-body">
+                    <div class="achievement-grid">
+                        {% for ach in achievements %}
+                        {% set ach_info = ach.get_achievement_info(ach.achievement_type) %}
+                        <div class="achievement-badge" title="{{ ach_info.description }}">
+                            <i class="fas {{ ach_info.icon }}"></i>
+                            {{ ach_info.name }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Reviews -->
+            {% if completed_contracts %}
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h4 class="sidebar-title"><i class="fas fa-star"></i> Recent Reviews</h4>
+                </div>
+                <div class="sidebar-body">
+                    {% for contract in completed_contracts %}
+                    <div class="review-item">
+                        <div class="review-stars">
+                            {% for i in range(5) %}
+                                {% if i < contract.review_rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div class="review-meta">
+                            {{ contract.contract.country.name if contract.contract.country else 'Unknown' }} - {{ contract.review_at.strftime('%b %d, %Y') if contract.review_at else '' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Links -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h4 class="sidebar-title"><i class="fas fa-link"></i> Quick Links</h4>
+                </div>
+                <div class="sidebar-body" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    {% if user_membership %}
+                    <a href="{{ url_for('military_unit.messages', unit_id=unit.id) }}" class="btn btn-outline-secondary btn-sm w-100 text-start">
+                        <i class="fas fa-comments me-2"></i>Message Board
+                    </a>
+                    <a href="{{ url_for('military_unit.inventory', unit_id=unit.id) }}" class="btn btn-outline-secondary btn-sm w-100 text-start">
+                        <i class="fas fa-boxes me-2"></i>Unit Inventory
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('military_unit.bounties') }}" class="btn btn-outline-secondary btn-sm w-100 text-start">
+                        <i class="fas fa-coins me-2"></i>Browse Bounties
+                    </a>
+                    <a href="{{ url_for('main.leaderboards', tab='military_units') }}" class="btn btn-outline-secondary btn-sm w-100 text-start">
+                        <i class="fas fa-trophy me-2"></i>Leaderboards
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Unit Modal -->
+<div class="modal fade" id="leaveUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(239, 68, 68, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.2);">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>Leave Unit
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <p class="text-white mb-0">Are you sure you want to leave <strong>{{ unit.name }}</strong>?</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(239, 68, 68, 0.2);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-leave-btn">Leave Unit</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock main_layout %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Leave unit modal
+    const leaveBtn = document.getElementById('leave-unit-btn');
+    const leaveForm = document.getElementById('leave-unit-form');
+    const confirmLeaveBtn = document.getElementById('confirm-leave-btn');
+
+    if (leaveBtn && leaveForm) {
+        leaveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            new bootstrap.Modal(document.getElementById('leaveUnitModal')).show();
+        });
+
+        if (confirmLeaveBtn) {
+            confirmLeaveBtn.addEventListener('click', function() {
+                leaveForm.submit();
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

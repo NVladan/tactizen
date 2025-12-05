@@ -1,0 +1,261 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Report {{ report.report_number }}{% endblock %}
+
+{% block app_content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Main Report Content -->
+        <div class="col-lg-8">
+            <div class="card mb-4" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(239, 68, 68, 0.3);">
+                <div class="card-header d-flex justify-content-between align-items-start" style="background: rgba(239, 68, 68, 0.1); border-bottom: 1px solid rgba(239, 68, 68, 0.3);">
+                    <div>
+                        <h4 class="mb-1 text-danger">{{ report.report_number }}</h4>
+                        <span class="badge bg-{{ 'info' if report.report_type.value == 'message' else 'primary' if report.report_type.value == 'newspaper_article' else 'warning' if report.report_type.value == 'user_profile' else 'secondary' }}">
+                            {{ report.report_type.value.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                    <div>
+                        {% if report.status.value == 'pending' %}
+                        <span class="badge bg-warning text-dark fs-6">Pending</span>
+                        {% elif report.status.value == 'under_review' %}
+                        <span class="badge bg-info fs-6">Under Review</span>
+                        {% elif report.status.value == 'resolved' %}
+                        <span class="badge bg-success fs-6">Resolved</span>
+                        {% elif report.status.value == 'dismissed' %}
+                        <span class="badge bg-secondary fs-6">Dismissed</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Report Details -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Reported By</small>
+                            <a href="{{ url_for('main.view_profile', username=report.reporter.username) }}" class="text-info">
+                                {{ report.reporter.username }}
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Reported User</small>
+                            {% if report.reported_user %}
+                            <a href="{{ url_for('support.user_ticket_history', user_id=report.reported_user_id) }}" class="text-warning">
+                                {{ report.reported_user.username }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <small class="text-muted d-block">Reason</small>
+                        <span class="badge bg-danger">{{ report.reason.value.replace('_', ' ').title() }}</span>
+                    </div>
+
+                    {% if report.description %}
+                    <div class="mb-4">
+                        <small class="text-muted d-block mb-1">Description from Reporter</small>
+                        <div class="p-3 rounded" style="background: rgba(0,0,0,0.2);">
+                            <p class="text-white mb-0">{{ report.description }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Content Snapshot -->
+                    {% if report.content_snapshot %}
+                    <div class="mb-4">
+                        <small class="text-muted d-block mb-1">
+                            {% set captured_at = report.content_snapshot.get('captured_at', '') %}
+                            <i class="fas fa-camera me-1"></i>Content Snapshot (captured at {{ captured_at[:16] if captured_at else 'time of report' }})
+                        </small>
+                        <div class="p-3 rounded" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);">
+                            {% if report.report_type.value == 'message' %}
+                            <p class="text-white mb-0" style="white-space: pre-wrap;">{{ report.content_snapshot.get('content', 'No content available') }}</p>
+                            {% elif report.report_type.value == 'newspaper_article' %}
+                            <h6 class="text-white">{{ report.content_snapshot.get('title', 'Untitled') }}</h6>
+                            {% set article_content = report.content_snapshot.get('content', '') %}
+                            <p class="text-muted mb-0" style="white-space: pre-wrap;">{{ article_content[:500] if article_content else 'No content available' }}{% if article_content|length > 500 %}...{% endif %}</p>
+                            {% elif report.report_type.value == 'article_comment' %}
+                            <p class="text-muted mb-1"><small>Comment on: {{ report.content_snapshot.get('article_title', 'Unknown article') }}</small></p>
+                            <p class="text-white mb-0" style="white-space: pre-wrap;">{{ report.content_snapshot.get('content', 'No content available') }}</p>
+                            <small class="text-muted">By {{ report.content_snapshot.get('author_username', 'Unknown') }}</small>
+                            {% elif report.report_type.value == 'user_profile' %}
+                            <p class="text-white mb-0">Username: {{ report.content_snapshot.get('username', 'Unknown') }}</p>
+                            {% if report.content_snapshot.get('bio') %}
+                            <p class="text-muted mb-0">Bio: {{ report.content_snapshot.get('bio') }}</p>
+                            {% endif %}
+                            {% elif report.report_type.value == 'company' %}
+                            <p class="text-white mb-0">Company: {{ report.content_snapshot.get('company_name', 'Unknown') }}</p>
+                            <p class="text-muted mb-0">Owner: {{ report.content_snapshot.get('owner_username', 'Unknown') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Taken (if resolved) -->
+                    {% if report.action_taken %}
+                    <div class="alert alert-{{ 'secondary' if report.action_taken.value == 'dismissed' else 'success' }}">
+                        <h6><i class="fas fa-gavel me-2"></i>Action Taken</h6>
+                        <p class="mb-1"><strong>{{ report.action_taken.value.replace('_', ' ').title() }}</strong></p>
+                        {% if report.action_details %}
+                        <small>{{ report.action_details }}</small>
+                        {% endif %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Handled by {{ report.handled_by.username if report.handled_by else 'Unknown' }}
+                                on {{ report.handled_at.strftime('%b %d, %Y at %H:%M') if report.handled_at else '-' }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Take Action Form -->
+            {% if report.status.value in ['pending', 'under_review'] %}
+            <div class="card" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+                <div class="card-header" style="background: rgba(34, 197, 94, 0.1);">
+                    <h5 class="mb-0 text-white"><i class="fas fa-gavel me-2"></i>Take Action</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('support.take_report_action', report_id=report.id) }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-white">Action *</label>
+                                {{ form.action(class="form-select bg-dark text-white border-secondary", id="action_select") }}
+                            </div>
+                            <div class="col-md-6" id="mute_duration_div" style="display: none;">
+                                <label class="form-label text-white">Mute Duration</label>
+                                {{ form.mute_duration_hours(class="form-select bg-dark text-white border-secondary") }}
+                            </div>
+                            <div class="col-md-6" id="ban_duration_div" style="display: none;">
+                                <label class="form-label text-white">Ban Duration</label>
+                                {{ form.ban_duration_days(class="form-select bg-dark text-white border-secondary") }}
+                            </div>
+                        </div>
+
+                        <!-- Quick Response -->
+                        {% if canned_responses %}
+                        <div class="mb-3">
+                            <label class="form-label text-white">Quick Response</label>
+                            <select class="form-select bg-dark text-white border-success" id="quick_response_select">
+                                <option value="">-- Select a template --</option>
+                                {% for cr in canned_responses %}
+                                <option value="{{ cr.id }}" data-content="{{ cr.content }}">{{ cr.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label text-white">Notes</label>
+                            {{ form.action_details(class="form-control bg-dark text-white border-secondary", rows="3", placeholder="Add any notes about this action...", id="action_details_textarea") }}
+                        </div>
+
+                        {{ form.submit(class="btn btn-success") }}
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- User History -->
+            {% if user_reports %}
+            <div class="card mb-4" style="background: #1a1f2e; border: 1px solid rgba(239, 68, 68, 0.3);">
+                <div class="card-header" style="background: rgba(239, 68, 68, 0.1);">
+                    <h5 class="mb-0 text-danger"><i class="fas fa-history me-2"></i>Other Reports Against User</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for r in user_reports %}
+                        <a href="{{ url_for('support.view_report', report_id=r.id) }}"
+                           class="d-block px-3 py-2 border-bottom text-decoration-none"
+                           style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-danger">{{ r.report_number }}</span>
+                                <span class="badge bg-{{ 'warning text-dark' if r.status.value == 'pending' else 'success' if r.status.value == 'resolved' else 'secondary' }}">
+                                    {{ r.status.value.title() }}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ r.reason.value.replace('_', ' ').title() }} - {{ r.created_at.strftime('%b %d') }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Links -->
+            <div class="card" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+                <div class="card-header" style="background: rgba(34, 197, 94, 0.1);">
+                    <h5 class="mb-0 text-white"><i class="fas fa-link me-2"></i>Quick Links</h5>
+                </div>
+                <div class="card-body">
+                    {% if report.reported_user %}
+                    <a href="{{ url_for('support.user_ticket_history', user_id=report.reported_user_id) }}"
+                       class="btn btn-outline-warning w-100 mb-2">
+                        <i class="fas fa-user me-1"></i> View User History
+                    </a>
+                    <a href="{{ url_for('main.view_profile', username=report.reported_user.username) }}"
+                       class="btn btn-outline-info w-100 mb-2">
+                        <i class="fas fa-id-card me-1"></i> View User Profile
+                    </a>
+                    {% endif %}
+
+                    {% if report.report_type.value == 'message' and report.reported_message %}
+                    <a href="{{ url_for('main.messages') }}" class="btn btn-outline-secondary w-100 mb-2">
+                        <i class="fas fa-envelope me-1"></i> View Messages
+                    </a>
+                    {% elif report.report_type.value == 'newspaper_article' and report.reported_article %}
+                    <a href="{{ url_for('main.view_article', newspaper_id=report.reported_article.newspaper_id, article_id=report.reported_article_id) }}"
+                       class="btn btn-outline-secondary w-100 mb-2">
+                        <i class="fas fa-newspaper me-1"></i> View Article
+                    </a>
+                    {% elif report.report_type.value == 'article_comment' and report.reported_comment %}
+                    <a href="{{ url_for('main.view_article', newspaper_id=report.reported_comment.article.newspaper_id, article_id=report.reported_comment.article_id) }}"
+                       class="btn btn-outline-secondary w-100 mb-2">
+                        <i class="fas fa-comment me-1"></i> View Article with Comment
+                    </a>
+                    {% elif report.report_type.value == 'company' and report.reported_company %}
+                    <a href="{{ url_for('main.view_company', company_id=report.reported_company_id) }}"
+                       class="btn btn-outline-secondary w-100 mb-2">
+                        <i class="fas fa-building me-1"></i> View Company
+                    </a>
+                    {% endif %}
+
+                    <hr class="my-3" style="border-color: rgba(34, 197, 94, 0.2);">
+
+                    <a href="{{ url_for('support.admin_reports') }}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle action select to show/hide duration fields
+document.getElementById('action_select')?.addEventListener('change', function() {
+    const action = this.value;
+    document.getElementById('mute_duration_div').style.display = action === 'user_muted' ? 'block' : 'none';
+    document.getElementById('ban_duration_div').style.display = action === 'temporary_ban' ? 'block' : 'none';
+});
+
+// Handle quick response selection
+document.getElementById('quick_response_select')?.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const content = selectedOption.getAttribute('data-content');
+    const textarea = document.getElementById('action_details_textarea');
+
+    if (content && textarea) {
+        textarea.value = content;
+    }
+});
+</script>
+{% endblock %}

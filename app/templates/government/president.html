@@ -1,0 +1,506 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Government of {{ country.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .politics-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        color: #22c55e;
+        font-size: 1.75rem;
+        margin: 0;
+    }
+
+    .grid-2col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .grid-2col {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .president-card {
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .president-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.2);
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #22c55e;
+    }
+
+    .president-name {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .president-name a {
+        color: #22c55e;
+        text-decoration: none;
+    }
+
+    .president-name a:hover {
+        text-decoration: underline;
+    }
+
+    .president-info {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    .minister-card {
+        background: rgba(26, 31, 46, 0.6);
+        border-radius: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .minister-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .minister-icon.foreign { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+    .minister-icon.defence { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .minister-icon.finance { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+
+    .minister-info {
+        flex: 1;
+    }
+
+    .minister-title {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .minister-name {
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .minister-name a {
+        color: #22c55e;
+        text-decoration: none;
+    }
+
+    .empty-minister {
+        color: rgba(255, 255, 255, 0.4);
+        font-style: italic;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .action-btn-primary {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #fff;
+    }
+
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: #fff;
+    }
+
+    .action-btn-secondary {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+    }
+
+    .action-btn-secondary:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .law-item, .war-item {
+        background: rgba(26, 31, 46, 0.6);
+        border-radius: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .law-title {
+        color: #fff;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .law-meta {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-voting {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+
+    .status-passed {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .status-active {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .war-countries {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #fff;
+    }
+
+    .war-vs {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.85rem;
+    }
+
+    .election-info {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .election-date {
+        color: #3b82f6;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .election-status {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+
+    .empty-state {
+        color: rgba(255, 255, 255, 0.4);
+        text-align: center;
+        padding: 1rem;
+        font-style: italic;
+    }
+
+    .past-president {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .past-president:last-child {
+        border-bottom: none;
+    }
+
+    .past-president-name a {
+        color: #22c55e;
+        text-decoration: none;
+    }
+
+    .past-president-term {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="politics-container">
+    <div class="page-header">
+        <h1 class="page-title">Government of {{ country.name }}</h1>
+        {% if is_president %}
+        <div>
+            <a href="{{ url_for('government.propose_law') }}" class="action-btn action-btn-primary">
+                Propose Law
+            </a>
+        </div>
+        {% endif %}
+        <a href="{{ url_for('government.congress', country_id=country.id) }}" class="action-btn action-btn-secondary" style="margin-left: 1rem;">
+            View Congress
+        </a>
+    </div>
+
+    <div class="grid-2col">
+        <!-- Left Column -->
+        <div>
+            <!-- Current President -->
+            <div class="section">
+                <h2 class="section-title">President</h2>
+                {% if current_president %}
+                <div class="president-card">
+                    <div class="president-avatar">
+                        {{ current_president.user.username[0].upper() }}
+                    </div>
+                    <div class="president-name">
+                        <a href="{{ url_for('main.view_profile', username=current_president.user.username) }}">
+                            {{ current_president.user.username }}
+                        </a>
+                    </div>
+                    <div class="president-info">
+                        <div>Term: {{ current_president.term_start.strftime('%b %d, %Y') }} - {{ current_president.term_end.strftime('%b %d, %Y') }}</div>
+                        <div>Elected via: {{ current_president.became_president_via }}</div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">No current president</div>
+                {% endif %}
+            </div>
+
+            <!-- Cabinet Ministers -->
+            <div class="section">
+                <h2 class="section-title">Cabinet</h2>
+
+                <div class="minister-card">
+                    <div class="minister-icon foreign">&#127760;</div>
+                    <div class="minister-info">
+                        <div class="minister-title">Minister of Foreign Affairs</div>
+                        {% if cabinet.foreign_affairs %}
+                        <div class="minister-name">
+                            <a href="{{ url_for('main.view_profile', username=cabinet.foreign_affairs.user.username) }}">
+                                {{ cabinet.foreign_affairs.user.username }}
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="empty-minister">Not appointed</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="minister-card">
+                    <div class="minister-icon defence">&#9876;</div>
+                    <div class="minister-info">
+                        <div class="minister-title">Minister of Defence</div>
+                        {% if cabinet.defence %}
+                        <div class="minister-name">
+                            <a href="{{ url_for('main.view_profile', username=cabinet.defence.user.username) }}">
+                                {{ cabinet.defence.user.username }}
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="empty-minister">Not appointed</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="minister-card">
+                    <div class="minister-icon finance">&#128176;</div>
+                    <div class="minister-info">
+                        <div class="minister-title">Minister of Finance</div>
+                        {% if cabinet.finance %}
+                        <div class="minister-name">
+                            <a href="{{ url_for('main.view_profile', username=cabinet.finance.user.username) }}">
+                                {{ cabinet.finance.user.username }}
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="empty-minister">Not appointed</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Past Presidents -->
+            {% if past_presidents %}
+            <div class="section">
+                <h2 class="section-title">Past Presidents</h2>
+                {% for president in past_presidents %}
+                <div class="past-president">
+                    <div class="past-president-name">
+                        <a href="{{ url_for('main.view_profile', username=president.user.username) }}">
+                            {{ president.user.username }}
+                        </a>
+                    </div>
+                    <div class="past-president-term">
+                        {{ president.term_start.strftime('%b %Y') }} - {{ president.term_end.strftime('%b %Y') }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column -->
+        <div>
+            <!-- Presidential Actions (Only for President) -->
+            {% if is_president %}
+            <div class="section">
+                <h2 class="section-title">Presidential Actions</h2>
+                <div>
+                    <a href="{{ url_for('government.propose_law') }}" class="action-btn action-btn-primary">
+                        Propose Law
+                    </a>
+                    <a href="{{ url_for('government.alliances') }}" class="action-btn action-btn-secondary">
+                        Manage Alliances
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Next Election -->
+            <div class="section">
+                <h2 class="section-title">Next Presidential Election</h2>
+                {% if next_election %}
+                <div class="election-info">
+                    <div class="election-status">
+                        {% if next_election.status.value == 'nominations' %}
+                            Nominations Open
+                        {% elif next_election.status.value == 'voting' %}
+                            Voting in Progress
+                        {% else %}
+                            {{ next_election.status.value | title }}
+                        {% endif %}
+                    </div>
+                    <div class="election-date">
+                        {% if next_election.status.value == 'nominations' %}
+                            Voting starts: {{ next_election.voting_start.strftime('%b %d, %Y at %H:%M') }}
+                        {% else %}
+                            Ends: {{ next_election.voting_end.strftime('%b %d, %Y at %H:%M') }}
+                        {% endif %}
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <a href="{{ url_for('government.election_detail', election_id=next_election.id) }}" class="action-btn action-btn-secondary">
+                            View Election
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">No upcoming elections</div>
+                {% endif %}
+            </div>
+
+            <!-- Active Wars -->
+            <div class="section">
+                <h2 class="section-title">Active Wars</h2>
+                {% if active_wars %}
+                    {% for war in active_wars %}
+                    <div class="war-item">
+                        <div class="war-countries">
+                            <span>{{ war.attacker_country.name }}</span>
+                            <span class="war-vs">vs</span>
+                            <span>{{ war.defender_country.name }}</span>
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <span class="status-badge status-active">Active</span>
+                            <a href="{{ url_for('main.war_detail', war_id=war.id) }}" style="color: #22c55e; font-size: 0.85rem; margin-left: 0.5rem;">View War</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-state">No active wars</div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Laws -->
+            <div class="section">
+                <h2 class="section-title">Recent Laws</h2>
+                {% if recent_laws %}
+                    {% for law in recent_laws %}
+                    <div class="law-item">
+                        <div class="law-title">
+                            {{ law.law_type.value | replace('_', ' ') | title }}
+                            {% if law.status.value == 'voting' %}
+                            <span class="status-badge status-voting">Voting</span>
+                            {% elif law.status.value == 'passed' %}
+                            <span class="status-badge status-passed">Passed</span>
+                            {% endif %}
+                        </div>
+                        <div class="law-meta">
+                            Proposed by {{ law.proposed_by.username }} on {{ law.created_at.strftime('%b %d, %Y') }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-state">No recent laws</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}

@@ -1,0 +1,93 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <h2><i class="fas fa-tools"></i> Admin Dashboard</h2>
+    <p class="text-muted">Manage soft-deleted records and administrative tasks</p>
+    <hr>
+
+            <h3>Management Tools</h3>
+            <div class="row mt-3 mb-4">
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.players') }}" class="btn btn-lg btn-danger btn-block w-100">
+                        <i class="fas fa-users"></i> Player Management
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.cache_management') }}" class="btn btn-lg btn-info btn-block w-100">
+                        <i class="fas fa-tachometer-alt"></i> Cache Management
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.activity_dashboard') }}" class="btn btn-lg btn-success btn-block w-100">
+                        <i class="fas fa-chart-line"></i> Activity Dashboard
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.game_updates') }}" class="btn btn-lg btn-primary btn-block w-100">
+                        <i class="fas fa-bullhorn"></i> Game Updates
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.regional_resources') }}" class="btn btn-lg btn-warning btn-block w-100">
+                        <i class="fas fa-gem"></i> Regional Resources
+                    </a>
+                </div>
+            </div>
+
+            <h3>Soft-Deleted Records</h3>
+            <div class="row mt-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Deleted Users</h5>
+                            <h2 class="text-primary">{{ deleted_users_count }}</h2>
+                            <a href="{{ url_for('admin.deleted_users') }}" class="btn btn-primary btn-sm">View & Restore</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Deleted Countries</h5>
+                            <h2 class="text-success">{{ deleted_countries_count }}</h2>
+                            <a href="{{ url_for('admin.deleted_countries') }}" class="btn btn-success btn-sm">View & Restore</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Deleted Regions</h5>
+                            <h2 class="text-info">{{ deleted_regions_count }}</h2>
+                            <a href="{{ url_for('admin.deleted_regions') }}" class="btn btn-info btn-sm">View & Restore</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Deleted Resources</h5>
+                            <h2 class="text-warning">{{ deleted_resources_count }}</h2>
+                            <a href="{{ url_for('admin.deleted_resources') }}" class="btn btn-warning btn-sm">View & Restore</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+</style>
+{% endblock %}

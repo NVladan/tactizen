@@ -1,0 +1,92 @@
+{% extends "layouts/base.html" %}
+{% import 'bootstrap_wtf.html' as wtf %}
+
+{% block title %}Create Newspaper - Tactizen{% endblock %}
+
+{% block head_extra %}
+<style>
+    .newspaper-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .newspaper-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        padding: 2rem;
+    }
+
+    .newspaper-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .newspaper-header h2 {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .newspaper-header p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1rem;
+    }
+
+    .cost-badge {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        padding: 0.5rem 1.5rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        display: inline-block;
+        margin: 1rem 0;
+        font-weight: 600;
+        box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+    }
+
+    .info-box {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box i {
+        color: #22c55e;
+        margin-right: 0.5rem;
+    }
+
+    .info-box p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<div class="newspaper-container">
+    <div class="newspaper-card">
+        <div class="newspaper-header">
+            <h2><i class="fas fa-newspaper"></i> Create Your Newspaper</h2>
+            <p>Start your own newspaper and share your stories with the world</p>
+            <div class="cost-badge">
+                <i class="fas fa-coins"></i> Cost: 5 Gold
+            </div>
+        </div>
+
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <p><strong>Note:</strong> You can only own one newspaper. It will be tied to your citizenship country ({{ current_user.citizenship.name }}).</p>
+        </div>
+
+        {{ wtf.quick_form(form, action=url_for('main.create_newspaper'), enctype='multipart/form-data', button_map={'submit': 'btn btn-primary w-100'}) }}
+    </div>
+</div>
+{% endblock %}

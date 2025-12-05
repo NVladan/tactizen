@@ -1,0 +1,570 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ war.attacker_country.name }} vs {{ war.defender_country.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .war-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .war-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(220, 38, 38, 0.3);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .country-battle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .country-info {
+        text-align: center;
+    }
+
+    .country-flag {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .country-flag img {
+        width: 64px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .country-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .country-role {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+    }
+
+    .vs-badge {
+        background: rgba(220, 38, 38, 0.3);
+        color: #dc2626;
+        padding: 0.5rem 1.5rem;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .war-stats {
+        display: flex;
+        justify-content: space-around;
+        padding: 1rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 1rem;
+    }
+
+    .war-stat {
+        text-align: center;
+    }
+
+    .war-stat .value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #22c55e;
+    }
+
+    .war-stat .label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+    }
+
+    .initiative-banner {
+        background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(234, 179, 8, 0.05) 100%);
+        border: 1px solid rgba(234, 179, 8, 0.4);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+    }
+
+    .initiative-banner.expired {
+        background: linear-gradient(135deg, rgba(100, 116, 139, 0.15) 0%, rgba(100, 116, 139, 0.05) 100%);
+        border-color: rgba(100, 116, 139, 0.4);
+    }
+
+    .initiative-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .initiative-header i {
+        font-size: 1.5rem;
+        color: #eab308;
+    }
+
+    .initiative-banner.expired .initiative-header i {
+        color: #64748b;
+    }
+
+    .initiative-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #eab308;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .initiative-banner.expired .initiative-title {
+        color: #64748b;
+    }
+
+    .initiative-holder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .initiative-holder .country-flag {
+        font-size: 1.5rem;
+    }
+
+    .initiative-holder .holder-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    .initiative-timer {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .timer-segment {
+        text-align: center;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        min-width: 70px;
+    }
+
+    .timer-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #eab308;
+        font-family: 'Courier New', monospace;
+    }
+
+    .initiative-banner.expired .timer-value {
+        color: #64748b;
+    }
+
+    .timer-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+    }
+
+    .initiative-description {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-top: 0.75rem;
+    }
+
+    .initiative-description strong {
+        color: #eab308;
+    }
+
+    .initiative-banner.expired .initiative-description strong {
+        color: #64748b;
+    }
+
+    .section-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        color: #ffffff;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .battle-card {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #dc2626;
+    }
+
+    .battle-card.won {
+        border-left-color: #22c55e;
+    }
+
+    .battle-card.lost {
+        border-left-color: #ef4444;
+    }
+
+    .battle-card h5 {
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+    }
+
+    .battle-info {
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    .region-select {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #ffffff;
+        padding: 0.75rem 1rem;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .region-select option {
+        background: #1a1f2e;
+    }
+
+    .start-battle-btn {
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        color: #ffffff;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .start-battle-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    }
+
+    .start-battle-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .active-battle-alert {
+        background: rgba(220, 38, 38, 0.2);
+        border: 1px solid rgba(220, 38, 38, 0.5);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .active-battle-alert h4 {
+        color: #dc2626;
+        margin-bottom: 0.5rem;
+    }
+
+    .join-battle-btn {
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        color: #ffffff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-top: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .join-battle-btn:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="war-container">
+    <!-- War Header -->
+    <div class="war-header">
+        <div class="country-battle">
+            <div class="country-info">
+                <div class="country-flag">
+                    {% if war.attacker_country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' ~ war.attacker_country.flag_code|lower ~ '.png') }}" alt="{{ war.attacker_country.name }} flag">
+                    {% else %}
+                    <i class="fas fa-flag"></i>
+                    {% endif %}
+                </div>
+                <div class="country-name">{{ war.attacker_country.name }}</div>
+                <div class="country-role">Attacker</div>
+            </div>
+            <div class="vs-badge">VS</div>
+            <div class="country-info">
+                <div class="country-flag">
+                    {% if war.defender_country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' ~ war.defender_country.flag_code|lower ~ '.png') }}" alt="{{ war.defender_country.name }} flag">
+                    {% else %}
+                    <i class="fas fa-flag"></i>
+                    {% endif %}
+                </div>
+                <div class="country-name">{{ war.defender_country.name }}</div>
+                <div class="country-role">Defender</div>
+            </div>
+        </div>
+
+        <div class="war-stats">
+            <div class="war-stat">
+                <div class="value">{{ war.started_at.strftime('%Y-%m-%d') }}</div>
+                <div class="label">Started</div>
+            </div>
+            <div class="war-stat">
+                <div class="value">
+                    {% if war.status.value == 'active' %}
+                    {{ ((war.scheduled_end_at - now).days)|abs if war.scheduled_end_at else 'N/A' }}
+                    {% else %}
+                    --
+                    {% endif %}
+                </div>
+                <div class="label">Days Remaining</div>
+            </div>
+            <div class="war-stat">
+                <div class="value">
+                    {% if war.status.value == 'active' %}
+                    <span class="text-danger"><i class="fas fa-fire"></i> Active</span>
+                    {% elif war.status.value == 'peace_proposed' %}
+                    <span class="text-success"><i class="fas fa-dove"></i> Peace</span>
+                    {% else %}
+                    <span class="text-secondary"><i class="fas fa-check"></i> Ended</span>
+                    {% endif %}
+                </div>
+                <div class="label">Status</div>
+            </div>
+        </div>
+
+        {% if initiative_info %}
+        <div class="initiative-banner {% if initiative_info.is_expired %}expired{% endif %}" id="initiative-banner">
+            {% if initiative_info.is_expired %}
+            <div class="initiative-header">
+                <i class="fas fa-clock"></i>
+                <span class="initiative-title">Initiative Expired</span>
+            </div>
+            <div class="initiative-description">
+                <strong>Both sides</strong> can now start battles
+            </div>
+            {% else %}
+            <div class="initiative-header">
+                <i class="fas fa-bolt"></i>
+                <span class="initiative-title">Active Initiative</span>
+            </div>
+            <div class="initiative-holder">
+                {% if initiative_info.holder.flag_code %}
+                <img src="{{ url_for('static', filename='images/country-flags/' ~ initiative_info.holder.flag_code|lower ~ '.png') }}" alt="{{ initiative_info.holder.name }} flag" style="width: 32px; height: 24px; object-fit: cover; border-radius: 3px;">
+                {% endif %}
+                <span class="holder-name">{{ initiative_info.holder.name }}</span>
+            </div>
+            <div class="initiative-timer" id="initiative-timer">
+                <div class="timer-segment">
+                    <div class="timer-value" id="timer-hours">--</div>
+                    <div class="timer-label">Hours</div>
+                </div>
+                <div class="timer-segment">
+                    <div class="timer-value" id="timer-minutes">--</div>
+                    <div class="timer-label">Minutes</div>
+                </div>
+                <div class="timer-segment">
+                    <div class="timer-value" id="timer-seconds">--</div>
+                    <div class="timer-label">Seconds</div>
+                </div>
+            </div>
+            <div class="initiative-description">
+                Only <strong>{{ initiative_info.holder.name }}</strong> can start new battles until the timer expires
+            </div>
+            {% endif %}
+        </div>
+        {% elif war.status.value == 'active' %}
+        <div class="initiative-banner expired">
+            <div class="initiative-header">
+                <i class="fas fa-balance-scale"></i>
+                <span class="initiative-title">No Initiative</span>
+            </div>
+            <div class="initiative-description">
+                <strong>Both sides</strong> can start battles
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <!-- Left Column: Active Battle / Start Battle -->
+        <div class="col-lg-6">
+            <div class="section-card">
+                <h4 class="section-title"><i class="fas fa-crosshairs text-danger"></i> Battle</h4>
+
+                {% if active_battle %}
+                <!-- Active Battle -->
+                <div class="active-battle-alert">
+                    <h4><i class="fas fa-fire"></i> Battle in Progress!</h4>
+                    <p class="mb-0 text-white">
+                        Fighting for <strong>{{ active_battle.region.name }}</strong>
+                    </p>
+                    <p class="text-muted small">
+                        Round {{ active_battle.current_round }}/3 |
+                        Attacker: {{ active_battle.attacker_rounds_won }} |
+                        Defender: {{ active_battle.defender_rounds_won }}
+                    </p>
+                    <a href="{{ url_for('main.battle_screen', battle_id=active_battle.id) }}" class="btn join-battle-btn">
+                        <i class="fas fa-fist-raised"></i> Join Battle
+                    </a>
+                </div>
+
+                {% elif can_start_battle and attackable_regions %}
+                <!-- Start Battle Form -->
+                <form method="POST" action="{{ url_for('main.start_battle', war_id=war.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <p class="text-muted mb-3">Select a region to attack:</p>
+                    <select name="region_id" class="region-select" required>
+                        <option value="">-- Select Region --</option>
+                        {% for region in attackable_regions %}
+                        <option value="{{ region.id }}">{{ region.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="start-battle-btn">
+                        <i class="fas fa-crosshairs"></i> Start Battle
+                    </button>
+                </form>
+
+                {% elif not war.is_active() %}
+                <p class="text-muted text-center">This war has ended.</p>
+
+                {% else %}
+                <p class="text-muted text-center">
+                    {% if not can_start_battle %}
+                    You cannot start a battle at this time.
+                    {% else %}
+                    No regions available to attack.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Past Battles -->
+        <div class="col-lg-6">
+            <div class="section-card">
+                <h4 class="section-title"><i class="fas fa-history text-secondary"></i> Battle History</h4>
+
+                {% if past_battles %}
+                {% for battle in past_battles %}
+                <div class="battle-card {% if battle.status.value == 'attacker_won' %}won{% elif battle.status.value == 'defender_won' %}lost{% endif %}">
+                    <h5>
+                        <i class="fas fa-map-marker-alt"></i> {{ battle.region.name }}
+                    </h5>
+                    <div class="battle-info">
+                        <span>
+                            {% if battle.status.value == 'attacker_won' %}
+                            <span class="text-success"><i class="fas fa-trophy"></i> Attacker Won</span>
+                            {% else %}
+                            <span class="text-danger"><i class="fas fa-shield-alt"></i> Defender Won</span>
+                            {% endif %}
+                        </span>
+                        <span>
+                            Rounds: {{ battle.attacker_rounds_won }} - {{ battle.defender_rounds_won }}
+                        </span>
+                        <span>
+                            {{ battle.ended_at.strftime('%Y-%m-%d') if battle.ended_at else 'N/A' }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">No battles have been fought yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Link -->
+    <div class="text-center mt-3">
+        <a href="{{ url_for('main.wars_list') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Wars
+        </a>
+    </div>
+</div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}
+
+{% block scripts %}
+{{ super() }}
+{% if initiative_info and not initiative_info.is_expired %}
+<script>
+(function() {
+    // Initiative expiration time (UTC)
+    const expiresAt = new Date('{{ initiative_info.expires_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z');
+
+    function updateTimer() {
+        const now = new Date();
+        const diff = expiresAt - now;
+
+        if (diff <= 0) {
+            // Timer expired - reload page to show updated state
+            document.getElementById('timer-hours').textContent = '00';
+            document.getElementById('timer-minutes').textContent = '00';
+            document.getElementById('timer-seconds').textContent = '00';
+
+            // Add expired class and update banner
+            const banner = document.getElementById('initiative-banner');
+            if (banner) {
+                banner.classList.add('expired');
+            }
+
+            // Reload page after 2 seconds to show updated state
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+            return;
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('timer-hours').textContent = hours.toString().padStart(2, '0');
+        document.getElementById('timer-minutes').textContent = minutes.toString().padStart(2, '0');
+        document.getElementById('timer-seconds').textContent = seconds.toString().padStart(2, '0');
+    }
+
+    // Update immediately and then every second
+    updateTimer();
+    setInterval(updateTimer, 1000);
+})();
+</script>
+{% endif %}
+{% endblock %}

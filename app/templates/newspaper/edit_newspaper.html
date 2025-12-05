@@ -1,0 +1,17 @@
+{% extends "layouts/base.html" %}
+{% import 'bootstrap_wtf.html' as wtf %}
+
+{% block title %}Edit {{ newspaper.name }}{% endblock %}
+
+{% block main_layout %}
+<div class="container mt-4" style="max-width: 800px;">
+    <div class="card bg-dark border-success">
+        <div class="card-header bg-gradient text-white">
+            <h3><i class="fas fa-edit"></i> Edit Newspaper</h3>
+        </div>
+        <div class="card-body">
+            {{ wtf.quick_form(form, action=url_for('main.edit_newspaper', newspaper_id=newspaper.id), enctype='multipart/form-data', button_map={'submit': 'btn btn-success w-100'}) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

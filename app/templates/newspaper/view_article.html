@@ -1,0 +1,297 @@
+{% extends "layouts/base.html" %}
+{% import 'bootstrap_wtf.html' as wtf %}
+
+{% block title %}{{ article.title }} - {{ article.newspaper.name }}{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .article-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .article-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .article-content {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: #ffffff;
+        line-height: 1.8;
+        overflow: hidden;
+    }
+
+    .article-content img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 1rem auto;
+        border-radius: 8px;
+    }
+
+    .comment {
+        background: rgba(26, 31, 46, 0.5);
+        border-left: 3px solid rgba(34, 197, 94, 0.3);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+    }
+
+    .comment.level-1 {
+        margin-left: 2rem;
+    }
+
+    .comment.level-2 {
+        margin-left: 4rem;
+    }
+
+    .comment-author {
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .comment-date {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+
+    .comment-content {
+        color: rgba(255, 255, 255, 0.9);
+        margin-top: 0.5rem;
+    }
+
+    .vote-section {
+        padding: 1.5rem;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .action-button {
+        min-width: 200px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+    }
+
+    .vote-display {
+        background: rgba(34, 197, 94, 0.2);
+        border: 2px solid #22c55e;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        min-width: 200px;
+    }
+
+    .vote-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #22c55e;
+        margin: 0;
+    }
+
+    .vote-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="article-container">
+    <div class="article-header">
+        <h1 class="text-white mb-3">{{ article.title }}</h1>
+        <div class="text-muted">
+            <a href="{{ url_for('main.view_newspaper', newspaper_id=article.newspaper_id) }}" class="text-success text-decoration-none">
+                <i class="fas fa-newspaper"></i> {{ article.newspaper.name }}
+            </a>
+            <span class="mx-2">|</span>
+            By {{ article.author.username }}
+            <span class="mx-2">|</span>
+            {{ article.created_at.strftime('%Y-%m-%d %H:%M') }}
+        </div>
+
+        <div class="mt-3">
+            {% if current_user.id == article.newspaper.owner_id %}
+                <a href="{{ url_for('main.edit_article', newspaper_id=article.newspaper_id, article_id=article.id) }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteArticleModal">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            {% endif %}
+            {% if current_user.is_authenticated and current_user.id != article.author_id %}
+                <a href="{{ url_for('support.report_article', article_id=article.id) }}" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-flag"></i> Report Article
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="article-content">
+        {{ article.content|safe }}
+    </div>
+
+    <div class="vote-section">
+        <div class="row g-3 align-items-center">
+            <!-- Vote Display/Button -->
+            <div class="col-md-4">
+                {% if has_voted %}
+                    <div class="vote-display text-center">
+                        <p class="vote-count"><i class="fas fa-thumbs-up"></i> {{ article.vote_count }}</p>
+                        <p class="vote-label">You voted for this</p>
+                    </div>
+                {% else %}
+                    <form method="POST" action="{{ url_for('main.vote_article', article_id=article.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-success action-button w-100">
+                            <i class="fas fa-thumbs-up"></i> Vote ({{ article.vote_count }})
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <!-- Subscribe/Unsubscribe Button -->
+            <div class="col-md-4">
+                {% if is_subscribed %}
+                    <form method="POST" action="{{ url_for('main.unsubscribe_newspaper', newspaper_id=article.newspaper_id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-warning action-button w-100">
+                            <i class="fas fa-bell-slash"></i> Unsubscribe
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="POST" action="{{ url_for('main.subscribe_newspaper', newspaper_id=article.newspaper_id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-warning action-button w-100">
+                            <i class="fas fa-bell"></i> Subscribe
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <!-- Back to Home Button -->
+            <div class="col-md-4">
+                <a href="{{ url_for('main.index') }}" class="btn btn-outline-success action-button w-100">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="comments-section">
+        <h3 class="text-white mb-3"><i class="fas fa-comments"></i> Comments ({{ article.comment_count }})</h3>
+
+        <div class="card bg-dark border-success mb-4">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.post_comment', article_id=article.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ comment_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ comment_form.content.label(class="form-label text-white") }}
+                        {{ comment_form.content(class="form-control bg-dark text-white border-success") }}
+                    </div>
+                    {{ comment_form.submit(class="btn btn-success") }}
+                </form>
+            </div>
+        </div>
+
+        {% macro render_comment(comment, level=0) %}
+            <div class="comment level-{{ level }}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="comment-author">
+                        {{ comment.user.username }}
+                        <span class="comment-date">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    {% if current_user.is_authenticated and current_user.id != comment.user_id %}
+                    <a href="{{ url_for('support.report_comment', comment_id=comment.id) }}"
+                       class="btn btn-sm btn-link text-danger p-0" title="Report Comment">
+                        <i class="fas fa-flag"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="comment-content">{{ comment.content }}</div>
+                {% if comment.can_reply %}
+                    <button class="btn btn-sm btn-outline-success mt-2" onclick="showReplyForm({{ comment.id }})">
+                        <i class="fas fa-reply"></i> Reply
+                    </button>
+                    <div id="reply-form-{{ comment.id }}" style="display:none;" class="mt-2">
+                        <form method="POST" action="{{ url_for('main.post_comment', article_id=article.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {{ comment_form.csrf_token }}
+                            <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
+                            <textarea name="content" class="form-control bg-dark text-white border-success mb-2" rows="2" required></textarea>
+                            <button type="submit" class="btn btn-sm btn-success">Post Reply</button>
+                        </form>
+                    </div>
+                {% endif %}
+
+                {% if comment.replies %}
+                    {% for reply in comment.replies %}
+                        {% if not reply.is_deleted %}
+                            {{ render_comment(reply, level + 1) }}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endmacro %}
+
+        {% for comment in comments %}
+            {{ render_comment(comment) }}
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function showReplyForm(commentId) {
+    const form = document.getElementById('reply-form-' + commentId);
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+
+{# Delete Article Confirmation Modal #}
+{% if current_user.id == article.newspaper.owner_id %}
+<div class="modal fade" id="deleteArticleModal" tabindex="-1" aria-labelledby="deleteArticleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-danger">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-white" id="deleteArticleModalLabel">
+                    <i class="fas fa-trash me-2 text-danger"></i>Confirm Delete Article
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <p class="mb-0">Are you sure you want to delete this article?</p>
+                <p class="text-muted small mt-2 mb-1"><strong>{{ article.title }}</strong></p>
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer border-danger">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('main.delete_article', newspaper_id=article.newspaper_id, article_id=article.id) }}" style="margin: 0; display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Article
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

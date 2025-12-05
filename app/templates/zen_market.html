@@ -1,0 +1,770 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}ZEN/Gold Exchange - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .market-item-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 18px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .market-item-card:hover {
+        box-shadow: 0 0 25px rgba(34, 197, 94, 0.2);
+    }
+
+    .zen-logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        font-weight: bold;
+        margin: 0 auto 1rem;
+        box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+    }
+
+    .price-display {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .buy-price {
+        color: #22c55e;
+    }
+
+    .sell-price {
+        color: #ef4444;
+    }
+
+    .form-control-lg {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        color: #fff;
+        border: 1.5px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        font-size: 1.15rem;
+        min-height: 48px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .form-control-lg:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        color: #fff;
+    }
+
+    .btn-lg {
+        font-size: 1.1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        min-height: 48px;
+    }
+
+    .btn-lg:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .zen-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.7), rgba(15, 20, 25, 0.7)), url('{{ url_for("static", filename="images/buildings/zenmarket.png") }}');
+        background-size: cover;
+        background-position: center;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .zen-header h2 {
+        color: #a78bfa;
+    }
+
+    .progress-bar-zen {
+        background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 100%);
+    }
+
+    .balance-card {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        text-align: center;
+    }
+
+    .balance-label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 0.25rem;
+    }
+
+    .balance-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #a78bfa;
+    }
+
+    .balance-value.gold {
+        color: #fbbf24;
+    }
+
+    .transaction-row {
+        background: rgba(255, 255, 255, 0.02);
+        border-left: 3px solid rgba(139, 92, 246, 0.3);
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0 8px 8px 0;
+        transition: all 0.2s ease;
+    }
+
+    .transaction-row:hover {
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .transaction-row.buy {
+        border-left-color: #22c55e;
+    }
+
+    .transaction-row.sell {
+        border-left-color: #ef4444;
+    }
+
+    .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .info-badge.purple {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .wallet-badge {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #22c55e;
+    }
+
+    .nav-tabs .nav-link {
+        color: rgba(255, 255, 255, 0.7);
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #a78bfa;
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    .nav-tabs .nav-link.active {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        color: #a78bfa;
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Tab Navigation Header -->
+        <ul class="nav nav-tabs mb-4" id="marketTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{% if current_user.citizenship %}{{ url_for('main.marketplace', country_slug=current_user.citizenship.slug) }}{% else %}#{% endif %}"><i class="fas fa-store me-1"></i>Marketplace</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('company.job_market') }}"><i class="fas fa-briefcase me-1"></i>Job Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.currency_market_default') }}"><i class="fas fa-money-bill-wave me-1"></i>Currency Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('main.zen_market') }}"><i class="fas fa-coins me-1"></i>Zen Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('marketplace.marketplace_page') }}"><i class="fas fa-gem me-1"></i>NFT Market</a>
+          </li>
+        </ul>
+
+        <!-- Header -->
+        <div class="zen-header text-center">
+            <h2 class="mb-2"><i class="fas fa-gem me-2"></i>ZEN / Gold Exchange</h2>
+            <p class="text-muted mb-0">Trade ZEN tokens for Gold on the blockchain.</p>
+        </div>
+
+        <!-- Balances Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="balance-card">
+                    <div class="balance-label"><i class="fas fa-gem me-1"></i>Your ZEN Balance</div>
+                    <div class="balance-value">{{ zen_balance|round(2) }} ZEN</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="balance-card">
+                    <div class="balance-label"><i class="fas fa-coins me-1"></i>Your Gold Balance</div>
+                    <div class="balance-value gold">{{ user_gold|round(2) }} Gold</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: Trading Card -->
+            <div class="col-lg-6">
+                <div class="card h-100 shadow-lg border-0 market-item-card">
+                    <div class="card-body p-4">
+                        <!-- ZEN Logo and Title -->
+                        <div class="text-center mb-4">
+                            <div class="zen-logo">Z</div>
+                            <h4 class="card-title text-white mb-2">ZEN / Gold</h4>
+                            <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+                                <span class="badge {% if market.price_level < 0 %}bg-success{% elif market.price_level > 0 %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    Level: {{ market.price_level|int }}
+                                </span>
+                                {% if price_change %}
+                                <span class="badge {% if price_change.direction == 'up' %}bg-success{% elif price_change.direction == 'down' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {% if price_change.direction == 'up' %}
+                                        <i class="fas fa-arrow-up me-1"></i>
+                                    {% elif price_change.direction == 'down' %}
+                                        <i class="fas fa-arrow-down me-1"></i>
+                                    {% else %}
+                                        <i class="fas fa-minus me-1"></i>
+                                    {% endif %}
+                                    {{ "%.2f"|format(price_change.percent|abs) }}% today
+                                </span>
+                                {% endif %}
+                                <span class="badge bg-secondary">
+                                    Spread: {{ (market.MARKET_SPREAD_PERCENT * 100)|round(1) }}%
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Price Level Progress -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between small text-muted mb-2">
+                                <span>Progress to Next Level</span>
+                                <span>{{ market.progress_within_level|int }} / {{ market.volume_per_level|int }} ZEN</span>
+                            </div>
+                            <div class="progress" style="height: 10px; background: rgba(255,255,255,0.1);">
+                                {% set progress_percent = (market.progress_within_level / market.volume_per_level * 100) if market.volume_per_level > 0 else 0 %}
+                                <div class="progress-bar progress-bar-zen" role="progressbar" style="width: {{ progress_percent }}%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mt-2">
+                                <span>Buy {{ market.zen_volume_to_next_level }} more to increase price</span>
+                                <span>Sell {{ market.zen_volume_to_previous_level }} more to decrease</span>
+                            </div>
+                        </div>
+
+                        <!-- Buy/Sell Prices -->
+                        <div class="row text-center mb-4">
+                            <div class="col-6">
+                                <div class="text-muted small mb-1">Buy 1 ZEN</div>
+                                <div class="price-display buy-price">{{ market.buy_zen_price|round(2) }} Gold</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small mb-1">Sell 1 ZEN</div>
+                                <div class="price-display sell-price">{{ market.sell_zen_price|round(2) }} Gold</div>
+                            </div>
+                        </div>
+
+                        <!-- Buy/Sell Forms -->
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <input type="number" step="1" min="1" id="buy_quantity"
+                                           class="form-control form-control-lg flex-grow-1" placeholder="Amount to Buy">
+                                    <button type="button" id="buyZenBtn" class="btn btn-success btn-lg px-4" onclick="buyZen()">
+                                        <i class="fas fa-arrow-up me-1"></i>Buy
+                                    </button>
+                                </div>
+                                <div class="text-end mt-1">
+                                    <small class="text-muted">Cost: <span id="buy_total" class="text-success fw-bold">0.00 Gold</span></small>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <input type="number" step="1" min="1" max="{{ zen_balance|int }}" id="sell_quantity"
+                                           class="form-control form-control-lg flex-grow-1" placeholder="Amount to Sell">
+                                    <button type="button" id="sellZenBtn" class="btn btn-danger btn-lg px-4" onclick="sellZen()" {% if zen_balance == 0 %}disabled{% endif %}>
+                                        <i class="fas fa-arrow-down me-1"></i>Sell
+                                    </button>
+                                </div>
+                                <div class="text-end mt-1">
+                                    <small class="text-muted">Receive: <span id="sell_total" class="text-success fw-bold">0.00 Gold</span></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Chart -->
+            <div class="col-lg-6">
+                <div class="card h-100 shadow-lg border-0 market-item-card">
+                    <div class="card-body p-4">
+                        <h5 class="text-white mb-3"><i class="fas fa-chart-line me-2"></i>30-Day Price History</h5>
+                        <canvas id="priceChart" style="max-height: 350px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        {% if recent_transactions %}
+        <div class="card shadow-lg border-0 market-item-card mt-4">
+            <div class="card-body p-4">
+                <h5 class="text-white mb-3"><i class="fas fa-history me-2"></i>Your Recent Transactions</h5>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    {% for tx in recent_transactions %}
+                    <div class="transaction-row {{ tx.transaction_type }}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="text-white">
+                                    {% if tx.transaction_type == 'buy' %}
+                                        <i class="fas fa-arrow-up text-success me-2"></i>Bought
+                                    {% else %}
+                                        <i class="fas fa-arrow-down text-danger me-2"></i>Sold
+                                    {% endif %}
+                                    {{ tx.zen_amount|round(2) }} ZEN
+                                </strong>
+                                <br>
+                                <small class="text-muted">{{ tx.created_at.strftime('%b %d, %Y %H:%M') }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-white fw-bold">{{ tx.gold_amount|round(2) }} Gold</div>
+                                <small class="text-muted">@ {{ tx.exchange_rate|round(2) }} Gold/ZEN</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Info Box -->
+        <div class="card shadow-lg border-0 market-item-card mt-4" style="border-color: rgba(139, 92, 246, 0.3) !important;">
+            <div class="card-body p-4">
+                <h5 class="mb-3" style="color: #a78bfa;"><i class="fas fa-info-circle me-2"></i>How ZEN Market Works</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-shopping-cart text-success mt-1"></i>
+                            <div>
+                                <strong class="text-white">Buying ZEN</strong>
+                                <p class="text-muted small mb-0">Spend Gold and receive testZEN tokens directly to your connected wallet via blockchain.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-hand-holding-usd text-danger mt-1"></i>
+                            <div>
+                                <strong class="text-white">Selling ZEN</strong>
+                                <p class="text-muted small mb-0">Sign a transaction with MetaMask to send ZEN to treasury and receive Gold instantly.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-chart-line mt-1" style="color: #a78bfa;"></i>
+                            <div>
+                                <strong class="text-white">Dynamic Pricing</strong>
+                                <p class="text-muted small mb-0">Prices adjust based on supply and demand. Every {{ market.volume_per_level }} ZEN traded shifts the price level by {{ market.price_adjustment_per_level }} Gold.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-shield-alt text-warning mt-1"></i>
+                            <div>
+                                <strong class="text-white">Market Spread</strong>
+                                <p class="text-muted small mb-0">{{ (market.MARKET_SPREAD_PERCENT * 100)|round(1) }}% spread between buy/sell prices protects against manipulation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert mb-0 mt-3" style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Testnet Only:</strong> This market uses BASE Sepolia testnet tokens with no real value.
+                </div>
+            </div>
+        </div>
+    </div>
+{% include '_dashboard_wrapper_end.html' %}
+
+<!-- Transaction Result Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white" id="transactionModalTitle">
+                    <i class="fas fa-check-circle text-success me-2" id="modalIcon"></i>
+                    <span id="modalTitleText">Transaction Successful</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="transactionModalBody" class="text-white"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="modalCloseBtn">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Modal helper function
+    function showModal(title, message, isSuccess = true) {
+        const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
+        const icon = document.getElementById('modalIcon');
+        const titleText = document.getElementById('modalTitleText');
+        const body = document.getElementById('transactionModalBody');
+        const closeBtn = document.getElementById('modalCloseBtn');
+
+        if (isSuccess) {
+            icon.className = 'fas fa-check-circle text-success me-2';
+            closeBtn.className = 'btn btn-success';
+        } else {
+            icon.className = 'fas fa-exclamation-circle text-danger me-2';
+            closeBtn.className = 'btn btn-danger';
+        }
+
+        titleText.textContent = title;
+        body.innerHTML = message;
+        modal.show();
+    }
+
+    // ZEN Price History Chart
+    {% if zen_history_data %}
+    const ctx = document.getElementById('priceChart');
+    if (ctx) {
+        const rawCandleData = {{ zen_history_data.candlestick | tojson }};
+        const candleData = rawCandleData.map(d => ({
+            x: d.x,
+            o: parseFloat(d.o),
+            h: parseFloat(d.h),
+            l: parseFloat(d.l),
+            c: parseFloat(d.c)
+        }));
+
+        try {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    datasets: [
+                        {
+                            label: 'High',
+                            data: candleData.map(d => ({x: d.x, y: d.h})),
+                            backgroundColor: 'rgba(139, 92, 246, 0.4)',
+                            borderColor: '#8b5cf6',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        },
+                        {
+                            label: 'Low',
+                            data: candleData.map(d => ({x: d.x, y: d.l})),
+                            backgroundColor: 'rgba(239, 68, 68, 0.3)',
+                            borderColor: '#ef4444',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        },
+                        {
+                            label: 'Close',
+                            data: candleData.map(d => ({x: d.x, y: d.c})),
+                            backgroundColor: 'rgba(107, 114, 128, 0.3)',
+                            borderColor: '#6b7280',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#9ca3af' }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#8b5cf6',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const candle = candleData[dataIndex];
+                                    if (!candle) return '';
+                                    return [
+                                        'Open: ' + candle.o.toFixed(2) + ' Gold',
+                                        'High: ' + candle.h.toFixed(2) + ' Gold',
+                                        'Low: ' + candle.l.toFixed(2) + ' Gold',
+                                        'Close: ' + candle.c.toFixed(2) + ' Gold'
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: '#9ca3af',
+                                callback: function(value) { return value.toFixed(2) + ' Gold'; }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error creating ZEN history chart:', error);
+        }
+    }
+    {% endif %}
+
+    // Calculate totals on input
+    const buyInput = document.getElementById('buy_quantity');
+    const buyTotal = document.getElementById('buy_total');
+    const sellInput = document.getElementById('sell_quantity');
+    const sellTotal = document.getElementById('sell_total');
+
+    const buyPrice = {{ market.buy_zen_price }};
+    const sellPrice = {{ market.sell_zen_price }};
+
+    buyInput.addEventListener('input', function() {
+        const amount = parseFloat(this.value) || 0;
+        buyTotal.textContent = (amount * buyPrice).toFixed(2) + ' Gold';
+    });
+
+    sellInput.addEventListener('input', function() {
+        const amount = parseFloat(this.value) || 0;
+        sellTotal.textContent = (amount * sellPrice).toFixed(2) + ' Gold';
+    });
+
+    // Buy ZEN (server sends tokens to user's wallet)
+    async function buyZen() {
+        const zenAmount = parseFloat(document.getElementById('buy_quantity').value);
+
+        if (!zenAmount || zenAmount <= 0) {
+            showModal('Invalid Amount', 'Please enter a valid ZEN amount.', false);
+            return;
+        }
+
+        if (typeof window.ethereum === 'undefined') {
+            showModal('MetaMask Required', 'Please install MetaMask to use the ZEN market!', false);
+            return;
+        }
+
+        const btn = document.getElementById('buyZenBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>...';
+
+        try {
+            const targetChainId = '0x28751c';
+            const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+            if (currentChainId !== targetChainId) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: targetChainId }],
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        showModal('Network Not Found',
+                            `<p>Please add Horizen L3 Testnet to MetaMask:</p>
+                            <ul class="text-start small">
+                                <li><strong>Network:</strong> Horizen L3 Testnet</li>
+                                <li><strong>RPC:</strong> https://horizen-testnet.rpc.caldera.xyz/http</li>
+                                <li><strong>Chain ID:</strong> 2651420</li>
+                            </ul>`, false);
+                        return;
+                    }
+                    throw switchError;
+                }
+            }
+
+            const response = await fetch('/api/zen-market/buy-zen', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ zen_amount: zenAmount })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showModal('Purchase Successful!',
+                    `<p class="mb-2">${data.message}</p>
+                    <p class="mb-0 text-success"><i class="fas fa-check-circle me-1"></i>Check your wallet for ${data.zen_amount} ZEN!</p>`, true);
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showModal('Purchase Failed', `<p>${data.error}</p>`, false);
+            }
+        } catch (error) {
+            showModal('Error', `<p>${error.message}</p>`, false);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-arrow-up me-1"></i>Buy';
+        }
+    }
+
+    // Sell ZEN (user sends tokens via MetaMask)
+    async function sellZen() {
+        const zenAmount = parseFloat(document.getElementById('sell_quantity').value);
+
+        if (!zenAmount || zenAmount <= 0) {
+            showModal('Invalid Amount', 'Please enter a valid ZEN amount.', false);
+            return;
+        }
+
+        if (typeof window.ethereum === 'undefined') {
+            showModal('MetaMask Required', 'Please install MetaMask to sell ZEN tokens!', false);
+            return;
+        }
+
+        const btn = document.getElementById('sellZenBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>...';
+
+        try {
+            const targetChainId = '0x28751c';
+            const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+            if (currentChainId !== targetChainId) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: targetChainId }],
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        showModal('Network Not Found',
+                            `<p>Please add Horizen L3 Testnet to MetaMask.</p>`, false);
+                        return;
+                    }
+                    throw switchError;
+                }
+            }
+
+            const prepareResponse = await fetch('/api/zen-market/prepare-sell', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ zen_amount: zenAmount })
+            });
+
+            const prepareData = await prepareResponse.json();
+
+            if (!prepareData.success) {
+                showModal('Preparation Failed', `<p>${prepareData.error}</p>`, false);
+                return;
+            }
+
+            btn.innerHTML = '<i class="fas fa-wallet fa-pulse me-1"></i>Sign...';
+
+            const txHash = await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [prepareData.transaction_data],
+            });
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Confirming...';
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            let confirmData;
+            for (let i = 0; i < 5; i++) {
+                const confirmResponse = await fetch('/api/zen-market/confirm-sell', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tx_hash: txHash })
+                });
+                confirmData = await confirmResponse.json();
+
+                if (confirmData.success) break;
+                if (confirmData.error && confirmData.error.includes('not found') && i < 4) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                } else break;
+            }
+
+            if (confirmData.success) {
+                showModal('Sale Successful!',
+                    `<p class="mb-2">${confirmData.message}</p>
+                    <p class="mb-0 text-success"><i class="fas fa-coins me-1"></i>You received ${confirmData.gold_amount} Gold!</p>`, true);
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showModal('Sale Failed', `<p>${confirmData.error}</p>`, false);
+            }
+        } catch (error) {
+            if (error.code === 4001) {
+                showModal('Cancelled', '<p>Transaction was cancelled.</p>', false);
+            } else {
+                showModal('Error', `<p>${error.message}</p>`, false);
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-arrow-down me-1"></i>Sell';
+        }
+    }
+</script>
+{% endblock %}

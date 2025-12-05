@@ -1,0 +1,1690 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Battle for {{ battle.region.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .battle-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .battle-main-section {
+        background: url('/static/images/battle.png') center top / cover no-repeat;
+        border-radius: 16px;
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .battle-main-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.65) 100%);
+        border-radius: 16px;
+    }
+
+    .battle-header {
+        padding: 1rem 2rem 0.5rem 2rem;
+        text-align: center;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        z-index: 1;
+    }
+
+    .back-to-war {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 10;
+    }
+
+    .back-to-war .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .battle-header > * {
+        position: relative;
+    }
+
+    .battle-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #ffffff;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        margin-bottom: 0.5rem;
+    }
+
+    .battle-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+    }
+
+    .round-info {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+
+    .round-stat {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+    }
+
+    .round-stat .label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+    }
+
+    .round-stat .value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .walls-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0.5rem 2rem 1rem 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .wall-card {
+        background: rgba(15, 20, 30, 0.7);
+        backdrop-filter: blur(4px);
+        border-radius: 12px;
+        border: 2px solid rgba(100, 116, 139, 0.3);
+        padding: 1rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .wall-card.selected {
+        border-color: #22c55e;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .wall-card.aviation { border-left: 4px solid #8b5cf6; }
+    .wall-card.armoured { border-left: 4px solid #f59e0b; }
+    .wall-card.infantry { border-left: 4px solid #3b82f6; }
+
+    .wall-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .wall-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .wall-name i {
+        margin-right: 0.5rem;
+    }
+
+    .wall-name.aviation i { color: #8b5cf6; }
+    .wall-name.armoured i { color: #f59e0b; }
+    .wall-name.infantry i { color: #3b82f6; }
+
+    .wall-weapon {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .wall-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .wall-side {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 140px;
+    }
+
+    .wall-side.defender {
+        align-items: flex-start;
+    }
+
+    .wall-side.attacker {
+        align-items: flex-end;
+    }
+
+    .wall-side-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .wall-side.defender .wall-side-label { color: #22c55e; }
+    .wall-side.attacker .wall-side-label { color: #dc2626; }
+
+    .top-fighter {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+    }
+
+    .wall-side.attacker .top-fighter {
+        flex-direction: row-reverse;
+    }
+
+    .top-fighter-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        object-fit: cover;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .wall-side.defender .top-fighter-avatar {
+        border-color: #22c55e;
+    }
+
+    .wall-side.attacker .top-fighter-avatar {
+        border-color: #dc2626;
+    }
+
+    .top-fighter-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wall-side.attacker .top-fighter-info {
+        text-align: right;
+    }
+
+    .top-fighter-name {
+        font-size: 0.8rem;
+        color: #ffffff;
+        font-weight: 500;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .top-fighter-damage {
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .wall-side.defender .top-fighter-damage { color: #22c55e; }
+    .wall-side.attacker .top-fighter-damage { color: #dc2626; }
+
+    .wall-progress-section {
+        flex: 1;
+    }
+
+    .progress-bar-container {
+        height: 24px;
+        background: linear-gradient(90deg, rgba(34, 197, 94, 0.2) 0%, rgba(100, 116, 139, 0.1) 50%, rgba(220, 38, 38, 0.2) 100%);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-indicator {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #ffffff;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+    }
+
+    .progress-fill {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        transition: all 0.3s ease;
+    }
+
+    .progress-fill.attacker {
+        background: linear-gradient(90deg, transparent, #dc2626);
+        right: 50%;
+    }
+
+    .progress-fill.defender {
+        background: linear-gradient(270deg, transparent, #22c55e);
+        left: 50%;
+    }
+
+    .damage-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+    }
+
+    .damage-labels .defender { color: #22c55e; }
+    .damage-labels .attacker { color: #dc2626; }
+
+    @media (max-width: 768px) {
+        .wall-content {
+            flex-direction: column;
+        }
+        .wall-side {
+            flex-direction: row;
+            width: 100%;
+            justify-content: space-around;
+        }
+        .wall-side.attacker {
+            flex-direction: row-reverse;
+        }
+    }
+
+    /* Last Hit Animation - positioned outside the wall cards */
+    .wall-card {
+        position: relative;
+    }
+
+    .last-hit {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        animation: lastHitAppear 2s ease-out forwards;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .last-hit.defender {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.2) 100%);
+        border: 2px solid #22c55e;
+        box-shadow: 0 0 25px rgba(34, 197, 94, 0.6);
+        right: calc(100% + 15px);
+        flex-direction: row-reverse;
+    }
+
+    .last-hit.attacker {
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.4) 0%, rgba(220, 38, 38, 0.2) 100%);
+        border: 2px solid #dc2626;
+        box-shadow: 0 0 25px rgba(220, 38, 38, 0.6);
+        left: calc(100% + 15px);
+    }
+
+    .last-hit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: lastHitShine 0.6s ease-out;
+    }
+
+    @keyframes lastHitShine {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    @keyframes lastHitAppear {
+        0% {
+            opacity: 0;
+            transform: translateY(-50%) scale(0.5);
+        }
+        15% {
+            opacity: 1;
+            transform: translateY(-50%) scale(1.1);
+        }
+        25% {
+            transform: translateY(-50%) scale(1);
+        }
+        80% {
+            opacity: 1;
+            transform: translateY(-50%) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-70%) scale(0.8);
+        }
+    }
+
+    .last-hit-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        object-fit: cover;
+    }
+
+    .last-hit-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .last-hit.defender .last-hit-info {
+        text-align: right;
+    }
+
+    .last-hit-name {
+        font-size: 0.85rem;
+        color: #ffffff;
+        font-weight: 600;
+    }
+
+    .last-hit-damage {
+        font-size: 1.1rem;
+        font-weight: 900;
+    }
+
+    .last-hit.defender .last-hit-damage {
+        color: #22c55e;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .last-hit.attacker .last-hit-damage {
+        color: #dc2626;
+        text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+    }
+
+    @media (max-width: 1200px) {
+        .last-hit {
+            display: none;
+        }
+    }
+
+    /* Inline Fight Panel */
+    .fight-panel-inline {
+        padding: 0.75rem 2rem 1rem 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .your-side {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        text-align: center;
+    }
+
+    .your-side.attacker { color: #dc2626; }
+    .your-side.defender { color: #22c55e; }
+
+    .fight-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .wall-selector {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .wall-btn {
+        padding: 0.4rem 0.8rem;
+        border: 2px solid rgba(100, 116, 139, 0.3);
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+    }
+
+    .wall-btn:hover {
+        border-color: rgba(255, 255, 255, 0.5);
+        color: #ffffff;
+    }
+
+    .wall-btn.active {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+
+    .weapon-selector {
+        min-width: 180px;
+    }
+
+    .fight-action {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .fight-btn {
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        color: #ffffff;
+        border: none;
+        padding: 0.6rem 2rem;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .fight-btn:hover:not(:disabled) {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(220, 38, 38, 0.5);
+    }
+
+    .fight-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .cooldown-timer {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #f59e0b;
+    }
+
+    .fight-info {
+        display: flex;
+        gap: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+    }
+
+    .fight-info i { margin-right: 0.25rem; }
+
+    /* Regional Constructions Info */
+    .constructions-info {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .construction-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .construction-badge.fortress {
+        background: rgba(139, 92, 246, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        color: #a78bfa;
+    }
+
+    .construction-badge.hospital {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #f87171;
+    }
+
+    .construction-badge small {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.65rem;
+    }
+
+    /* Hospital Action Button */
+    .hospital-action {
+        margin-top: 0.75rem;
+        text-align: center;
+    }
+
+    .hospital-btn {
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        color: #ffffff;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .hospital-btn:hover:not(.disabled) {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+    }
+
+    .hospital-btn.disabled {
+        background: rgba(100, 116, 139, 0.3);
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .hospital-btn i {
+        margin-right: 0.4rem;
+    }
+
+    .cannot-fight-inline {
+        padding: 0.75rem 2rem 1rem 2rem;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+        position: relative;
+        z-index: 1;
+    }
+
+    .cannot-fight-inline i {
+        margin-right: 0.5rem;
+    }
+
+    /* Battle Stats Inline */
+    .battle-stats-inline {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        padding: 0.25rem 2rem 0.5rem 2rem;
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        min-width: 60px;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+    }
+
+    .stat-value {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    @media (max-width: 768px) {
+        .fight-row {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .wall-selector {
+            justify-content: center;
+        }
+    }
+
+    /* Floating Damage Numbers */
+    .floating-damage {
+        position: fixed;
+        pointer-events: none;
+        font-size: 2.5rem;
+        font-weight: 900;
+        text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 2px 2px 4px rgba(0,0,0,0.8);
+        z-index: 9999;
+        animation: floatUp 1.5s ease-out forwards;
+    }
+
+    .floating-damage.attacker {
+        color: #dc2626;
+    }
+
+    .floating-damage.defender {
+        color: #22c55e;
+    }
+
+    .floating-damage.critical {
+        font-size: 3.5rem;
+        animation: floatUpCritical 1.8s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0) scale(0.5);
+        }
+        20% {
+            transform: translateY(-20px) scale(1.2);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-120px) scale(0.8);
+        }
+    }
+
+    @keyframes floatUpCritical {
+        0% {
+            opacity: 1;
+            transform: translateY(0) scale(0.3) rotate(-5deg);
+        }
+        15% {
+            transform: translateY(-10px) scale(1.5) rotate(5deg);
+        }
+        30% {
+            transform: translateY(-30px) scale(1.2) rotate(-3deg);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-150px) scale(0.6) rotate(0deg);
+        }
+    }
+
+
+    /* Progress Bar Hit Effect */
+    .progress-bar-container.hit {
+        animation: barHit 0.3s ease-out;
+    }
+
+    @keyframes barHit {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+    }
+
+    /* Fight Button Feedback */
+    .fight-btn.hitting {
+        animation: fightPulse 0.3s ease-out;
+    }
+
+    @keyframes fightPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+    }
+
+    /* Screen Shake for Big Hits */
+    .battle-container.shake {
+        animation: screenShake 0.4s ease-out;
+    }
+
+    @keyframes screenShake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="battle-container">
+    <!-- Battle Main Section (Header + Walls with single background) -->
+    <div class="battle-main-section">
+    <!-- Back to War Button (top right) -->
+    <div class="back-to-war">
+        <a href="{{ url_for('main.war_detail', war_id=battle.war_id) }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to War
+        </a>
+    </div>
+
+    <div class="battle-header">
+        <h1 class="battle-title">
+            <i class="fas fa-crosshairs"></i> Battle for {{ battle.region.name }}
+        </h1>
+        <p class="battle-subtitle">
+            {{ battle.war.attacker_country.name }} vs {{ battle.war.defender_country.name }}
+        </p>
+    </div>
+
+    <!-- Battle Stats (inline above walls) -->
+    <div class="battle-stats-inline">
+        <div class="stat-item">
+            <span class="stat-label">Round</span>
+            <span class="stat-value">{{ battle.current_round }}/3</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Attacker</span>
+            <span class="stat-value text-danger" id="attacker-wins">{{ battle.attacker_rounds_won }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Defender</span>
+            <span class="stat-value text-success" id="defender-wins">{{ battle.defender_rounds_won }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Round</span>
+            <span class="stat-value" id="round-timer" style="color: #f59e0b;">--:--:--</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Battle</span>
+            <span class="stat-value" id="battle-timer" style="color: #dc2626;">--:--:--</span>
+        </div>
+    </div>
+
+    <!-- Three Walls (stacked vertically: Aviation, Armoured, Infantry) -->
+    <div class="walls-container">
+        <!-- Aviation Wall -->
+        <div class="wall-card aviation" id="wall-aviation">
+            <div class="wall-header">
+                <span class="wall-name aviation"><i class="fas fa-helicopter"></i> Aviation</span>
+                <span class="wall-weapon">
+                    {% if user_weapons['aviation'].has_weapon %}
+                    <i class="fas fa-check text-success"></i> Q{{ user_weapons['aviation'].quality }} Helicopter
+                    {% else %}
+                    <i class="fas fa-times text-danger"></i> No Helicopters
+                    {% endif %}
+                </span>
+            </div>
+            <div class="wall-content">
+                <!-- Defender Side -->
+                <div class="wall-side defender">
+                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> Defenders</div>
+                    {% for entry in leaderboards.get('aviation', {}).get('defender', [])[:3] %}
+                    <div class="top-fighter">
+                        <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
+                        <div class="top-fighter-info">
+                            <span class="top-fighter-name">{{ entry.username }}</span>
+                            <span class="top-fighter-damage">{{ entry.total_damage|int }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="wall-progress-section">
+                    <div class="progress-bar-container">
+                        <div class="progress-indicator"></div>
+                        {% set progress = wall_progress.get('aviation', {}).get('progress', 0) %}
+                        {% if progress > 0 %}
+                        <div class="progress-fill attacker" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {% elif progress < 0 %}
+                        <div class="progress-fill defender" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Attacker Side -->
+                <div class="wall-side attacker">
+                    <div class="wall-side-label">Attackers <i class="fas fa-crosshairs"></i></div>
+                    {% for entry in leaderboards.get('aviation', {}).get('attacker', [])[:3] %}
+                    <div class="top-fighter">
+                        <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
+                        <div class="top-fighter-info">
+                            <span class="top-fighter-name">{{ entry.username }}</span>
+                            <span class="top-fighter-damage">{{ entry.total_damage|int }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Armoured Wall -->
+        <div class="wall-card armoured" id="wall-armoured">
+            <div class="wall-header">
+                <span class="wall-name armoured"><i class="fas fa-tank"></i> Armoured</span>
+                <span class="wall-weapon">
+                    {% if user_weapons['armoured'].has_weapon %}
+                    <i class="fas fa-check text-success"></i> Q{{ user_weapons['armoured'].quality }} Tank
+                    {% else %}
+                    <i class="fas fa-times text-danger"></i> No Tanks
+                    {% endif %}
+                </span>
+            </div>
+            <div class="wall-content">
+                <!-- Defender Side -->
+                <div class="wall-side defender">
+                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> Defenders</div>
+                    {% for entry in leaderboards.get('armoured', {}).get('defender', [])[:3] %}
+                    <div class="top-fighter">
+                        <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
+                        <div class="top-fighter-info">
+                            <span class="top-fighter-name">{{ entry.username }}</span>
+                            <span class="top-fighter-damage">{{ entry.total_damage|int }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="wall-progress-section">
+                    <div class="progress-bar-container">
+                        <div class="progress-indicator"></div>
+                        {% set progress = wall_progress.get('armoured', {}).get('progress', 0) %}
+                        {% if progress > 0 %}
+                        <div class="progress-fill attacker" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {% elif progress < 0 %}
+                        <div class="progress-fill defender" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Attacker Side -->
+                <div class="wall-side attacker">
+                    <div class="wall-side-label">Attackers <i class="fas fa-crosshairs"></i></div>
+                    {% for entry in leaderboards.get('armoured', {}).get('attacker', [])[:3] %}
+                    <div class="top-fighter">
+                        <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
+                        <div class="top-fighter-info">
+                            <span class="top-fighter-name">{{ entry.username }}</span>
+                            <span class="top-fighter-damage">{{ entry.total_damage|int }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Infantry Wall -->
+        <div class="wall-card infantry" id="wall-infantry">
+            <div class="wall-header">
+                <span class="wall-name infantry"><i class="fas fa-user-friends"></i> Infantry</span>
+                <span class="wall-weapon">
+                    {% if user_weapons['infantry'].has_weapon %}
+                    <i class="fas fa-check text-success"></i> Q{{ user_weapons['infantry'].quality }} Rifle
+                    {% else %}
+                    <i class="fas fa-times text-danger"></i> No Rifles
+                    {% endif %}
+                </span>
+            </div>
+            <div class="wall-content">
+                <!-- Defender Side -->
+                <div class="wall-side defender">
+                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> Defenders</div>
+                    {% for entry in leaderboards.get('infantry', {}).get('defender', [])[:3] %}
+                    <div class="top-fighter">
+                        <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
+                        <div class="top-fighter-info">
+                            <span class="top-fighter-name">{{ entry.username }}</span>
+                            <span class="top-fighter-damage">{{ entry.total_damage|int }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="wall-progress-section">
+                    <div class="progress-bar-container">
+                        <div class="progress-indicator"></div>
+                        {% set progress = wall_progress.get('infantry', {}).get('progress', 0) %}
+                        {% if progress > 0 %}
+                        <div class="progress-fill attacker" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {% elif progress < 0 %}
+                        <div class="progress-fill defender" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Attacker Side -->
+                <div class="wall-side attacker">
+                    <div class="wall-side-label">Attackers <i class="fas fa-crosshairs"></i></div>
+                    {% for entry in leaderboards.get('infantry', {}).get('attacker', [])[:3] %}
+                    <div class="top-fighter">
+                        <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
+                        <div class="top-fighter-info">
+                            <span class="top-fighter-name">{{ entry.username }}</span>
+                            <span class="top-fighter-damage">{{ entry.total_damage|int }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resistance War Side Selection -->
+    {% if is_resistance_war and needs_side_choice %}
+    <div class="resistance-side-selection" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%); border: 2px solid rgba(139, 92, 246, 0.4); border-radius: 16px; padding: 2rem; margin: 1rem 2rem; position: relative; z-index: 1;">
+        <h4 style="color: #a855f7; margin-bottom: 1rem; text-align: center;">
+            <i class="fas fa-flag me-2"></i>Resistance War - Choose Your Side
+        </h4>
+        <p style="color: rgba(255,255,255,0.7); text-align: center; margin-bottom: 1.5rem;">
+            This is a resistance war for <strong>{{ resistance_country.name }}</strong>. Choose which side you want to fight for:
+        </p>
+        <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
+            <form method="POST" action="{{ url_for('main.choose_side', battle_id=battle.id) }}" style="flex: 1; max-width: 300px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="side" value="resistance">
+                <button type="submit" class="btn btn-lg w-100" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 1.5rem; border-radius: 12px; border: none; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-fist-raised" style="font-size: 2rem;"></i>
+                    <strong>RESISTANCE</strong>
+                    <span style="font-size: 0.85rem; opacity: 0.9;">Fight for {{ resistance_country.name }}</span>
+                    {% if resistance_country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' + resistance_country.flag_code + '.png') }}"
+                         alt="{{ resistance_country.name }}" style="width: 48px; height: 32px; border-radius: 4px; border: 2px solid rgba(255,255,255,0.3); margin-top: 0.5rem;">
+                    {% endif %}
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('main.choose_side', battle_id=battle.id) }}" style="flex: 1; max-width: 300px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="side" value="occupier">
+                <button type="submit" class="btn btn-lg w-100" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 1.5rem; border-radius: 12px; border: none; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-shield-alt" style="font-size: 2rem;"></i>
+                    <strong>OCCUPIER</strong>
+                    <span style="font-size: 0.85rem; opacity: 0.9;">Fight for {{ occupying_country.name }}</span>
+                    {% if occupying_country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' + occupying_country.flag_code + '.png') }}"
+                         alt="{{ occupying_country.name }}" style="width: 48px; height: 32px; border-radius: 4px; border: 2px solid rgba(255,255,255,0.3); margin-top: 0.5rem;">
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+        <p style="color: rgba(255,255,255,0.5); text-align: center; margin-top: 1rem; font-size: 0.85rem;">
+            <i class="fas fa-info-circle me-1"></i>Your choice is permanent for this battle
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Fight Panel (inside battle-main-section) -->
+    {% if can_fight and not needs_side_choice %}
+    <div class="fight-panel-inline">
+        {% if is_resistance_war %}
+        <div class="your-side {% if is_attacker %}attacker{% else %}defender{% endif %}" style="background: {% if is_attacker %}rgba(34, 197, 94, 0.2){% else %}rgba(239, 68, 68, 0.2){% endif %};">
+            You are fighting for the
+            <strong>{% if is_attacker %}RESISTANCE{% else %}OCCUPIER{% endif %}</strong>
+            ({{ resistance_country.name if is_attacker else occupying_country.name }})
+        </div>
+        {% else %}
+        <div class="your-side {% if is_attacker %}attacker{% else %}defender{% endif %}">
+            You are fighting for the
+            <strong>{% if is_attacker %}ATTACKER{% else %}DEFENDER{% endif %}</strong> side
+            ({{ battle.war.attacker_country.name if is_attacker else battle.war.defender_country.name }})
+        </div>
+        {% endif %}
+
+        <form id="fight-form" method="POST" action="{{ url_for('main.fight', battle_id=battle.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="wall_type" id="wall-type-input" value="infantry">
+            <input type="hidden" name="weapon_quality" id="weapon-quality-input" value="">
+
+            <div class="fight-row">
+                <div class="wall-selector">
+                    <button type="button" class="wall-btn active" data-wall="infantry">
+                        <i class="fas fa-user-friends"></i> Infantry
+                    </button>
+                    <button type="button" class="wall-btn" data-wall="armoured">
+                        <i class="fas fa-tank"></i> Armoured
+                    </button>
+                    <button type="button" class="wall-btn" data-wall="aviation">
+                        <i class="fas fa-helicopter"></i> Aviation
+                    </button>
+                </div>
+
+                <div class="weapon-selector" id="weapon-selector">
+                    <select id="weapon-quality-select" class="form-select" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(34, 197, 94, 0.3); color: #fff; border-radius: 8px; padding: 0.5rem 1rem;">
+                        <option value="">Best Available</option>
+                    </select>
+                    <div id="weapon-info" style="margin-top: 0.25rem; font-size: 0.8rem; color: rgba(255,255,255,0.6);"></div>
+                </div>
+
+                <div class="fight-action">
+                    <button type="submit" class="fight-btn" id="fight-btn" {% if not can_fight_now %}disabled{% endif %}>
+                        <i class="fas fa-fist-raised"></i> FIGHT!
+                    </button>
+                    {% if not can_fight_now %}
+                    <div class="cooldown-timer" id="cooldown-display">
+                        <span id="cooldown-seconds">{{ cooldown_remaining|round(1) }}</span>s
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="fight-info">
+                    <span><i class="fas fa-bolt text-warning"></i> {{ current_user.energy }}/100</span>
+                    <span><i class="fas fa-heart text-danger"></i> {{ current_user.wellness }}/100</span>
+                </div>
+
+                <!-- Regional Constructions Info -->
+                {% if hospital_info or fortress_info %}
+                <div class="constructions-info">
+                    {% if fortress_info %}
+                    <div class="construction-badge fortress">
+                        <i class="fas fa-chess-rook"></i>
+                        <span>Fortress Q{{ fortress_info.quality }}</span>
+                        <small>{% if is_attacker %}-{{ fortress_info.damage_reduction }}% DMG{% else %}+{{ fortress_info.damage_reduction }}% DEF{% endif %}</small>
+                    </div>
+                    {% endif %}
+                    {% if hospital_info and not is_attacker %}
+                    <div class="construction-badge hospital">
+                        <i class="fas fa-hospital"></i>
+                        <span>Hospital Q{{ hospital_info.quality }}</span>
+                        <small>+{{ hospital_info.wellness_restore }} HP</small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Hospital Use Button (Defenders Only) -->
+                {% if hospital_info and not is_attacker %}
+                <div class="hospital-action">
+                    {% if can_use_hospital %}
+                    <button type="button" class="hospital-btn" id="use-hospital-btn" onclick="useHospital()">
+                        <i class="fas fa-hospital"></i> Use Hospital (+{{ hospital_info.wellness_restore }} HP)
+                    </button>
+                    {% elif hospital_cooldown_remaining > 0 %}
+                    <button type="button" class="hospital-btn disabled" disabled>
+                        <i class="fas fa-clock"></i> Hospital Cooldown: <span id="hospital-cooldown">{{ (hospital_cooldown_remaining // 3600) }}h {{ ((hospital_cooldown_remaining % 3600) // 60) }}m</span>
+                    </button>
+                    {% else %}
+                    <button type="button" class="hospital-btn disabled" disabled>
+                        <i class="fas fa-hospital"></i> Fight to unlock hospital
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="cannot-fight-inline">
+        <i class="fas fa-ban"></i>
+        <span>{{ side_message }}</span>
+    </div>
+    {% endif %}
+
+    </div> <!-- End battle-main-section -->
+</div>
+{% include '_dashboard_wrapper_end.html' %}
+
+<!-- Battle Alert Modal -->
+<div class="modal fade" id="battleAlertModal" tabindex="-1" aria-labelledby="battleAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937; border: 2px solid rgba(220, 38, 38, 0.4) !important;">
+            <div class="modal-header border-0" style="border-bottom: 2px solid rgba(220, 38, 38, 0.3) !important; background: #1a1f2e;">
+                <h5 class="modal-title text-gray-200" id="battleAlertModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Battle Notice
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="battleAlertMessage" class="text-gray-200 mb-0"></p>
+            </div>
+            <div class="modal-footer border-0" style="background: #1a1f2e;">
+                <button type="button" class="btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #fff; font-weight: 600;" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Helper function to show modal alert
+function showBattleAlert(message) {
+    const modalElement = document.getElementById('battleAlertModal');
+    const messageElement = document.getElementById('battleAlertMessage');
+    if (modalElement && messageElement) {
+        messageElement.textContent = message;
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    }
+}
+
+// ========== HOSPITAL FUNCTION ==========
+
+/**
+ * Use hospital to restore wellness
+ */
+function useHospital() {
+    const hospitalBtn = document.getElementById('use-hospital-btn');
+    if (!hospitalBtn || hospitalBtn.disabled) return;
+
+    // Disable button during request
+    hospitalBtn.disabled = true;
+    hospitalBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Using...';
+
+    fetch('{{ url_for("main.use_hospital", battle_id=battle.id) }}', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update wellness display
+            const wellnessDisplay = document.querySelector('.fight-info span:nth-child(2)');
+            if (wellnessDisplay) {
+                wellnessDisplay.innerHTML = `<i class="fas fa-heart text-danger"></i> ${data.new_wellness}/${data.max_wellness}`;
+            }
+
+            // Show success message
+            showBattleAlert(data.message);
+
+            // Update button to show cooldown
+            hospitalBtn.classList.add('disabled');
+            hospitalBtn.innerHTML = `<i class="fas fa-clock"></i> Hospital Cooldown: 6h 0m`;
+
+            // Start cooldown countdown
+            let cooldownSeconds = data.cooldown_seconds;
+            const cooldownInterval = setInterval(() => {
+                cooldownSeconds--;
+                if (cooldownSeconds <= 0) {
+                    clearInterval(cooldownInterval);
+                    hospitalBtn.classList.remove('disabled');
+                    hospitalBtn.disabled = false;
+                    hospitalBtn.innerHTML = `<i class="fas fa-hospital"></i> Use Hospital (+{{ hospital_info.wellness_restore if hospital_info else 0 }} HP)`;
+                } else {
+                    const hours = Math.floor(cooldownSeconds / 3600);
+                    const minutes = Math.floor((cooldownSeconds % 3600) / 60);
+                    hospitalBtn.innerHTML = `<i class="fas fa-clock"></i> Hospital Cooldown: ${hours}h ${minutes}m`;
+                }
+            }, 60000); // Update every minute
+        } else {
+            showBattleAlert(data.message);
+            // Re-enable button
+            hospitalBtn.disabled = false;
+            hospitalBtn.innerHTML = '<i class="fas fa-hospital"></i> Use Hospital (+{{ hospital_info.wellness_restore if hospital_info else 0 }} HP)';
+        }
+    })
+    .catch(error => {
+        console.error('Hospital error:', error);
+        showBattleAlert('An error occurred while using the hospital.');
+        hospitalBtn.disabled = false;
+        hospitalBtn.innerHTML = '<i class="fas fa-hospital"></i> Use Hospital (+{{ hospital_info.wellness_restore if hospital_info else 0 }} HP)';
+    });
+}
+
+// ========== DAMAGE ANIMATION FUNCTIONS ==========
+
+/**
+ * Show floating damage number at the fight button location
+ * @param {number} damage - The damage amount
+ * @param {boolean} isAttacker - Whether the damage is from attacker side
+ * @param {boolean} isCritical - Whether this is a critical hit (high damage)
+ */
+function showFloatingDamage(damage, isAttacker, isCritical = false) {
+    const fightBtn = document.getElementById('fight-btn');
+    if (!fightBtn) return;
+
+    const rect = fightBtn.getBoundingClientRect();
+    const floatingEl = document.createElement('div');
+
+    floatingEl.className = 'floating-damage ' + (isAttacker ? 'attacker' : 'defender');
+    if (isCritical) {
+        floatingEl.classList.add('critical');
+    }
+
+    // Add damage text with + sign
+    floatingEl.textContent = '+' + damage.toLocaleString();
+
+    // Position near the fight button with some randomness
+    const randomX = (Math.random() - 0.5) * 100;
+    floatingEl.style.left = (rect.left + rect.width / 2 + randomX) + 'px';
+    floatingEl.style.top = (rect.top - 20) + 'px';
+
+    document.body.appendChild(floatingEl);
+
+    // Remove after animation completes
+    setTimeout(() => {
+        floatingEl.remove();
+    }, isCritical ? 1800 : 1500);
+}
+
+/**
+ * Add screen shake effect for big hits
+ */
+function triggerScreenShake() {
+    const container = document.querySelector('.battle-container');
+    if (container) {
+        container.classList.add('shake');
+        setTimeout(() => {
+            container.classList.remove('shake');
+        }, 400);
+    }
+}
+
+/**
+ * Trigger hit effect on a progress bar
+ * @param {string} wallType - The wall type (infantry, armoured, aviation)
+ */
+function triggerBarHit(wallType) {
+    const card = document.getElementById('wall-' + wallType);
+    if (card) {
+        const bar = card.querySelector('.progress-bar-container');
+        if (bar) {
+            bar.classList.add('hit');
+            setTimeout(() => {
+                bar.classList.remove('hit');
+            }, 300);
+        }
+    }
+}
+
+/**
+ * Show last hit animation outside the wall card
+ * @param {string} wallType - Wall type (infantry, armoured, aviation)
+ * @param {boolean} isAttacker - Whether attacker side
+ * @param {string} username - Player username
+ * @param {number} damage - Damage dealt
+ * @param {string} avatarUrl - Player avatar URL
+ */
+function showLastHit(wallType, isAttacker, username, damage, avatarUrl) {
+    const card = document.getElementById('wall-' + wallType);
+    if (!card) return;
+
+    const sideClass = isAttacker ? 'attacker' : 'defender';
+
+    // Remove any existing last-hit element for this side on this wall
+    const existingHit = card.querySelector('.last-hit.' + sideClass);
+    if (existingHit) {
+        existingHit.remove();
+    }
+
+    // Create the last hit element
+    const lastHit = document.createElement('div');
+    lastHit.className = 'last-hit ' + sideClass;
+
+    const defaultAvatar = "{{ url_for('static', filename='images/default_avatar_placeholder.png') }}";
+
+    lastHit.innerHTML = `
+        <img src="${avatarUrl || defaultAvatar}" alt="" class="last-hit-avatar">
+        <div class="last-hit-info">
+            <span class="last-hit-name">${username}</span>
+            <span class="last-hit-damage">+${damage.toLocaleString()}</span>
+        </div>
+    `;
+
+    // Append to the wall card (positioned absolutely outside)
+    card.appendChild(lastHit);
+
+    // Remove after animation completes (2 seconds)
+    setTimeout(() => {
+        if (lastHit.parentNode) {
+            lastHit.remove();
+        }
+    }, 2000);
+}
+
+// ========== END DAMAGE ANIMATION FUNCTIONS ==========
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Current user data
+    const currentUserAvatar = "{{ url_for('static', filename='uploads/avatars/' + current_user.id|string + '.png') if current_user.avatar else '' }}";
+    const currentUsername = "{{ current_user.username }}";
+    const currentUserId = {{ current_user.id }};
+
+    // Track last seen damage timestamp for live animations
+    let lastSeenDamageTime = new Date().toISOString();
+
+    // Available weapons data from server
+    const availableWeapons = {{ available_weapons|tojson|safe }};
+    const weaponNames = {
+        'infantry': 'Rifle',
+        'armoured': 'Tank',
+        'aviation': 'Helicopter'
+    };
+
+    // Wall selector
+    const wallBtns = document.querySelectorAll('.wall-btn');
+    const wallTypeInput = document.getElementById('wall-type-input');
+    const wallCards = document.querySelectorAll('.wall-card');
+    const weaponSelect = document.getElementById('weapon-quality-select');
+    const weaponQualityInput = document.getElementById('weapon-quality-input');
+    const weaponInfo = document.getElementById('weapon-info');
+
+    function updateWeaponSelector(wallType, preserveSelection = true) {
+        const weapons = availableWeapons[wallType] || [];
+        const weaponName = weaponNames[wallType] || 'Weapon';
+        const currentSelection = preserveSelection ? weaponSelect.value : '';
+
+        // Clear existing options
+        weaponSelect.innerHTML = '<option value="">Best Available</option>';
+
+        if (weapons.length === 0) {
+            weaponSelect.innerHTML = '<option value="">No Weapon</option>';
+            weaponInfo.textContent = '';
+            weaponQualityInput.value = '';
+        } else {
+            weapons.forEach(w => {
+                const option = document.createElement('option');
+                option.value = w.quality;
+                option.textContent = `Q${w.quality} ${weaponName} (${w.quantity} left)`;
+                weaponSelect.appendChild(option);
+            });
+            weaponInfo.textContent = '';
+
+            // Restore selection if it still exists
+            if (currentSelection) {
+                const stillExists = weapons.some(w => w.quality == currentSelection);
+                if (stillExists) {
+                    weaponSelect.value = currentSelection;
+                    weaponQualityInput.value = currentSelection;
+                } else {
+                    // Previously selected quality is now gone, select first available
+                    weaponSelect.value = weapons[0].quality;
+                    weaponQualityInput.value = weapons[0].quality;
+                }
+            }
+        }
+    }
+
+    // Initialize weapon selector for default wall (infantry)
+    updateWeaponSelector('infantry', false);
+    // Select first weapon if available
+    if (availableWeapons['infantry'] && availableWeapons['infantry'].length > 0) {
+        weaponSelect.value = availableWeapons['infantry'][0].quality;
+        weaponQualityInput.value = availableWeapons['infantry'][0].quality;
+    }
+
+    wallBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            wallBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const wall = this.dataset.wall;
+            wallTypeInput.value = wall;
+
+            // Update weapon selector for this wall (don't preserve selection when switching walls)
+            updateWeaponSelector(wall, false);
+            // Select first weapon if available
+            if (availableWeapons[wall] && availableWeapons[wall].length > 0) {
+                weaponSelect.value = availableWeapons[wall][0].quality;
+                weaponQualityInput.value = availableWeapons[wall][0].quality;
+            }
+
+            // Highlight selected wall card
+            wallCards.forEach(card => card.classList.remove('selected'));
+            document.getElementById('wall-' + wall).classList.add('selected');
+        });
+    });
+
+    // Update hidden input when weapon quality changes
+    weaponSelect.addEventListener('change', function() {
+        weaponQualityInput.value = this.value;
+    });
+
+    // Cooldown timer
+    let cooldownSeconds = {{ cooldown_remaining|default(0) }};
+    const cooldownDisplay = document.getElementById('cooldown-display');
+    const cooldownSecondsSpan = document.getElementById('cooldown-seconds');
+    const fightBtn = document.getElementById('fight-btn');
+
+    if (cooldownSeconds > 0) {
+        const cooldownInterval = setInterval(function() {
+            cooldownSeconds -= 0.1;
+            if (cooldownSeconds <= 0) {
+                clearInterval(cooldownInterval);
+                if (cooldownDisplay) cooldownDisplay.style.display = 'none';
+                if (fightBtn) fightBtn.disabled = false;
+            } else {
+                if (cooldownSecondsSpan) cooldownSecondsSpan.textContent = cooldownSeconds.toFixed(1);
+            }
+        }, 100);
+    }
+
+    // AJAX fight submission
+    const fightForm = document.getElementById('fight-form');
+    if (fightForm) {
+        fightForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const damage = parseInt(data.damage);
+                    const isCritical = damage >= 500; // Consider 500+ as critical hit
+
+                    // Button feedback animation
+                    fightBtn.classList.add('hitting');
+                    setTimeout(() => fightBtn.classList.remove('hitting'), 300);
+
+                    // Show floating damage number
+                    showFloatingDamage(damage, data.is_attacker, isCritical);
+
+                    // Trigger progress bar hit effect
+                    triggerBarHit(data.wall_type);
+
+                    // Screen shake for big hits
+                    if (isCritical) {
+                        triggerScreenShake();
+                    }
+
+                    // Show last hit on the wall
+                    showLastHit(data.wall_type, data.is_attacker, currentUsername, damage, currentUserAvatar);
+
+                    // Immediately update wall leaderboards after fight
+                    if (data.leaderboards) {
+                        updateWallLeaderboards(data.leaderboards);
+                    }
+
+                    // Update energy/wellness display
+                    const energyDisplay = document.querySelector('.fight-info span:first-child');
+                    const wellnessDisplay = document.querySelector('.fight-info span:nth-child(2)');
+                    if (energyDisplay) energyDisplay.innerHTML = `<i class="fas fa-bolt text-warning"></i> Energy: ${data.user_energy}/100`;
+                    if (wellnessDisplay) wellnessDisplay.innerHTML = `<i class="fas fa-heart text-danger"></i> Wellness: ${data.user_wellness}/100`;
+
+                    // Update weapon counts from fight response
+                    if (data.available_weapons) {
+                        console.log('Updated weapons from fight:', data.available_weapons);
+                        for (const [wall, weapons] of Object.entries(data.available_weapons)) {
+                            availableWeapons[wall] = weapons;
+                        }
+                        updateWeaponSelector(wallTypeInput.value, true);
+                    }
+
+                    // Show level up notification if player leveled up
+                    if (data.leveled_up) {
+                        showBattleAlert(`Congratulations! You reached Level ${data.new_level}! You received 1 Gold as a reward.`);
+                    }
+
+                    // Start cooldown
+                    fightBtn.disabled = true;
+                    cooldownSeconds = 1.5;
+                    if (cooldownDisplay) cooldownDisplay.style.display = 'block';
+
+                    const cooldownInterval = setInterval(function() {
+                        cooldownSeconds -= 0.1;
+                        if (cooldownSeconds <= 0) {
+                            clearInterval(cooldownInterval);
+                            if (cooldownDisplay) cooldownDisplay.style.display = 'none';
+                            fightBtn.disabled = false;
+                        } else {
+                            if (cooldownSecondsSpan) cooldownSecondsSpan.textContent = cooldownSeconds.toFixed(1);
+                        }
+                    }, 100);
+                } else {
+                    showBattleAlert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showBattleAlert('An error occurred while fighting. Please try again.');
+            });
+        });
+    }
+
+    // Timer variables
+    let roundEndsAt = {% if current_round and current_round.ends_at %}new Date('{{ current_round.ends_at.isoformat() }}Z'){% else %}null{% endif %};
+    let battleEndsAt = {% if battle.ends_at %}new Date('{{ battle.ends_at.isoformat() }}Z'){% else %}null{% endif %};
+
+    function formatTime(ms) {
+        if (ms <= 0) return '00:00:00';
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimers() {
+        const now = new Date();
+
+        if (roundEndsAt) {
+            const roundDiff = roundEndsAt - now;
+            document.getElementById('round-timer').textContent = formatTime(roundDiff);
+        }
+
+        if (battleEndsAt) {
+            const battleDiff = battleEndsAt - now;
+            document.getElementById('battle-timer').textContent = formatTime(battleDiff);
+        }
+    }
+
+    // Update timers every second
+    updateTimers();
+    setInterval(updateTimers, 1000);
+
+    // Function to update wall leaderboards/heroes
+    function updateWallLeaderboards(leaderboards) {
+        const defaultAvatar = "{{ url_for('static', filename='images/default_avatar_placeholder.png') }}";
+
+        for (const [wallType, sides] of Object.entries(leaderboards)) {
+            const card = document.getElementById('wall-' + wallType);
+            if (!card) continue;
+
+            // Update defender side
+            const defenderSide = card.querySelector('.wall-side.defender');
+            if (defenderSide) {
+                // Keep the label, remove existing fighters
+                const defenderLabel = defenderSide.querySelector('.wall-side-label');
+                const existingFighters = defenderSide.querySelectorAll('.top-fighter');
+                existingFighters.forEach(f => f.remove());
+
+                // Add updated fighters
+                sides.defender.forEach(entry => {
+                    const fighter = document.createElement('div');
+                    fighter.className = 'top-fighter';
+                    fighter.innerHTML = `
+                        <img src="${entry.avatar_url || defaultAvatar}" alt="" class="top-fighter-avatar">
+                        <div class="top-fighter-info">
+                            <span class="top-fighter-name">${entry.username}</span>
+                            <span class="top-fighter-damage">${Math.floor(entry.total_damage).toLocaleString()}</span>
+                        </div>
+                    `;
+                    defenderSide.appendChild(fighter);
+                });
+            }
+
+            // Update attacker side
+            const attackerSide = card.querySelector('.wall-side.attacker');
+            if (attackerSide) {
+                // Keep the label, remove existing fighters
+                const attackerLabel = attackerSide.querySelector('.wall-side-label');
+                const existingFighters = attackerSide.querySelectorAll('.top-fighter');
+                existingFighters.forEach(f => f.remove());
+
+                // Add updated fighters
+                sides.attacker.forEach(entry => {
+                    const fighter = document.createElement('div');
+                    fighter.className = 'top-fighter';
+                    fighter.innerHTML = `
+                        <img src="${entry.avatar_url || defaultAvatar}" alt="" class="top-fighter-avatar">
+                        <div class="top-fighter-info">
+                            <span class="top-fighter-name">${entry.username}</span>
+                            <span class="top-fighter-damage">${Math.floor(entry.total_damage).toLocaleString()}</span>
+                        </div>
+                    `;
+                    attackerSide.appendChild(fighter);
+                });
+            }
+        }
+    }
+
+    // Auto-refresh battle status every 5 seconds
+    setInterval(function() {
+        fetch('{{ url_for("main.battle_status", battle_id=battle.id) }}')
+            .then(response => response.json())
+            .then(data => {
+                // Update wall progress bars
+                for (const [wall, status] of Object.entries(data.wall_status)) {
+                    const card = document.getElementById('wall-' + wall);
+                    if (card) {
+                        const container = card.querySelector('.progress-bar-container');
+                        const existingFill = container.querySelector('.progress-fill');
+                        if (existingFill) existingFill.remove();
+
+                        const progress = status.progress;
+                        if (progress !== 0) {
+                            const fill = document.createElement('div');
+                            fill.className = 'progress-fill ' + (progress > 0 ? 'attacker' : 'defender');
+                            fill.style.width = Math.abs(progress / 2) + '%';
+                            container.appendChild(fill);
+                        }
+                    }
+                }
+
+                // Update wall leaderboards/heroes
+                if (data.leaderboards) {
+                    updateWallLeaderboards(data.leaderboards);
+                }
+
+                // Update available weapons
+                if (data.available_weapons) {
+                    for (const [wall, weapons] of Object.entries(data.available_weapons)) {
+                        availableWeapons[wall] = weapons;
+                    }
+                    // Refresh the weapon selector for current wall
+                    updateWeaponSelector(wallTypeInput.value);
+                }
+
+                // Update energy/wellness display
+                const energyDisplay = document.querySelector('.fight-info span:first-child');
+                const wellnessDisplay = document.querySelector('.fight-info span:nth-child(2)');
+                if (energyDisplay) energyDisplay.innerHTML = `<i class="fas fa-bolt text-warning"></i> Energy: ${data.user_energy}/100`;
+                if (wellnessDisplay) wellnessDisplay.innerHTML = `<i class="fas fa-heart text-danger"></i> Wellness: ${data.user_wellness}/100`;
+
+                // Update round wins
+                document.getElementById('attacker-wins').textContent = data.attacker_rounds_won;
+                document.getElementById('defender-wins').textContent = data.defender_rounds_won;
+
+                // Update timers from server
+                if (data.round_ends_at) {
+                    roundEndsAt = new Date(data.round_ends_at);
+                }
+                if (data.battle_ends_at) {
+                    battleEndsAt = new Date(data.battle_ends_at);
+                }
+
+                // Process recent damage for live animations (show hits from other players)
+                if (data.recent_damage && data.recent_damage.length > 0) {
+                    // Filter to only new damage records we haven't seen
+                    const newHits = data.recent_damage.filter(hit => {
+                        return hit.dealt_at > lastSeenDamageTime && hit.user_id !== currentUserId;
+                    });
+
+                    // Show animations for new hits (limit to last 3 to avoid spam)
+                    newHits.slice(0, 3).forEach((hit, index) => {
+                        // Stagger animations slightly
+                        setTimeout(() => {
+                            showLastHit(hit.wall_type, hit.is_attacker, hit.username, hit.damage, hit.avatar_url);
+                            triggerBarHit(hit.wall_type);
+                        }, index * 200);
+                    });
+
+                    // Update last seen timestamp to the most recent damage
+                    if (data.recent_damage.length > 0) {
+                        lastSeenDamageTime = data.recent_damage[0].dealt_at;
+                    }
+                }
+            })
+            .catch(error => console.error('Status update error:', error));
+    }, 3000);
+});
+</script>
+{% endblock %}

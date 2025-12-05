@@ -1,0 +1,352 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ title }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .compose-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        text-align: center;
+    }
+
+    .compose-header h2 {
+        color: #22c55e;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        margin-bottom: 0.5rem;
+    }
+
+    .compose-form-container {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-label {
+        color: #22c55e;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        color: #ffffff;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.15);
+        color: #ffffff;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .form-text {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        transition: all 0.3s ease;
+        padding: 0.75rem 2.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #16a34a 0%, #15803d 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-outline-secondary {
+        color: rgba(255, 255, 255, 0.7);
+        border-color: rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        padding: 0.75rem 2rem;
+    }
+
+    .btn-outline-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.4);
+        color: #ffffff;
+    }
+
+    .info-card {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-card h5 {
+        color: #22c55e;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-card ul {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0;
+        padding-left: 1.5rem;
+    }
+
+    .info-card li {
+        margin-bottom: 0.5rem;
+    }
+
+    .character-count {
+        text-align: right;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Autocomplete Dropdown */
+    .autocomplete-container {
+        position: relative;
+    }
+
+    .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #0f1419;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .autocomplete-dropdown.show {
+        display: block;
+    }
+
+    .autocomplete-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .autocomplete-username {
+        color: #ffffff;
+        font-weight: 500;
+    }
+
+    .autocomplete-level {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<div class="dashboard-container">
+    <div class="main-container">
+        <!-- Compose Header -->
+        <div class="compose-header">
+            <h2 class="mb-2">
+                <i class="fas fa-envelope-open-text me-2"></i>Compose New Message
+            </h2>
+            <p class="text-muted mb-0">Send a private message to any player</p>
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-card">
+            <h5>
+                <i class="fas fa-info-circle"></i>Message Guidelines
+            </h5>
+            <ul>
+                <li>Enter the exact username of the player you want to message</li>
+                <li>Messages are private and can only be seen by you and the recipient</li>
+                <li>Be respectful and follow community guidelines</li>
+                <li>You can view and manage your conversations in the Messages tab</li>
+            </ul>
+        </div>
+
+        <!-- Compose Form -->
+        <div class="compose-form-container">
+            <form method="POST" action="{{ url_for('main.compose_message') }}" id="composeForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-4">
+                    <label for="recipient_username" class="form-label">
+                        <i class="fas fa-user"></i>Recipient Username
+                    </label>
+                    <div class="autocomplete-container">
+                        <input type="text" class="form-control" id="recipient_username"
+                               name="recipient_username" placeholder="Start typing username..." required autocomplete="off">
+                        <div id="autocomplete-dropdown" class="autocomplete-dropdown"></div>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-lightbulb me-1"></i>Tip: Start typing to see suggestions
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="content" class="form-label">
+                        <i class="fas fa-comment-dots"></i>Message Content
+                    </label>
+                    <textarea class="form-control" id="content" name="content" rows="8"
+                              placeholder="Type your message here..." required maxlength="5000"></textarea>
+                    <div class="character-count">
+                        <span id="charCount">0</span> / 5000 characters
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('main.messages') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Character counter
+const contentTextarea = document.getElementById('content');
+const charCountSpan = document.getElementById('charCount');
+
+contentTextarea.addEventListener('input', function() {
+    const count = this.value.length;
+    charCountSpan.textContent = count;
+
+    if (count > 4500) {
+        charCountSpan.style.color = '#ef4444';
+    } else if (count > 4000) {
+        charCountSpan.style.color = '#fbbf24';
+    } else {
+        charCountSpan.style.color = 'rgba(255, 255, 255, 0.5)';
+    }
+});
+
+// Username autocomplete
+const usernameInput = document.getElementById('recipient_username');
+const autocompleteDropdown = document.getElementById('autocomplete-dropdown');
+let autocompleteTimeout;
+
+usernameInput.addEventListener('input', function() {
+    const query = this.value.trim();
+
+    // Clear previous timeout
+    clearTimeout(autocompleteTimeout);
+
+    // Hide dropdown if query is too short
+    if (query.length < 2) {
+        autocompleteDropdown.classList.remove('show');
+        autocompleteDropdown.innerHTML = '';
+        return;
+    }
+
+    // Debounce API call
+    autocompleteTimeout = setTimeout(() => {
+        fetch(`/api/search-users?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(users => {
+                if (users.length === 0) {
+                    autocompleteDropdown.innerHTML = '<div class="autocomplete-item" style="cursor: default; color: rgba(255, 255, 255, 0.5);">No users found</div>';
+                    autocompleteDropdown.classList.add('show');
+                    return;
+                }
+
+                // Build dropdown items
+                const html = users.map(user => `
+                    <div class="autocomplete-item" data-username="${user.username}">
+                        <span class="autocomplete-username">${user.username}</span>
+                        <span class="autocomplete-level">Level ${user.level}</span>
+                    </div>
+                `).join('');
+
+                autocompleteDropdown.innerHTML = html;
+                autocompleteDropdown.classList.add('show');
+
+                // Add click handlers
+                autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                    const username = item.dataset.username;
+                    if (username) {
+                        item.addEventListener('click', function() {
+                            usernameInput.value = username;
+                            autocompleteDropdown.classList.remove('show');
+                            autocompleteDropdown.innerHTML = '';
+                        });
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Autocomplete error:', error);
+            });
+    }, 300); // 300ms debounce
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    if (!usernameInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+        autocompleteDropdown.classList.remove('show');
+    }
+});
+
+// Form validation
+document.getElementById('composeForm').addEventListener('submit', function(e) {
+    const username = document.getElementById('recipient_username').value.trim();
+    const content = document.getElementById('content').value.trim();
+
+    if (!username || !content) {
+        e.preventDefault();
+        showError('Please fill in all required fields.');
+        return false;
+    }
+});
+</script>
+{% endblock main_layout %}

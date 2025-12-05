@@ -1,0 +1,242 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Create Bounty Contract - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .create-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h2 {
+        color: #fbbf24;
+        margin-bottom: 0.5rem;
+    }
+
+    .minister-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        color: #3b82f6;
+        font-size: 0.9rem;
+    }
+
+    .form-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        color: #fbbf24;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control, .form-select {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: #fbbf24;
+        box-shadow: 0 0 0 0.2rem rgba(251, 191, 36, 0.25);
+        color: #fff;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .form-text {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .treasury-info {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .treasury-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(34, 197, 94, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+        font-size: 1.5rem;
+    }
+
+    .treasury-details h4 {
+        color: #22c55e;
+        margin: 0 0 0.25rem 0;
+        font-size: 1rem;
+    }
+
+    .treasury-details p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 0.875rem;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        border: none;
+        color: #000;
+        font-weight: 600;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: #000;
+    }
+
+    .no-battles {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .no-battles i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #fbbf24;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="create-container">
+        <div class="page-header">
+            <h2><i class="fas fa-coins me-2"></i>Create Bounty Contract</h2>
+            <div class="minister-badge">
+                {% if role == 'president' %}
+                <i class="fas fa-crown"></i>
+                Country President - {{ minister.name }}
+                {% else %}
+                <i class="fas fa-shield-alt"></i>
+                Minister of Defence - {{ minister.country.name if minister.country else 'Unknown' }}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-card">
+            {% set country = minister if role == 'president' else minister.country %}
+            {% if country %}
+            <div class="treasury-info">
+                <div class="treasury-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="treasury-details">
+                    <h4>Military Budget</h4>
+                    <p>{{ "{:,.2f}".format(country.military_budget_currency) }} {{ country.currency_code }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if form.battle_id.choices %}
+            <form method="POST" action="{{ url_for('military_unit.create_bounty') }}">
+                {{ form.hidden_tag() }}
+
+                <div class="form-group">
+                    <label class="form-label" for="battle_id">Select Battle</label>
+                    {{ form.battle_id(class="form-select") }}
+                    <div class="form-text">Choose an active battle for the bounty contract.</div>
+                    {% if form.battle_id.errors %}
+                        {% for error in form.battle_id.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="fight_for_attacker">Fight For Side</label>
+                    {{ form.fight_for_attacker(class="form-select") }}
+                    <div class="form-text">Which side should the military unit fight for?</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="damage_required">Damage Required</label>
+                    {{ form.damage_required(class="form-control", placeholder="e.g., 100000") }}
+                    <div class="form-text">Minimum damage the unit must deal to complete the contract.</div>
+                    {% if form.damage_required.errors %}
+                        {% for error in form.damage_required.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="payment_amount">Payment Amount ({{ country.currency_code }})</label>
+                    <div class="input-group">
+                        {{ form.payment_amount(class="form-control", placeholder="e.g., 1000") }}
+                        <span class="input-group-text" style="background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.3); color: #fbbf24; font-weight: 600;">{{ country.currency_code }}</span>
+                    </div>
+                    <div class="form-text">Amount to pay upon successful completion (from military budget).</div>
+                    {% if form.payment_amount.errors %}
+                        {% for error in form.payment_amount.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-submit">
+                    <i class="fas fa-file-contract me-2"></i>Create Bounty Contract
+                </button>
+            </form>
+            {% else %}
+            <div class="no-battles">
+                <i class="fas fa-swords"></i>
+                <h4>No Active Battles</h4>
+                <p>There are no active battles to create a bounty for.</p>
+                <p class="text-muted">Bounties can only be created for battles involving your country or its allies.</p>
+            </div>
+            {% endif %}
+
+            <div class="text-center mt-3">
+                <a href="{{ url_for('military_unit.bounties') }}" class="text-muted">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Bounties
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,794 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ title }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .region-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        padding: 2.5rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 197, 94, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .region-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at top right, rgba(34, 197, 94, 0.05) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .region-header h1 {
+        font-size: 2.25rem;
+        font-weight: 700;
+        text-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        position: relative;
+        z-index: 1;
+    }
+
+    .region-flag {
+        width: 64px;
+        height: 43px;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3), 0 0 20px rgba(34, 197, 94, 0.2);
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+    }
+
+    .region-flag:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.4), 0 0 30px rgba(34, 197, 94, 0.3);
+    }
+
+    .nav-pills .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.875rem 1.5rem;
+        font-weight: 500;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .nav-pills .nav-link:hover {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        border-color: rgba(34, 197, 94, 0.2);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.15);
+    }
+
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+        border-color: transparent;
+    }
+
+    .card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .card-header {
+        background: rgba(34, 197, 94, 0.05);
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        color: #ffffff;
+        padding: 1.25rem 1.5rem;
+        font-weight: 600;
+    }
+
+    .card-header h5 {
+        font-weight: 700;
+    }
+
+    .card-header i {
+        color: #22c55e;
+        filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.3));
+    }
+
+    .card-body {
+        color: rgba(255, 255, 255, 0.85);
+        padding: 1.5rem;
+    }
+
+    .card-body i {
+        color: #22c55e;
+    }
+
+    .neighbor-item {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .neighbor-item:hover {
+        background: linear-gradient(135deg, #1f2634 0%, #14191f 100%);
+        transform: translateX(8px);
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .neighbor-item a {
+        color: #ffffff;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 500;
+    }
+
+    .neighbor-item i {
+        color: #22c55e;
+        transition: all 0.3s ease;
+    }
+
+    .neighbor-item:hover i {
+        filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.5));
+    }
+
+    .neighbor-flag {
+        width: 28px;
+        height: 19px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 3px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .neighbor-item:hover .neighbor-flag {
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+    }
+
+    .btn-outline-secondary {
+        color: #22c55e;
+        border-color: rgba(34, 197, 94, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-outline-secondary:hover {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        border-color: rgba(34, 197, 94, 0.6);
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+    }
+
+    .text-muted {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    /* Animation on load */
+    .card {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Empty state styling */
+    .text-center.text-muted.py-4 {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .text-center.text-muted.py-4 i {
+        color: rgba(34, 197, 94, 0.3);
+        font-size: 2.5rem !important;
+    }
+
+    /* Constructions Grid */
+    .constructions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .construction-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .construction-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .construction-item.hospital {
+        border-color: rgba(239, 68, 68, 0.25);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(0, 0, 0, 0.25) 100%);
+    }
+
+    .construction-item.hospital:hover {
+        border-color: rgba(239, 68, 68, 0.4);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
+    }
+
+    .construction-item.fortress {
+        border-color: rgba(139, 92, 246, 0.25);
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(0, 0, 0, 0.25) 100%);
+    }
+
+    .construction-item.fortress:hover {
+        border-color: rgba(139, 92, 246, 0.4);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15);
+    }
+
+    .construction-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .construction-icon.hospital {
+        background: rgba(239, 68, 68, 0.15);
+    }
+
+    .construction-icon.fortress {
+        background: rgba(139, 92, 246, 0.15);
+    }
+
+    .construction-img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+    }
+
+    .construction-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .construction-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.15rem;
+    }
+
+    .construction-quality {
+        color: #a855f7;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .construction-bonus {
+        color: #22c55e;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .construction-bonus i {
+        color: inherit !important;
+    }
+
+    .construction-item.hospital .construction-bonus i {
+        color: #ef4444 !important;
+    }
+
+    .construction-item.fortress .construction-bonus i {
+        color: #8b5cf6 !important;
+    }
+
+    /* Empty constructions state */
+    .empty-constructions {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-constructions i {
+        font-size: 2.5rem;
+        color: rgba(34, 197, 94, 0.3) !important;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    .empty-constructions p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Resources Grid */
+    .resources-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .resource-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        transition: all 0.3s ease;
+    }
+
+    .resource-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .resource-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .resource-img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+    }
+
+    .resource-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .resource-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .resource-amount {
+        color: #22c55e;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .resource-bar .progress {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        margin-bottom: 0.25rem;
+    }
+
+    .resource-bar small {
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="region-content-container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+{# --- Region Header --- #}
+<div class="region-header">
+    <div class="d-flex align-items-center">
+        {% if owner_country and owner_country.flag_code %}
+        <img src="{{ url_for('static', filename='images/country-flags/' + owner_country.flag_code + '.png') }}"
+             alt="{{ owner_country.name }} Flag" class="region-flag me-3">
+        {% elif region.original_owner.flag_code %}
+        <img src="{{ url_for('static', filename='images/country-flags/' + region.original_owner.flag_code + '.png') }}"
+             alt="{{ region.original_owner.name }} Flag (Original)" class="region-flag me-3" style="opacity: 0.6;" title="Original Owner">
+        {% endif %}
+        <h1 class="mb-0 me-auto text-white">{{ region.name }} <small class="text-muted" style="font-size: 0.5em;">#{{ region.id }}</small></h1>
+        {% if owner_country %}
+        <a href="{{ url_for('main.country', slug=owner_country.slug) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-landmark me-1"></i> Country - {{ owner_country.name }}
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{# --- Region Navigation --- #}
+<ul class="nav nav-pills nav-fill mb-4">
+    <li class="nav-item">
+        <a class="nav-link active" href="#society" data-bs-toggle="tab">
+            <i class="fas fa-users me-2"></i>Society
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#economy" data-bs-toggle="tab">
+            <i class="fas fa-chart-pie me-2"></i>Economy
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#military" data-bs-toggle="tab">
+            <i class="fas fa-shield-alt me-2"></i>Military
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#administration" data-bs-toggle="tab">
+            <i class="fas fa-cogs me-2"></i>Administration
+        </a>
+    </li>
+</ul>
+
+{# --- Tab Content --- #}
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="society">
+        <div class="row">
+            <div class="col-md-8">
+                {# Population Card #}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-users me-2 text-primary"></i>Population</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><i class="fas fa-users me-2 text-primary"></i> {{ resident_count }} residents currently in this region.</p>
+                    </div>
+                </div>
+
+                {# Constructions Card #}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-building me-2 text-primary"></i>Constructions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if constructions %}
+                        <div class="constructions-grid">
+                            {% for construction in constructions %}
+                            <div class="construction-item {{ construction.construction_type }}">
+                                <div class="construction-icon {{ construction.construction_type }}">
+                                    {% if construction.construction_type == 'hospital' %}
+                                    <img src="{{ url_for('static', filename='images/resources/hospital.png') }}" alt="Hospital" class="construction-img">
+                                    {% elif construction.construction_type == 'fortress' %}
+                                    <img src="{{ url_for('static', filename='images/resources/fort.png') }}" alt="Fortress" class="construction-img">
+                                    {% endif %}
+                                </div>
+                                <div class="construction-info">
+                                    <div class="construction-name">{{ construction.display_name }}</div>
+                                    <div class="construction-quality">Quality {{ construction.quality }}</div>
+                                    <div class="construction-bonus">
+                                        {% if construction.construction_type == 'hospital' %}
+                                        <i class="fas fa-heart"></i> +{{ construction.bonus_percentage }}% Wellness Recovery
+                                        {% elif construction.construction_type == 'fortress' %}
+                                        <i class="fas fa-shield-alt"></i> +{{ construction.bonus_percentage }}% Defense Bonus
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-constructions">
+                            <i class="fas fa-hard-hat"></i>
+                            <p>No constructions in this region</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Natural Resources Card #}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-gem me-2 text-primary"></i>Natural Resources</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if regional_resources %}
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Countries with these resources get +100% production bonus for extraction companies.
+                        </p>
+                        <div class="resources-grid">
+                            {% for deposit in regional_resources %}
+                            <div class="resource-item">
+                                <div class="resource-icon">
+                                    <img src="{{ url_for('static', filename='images/resources/' + deposit.resource.slug + '.png') }}"
+                                         alt="{{ deposit.resource.name }}" class="resource-img">
+                                </div>
+                                <div class="resource-info">
+                                    <div class="resource-name">{{ deposit.resource.name }}</div>
+                                    <div class="resource-amount">
+                                        <i class="fas fa-cubes me-1"></i>
+                                        {{ "{:,}".format(deposit.amount) }} available
+                                    </div>
+                                    <div class="resource-bar">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar {% if deposit.remaining_percentage > 50 %}bg-success{% elif deposit.remaining_percentage > 25 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                 role="progressbar"
+                                                 style="width: {{ deposit.remaining_percentage }}%">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ "%.0f"|format(deposit.remaining_percentage) }}% remaining</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-mountain fa-2x mb-2 d-block" style="opacity: 0.3;"></i>
+                            <p class="mb-0">No natural resources in this region</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                {# Neighbors Card #}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2 text-primary"></i>Neighboring Regions</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for neighbor in neighbors %}
+                        <div class="neighbor-item">
+                            <a href="{{ url_for('main.region', slug=neighbor.slug) }}">
+                                <div>
+                                    <i class="fas fa-location-dot me-2 text-primary"></i>
+                                    {{ neighbor.name }}
+                                </div>
+                                {% set neighbor_owner = neighbor.current_owner %}
+                                {% if neighbor_owner and neighbor_owner.flag_code %}
+                                <img src="{{ url_for('static', filename='images/country-flags/' + neighbor_owner.flag_code + '.png') }}"
+                                     alt="{{ neighbor_owner.name }} Flag" class="neighbor-flag" title="{{ neighbor_owner.name }}">
+                                {% else %}
+                                <span class="neighbor-flag bg-secondary" title="Owner Unknown"></span>
+                                {% endif %}
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-map-signs mb-2 d-block" style="font-size: 2rem;"></i>
+                            This region has no neighbors.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ========== MILITARY TAB ========== #}
+    <div class="tab-pane fade" id="military">
+        <div class="row">
+            <div class="col-md-8">
+                {# Resistance War Card #}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-fist-raised me-2" style="color: #ef4444;"></i>Resistance War</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if is_conquered %}
+                        {# Region is conquered - show resistance options #}
+                        <div class="resistance-info" style="margin-bottom: 1.5rem;">
+                            <div class="alert-box warning" style="margin-bottom: 1rem;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div class="alert-box-content">
+                                    <strong>Occupied Territory</strong><br>
+                                    This region originally belongs to <strong>{{ region.original_owner.name }}</strong> but is currently occupied by <strong>{{ owner_country.name }}</strong>.
+                                </div>
+                            </div>
+
+                            {% if active_resistance_war %}
+                            {# Active resistance war #}
+                            <div class="resistance-active" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div>
+                                        <h6 style="color: #ef4444; margin: 0; font-weight: 700;">
+                                            <i class="fas fa-fire me-2"></i>Resistance War Active!
+                                        </h6>
+                                        <p style="color: rgba(255,255,255,0.7); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                                            Fighting to liberate {{ region.name }} for {{ region.original_owner.name }}
+                                        </p>
+                                    </div>
+                                    {% if region.original_owner.flag_code %}
+                                    <img src="{{ url_for('static', filename='images/country-flags/' + region.original_owner.flag_code + '.png') }}"
+                                         alt="{{ region.original_owner.name }}" style="width: 48px; height: 32px; border-radius: 4px; border: 2px solid rgba(239, 68, 68, 0.5);">
+                                    {% endif %}
+                                </div>
+
+                                {% if active_resistance_battle %}
+                                <a href="{{ url_for('main.battle_screen', battle_id=active_resistance_battle.id) }}"
+                                   class="btn btn-lg w-100" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; font-weight: 600; padding: 1rem;">
+                                    <i class="fas fa-sword me-2"></i>Join the Battle!
+                                </a>
+                                {% else %}
+                                <div class="text-center" style="color: rgba(255,255,255,0.6);">
+                                    <i class="fas fa-hourglass-half me-2"></i>Battle concluded, awaiting next round...
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            {# No active resistance war - show start option #}
+                            <div class="resistance-start" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 1.5rem;">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div>
+                                        <h6 style="color: #22c55e; margin: 0; font-weight: 700;">
+                                            <i class="fas fa-flag me-2"></i>Start a Resistance War
+                                        </h6>
+                                        <p style="color: rgba(255,255,255,0.7); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                                            Fight to return this region to {{ region.original_owner.name }}
+                                        </p>
+                                    </div>
+                                    {% if region.original_owner.flag_code %}
+                                    <img src="{{ url_for('static', filename='images/country-flags/' + region.original_owner.flag_code + '.png') }}"
+                                         alt="{{ region.original_owner.name }}" style="width: 48px; height: 32px; border-radius: 4px; border: 2px solid rgba(34, 197, 94, 0.5);">
+                                    {% endif %}
+                                </div>
+
+                                <div class="resistance-cost" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                    <img src="{{ url_for('static', filename='images/gold-coin.png') }}" alt="Gold" style="width: 24px; height: 24px;">
+                                    <span style="color: #fbbf24; font-weight: 600; font-size: 1.1rem;">30 Gold</span>
+                                    <span style="color: rgba(255,255,255,0.5); margin-left: auto; font-size: 0.85rem;">Required to start</span>
+                                </div>
+
+                                {% if can_start_resistance %}
+                                <form method="POST" action="{{ url_for('main.start_resistance_war', slug=region.slug) }}" id="startResistanceForm">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="button" class="btn btn-lg w-100" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; font-weight: 600; padding: 1rem;"
+                                            onclick="confirmResistance()">
+                                        <i class="fas fa-fist-raised me-2"></i>Start Resistance War (30 Gold)
+                                    </button>
+                                </form>
+                                {% elif resistance_start_error %}
+                                <div class="text-center" style="padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                    <i class="fas fa-lock me-2" style="color: #f59e0b;"></i>
+                                    <span style="color: rgba(255,255,255,0.7);">{{ resistance_start_error }}</span>
+                                </div>
+                                {% else %}
+                                <div class="text-center" style="padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                    <a href="{{ url_for('auth.login') }}" style="color: #22c55e;">Login to start a resistance war</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="resistance-rules" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+                            <strong style="color: rgba(255,255,255,0.8);"><i class="fas fa-info-circle me-1"></i>Resistance War Rules:</strong>
+                            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                                <li>Only one resistance war can be active per conquered country at a time</li>
+                                <li>You must be located in the occupying country to start a resistance war</li>
+                                <li>Anyone located in the occupying country can fight and choose their side</li>
+                                <li>If resistance wins, this region is liberated back to {{ region.original_owner.name }}</li>
+                                <li>The 30 Gold cost is non-refundable regardless of battle outcome</li>
+                            </ul>
+                        </div>
+                        {% else %}
+                        {# Region is not conquered #}
+                        <div class="text-center" style="padding: 2rem;">
+                            <i class="fas fa-peace" style="font-size: 3rem; color: rgba(34, 197, 94, 0.3); margin-bottom: 1rem; display: block;"></i>
+                            <p style="color: rgba(255,255,255,0.6); margin: 0;">
+                                This region is under its original ownership.<br>
+                                Resistance wars can only be started in occupied territories.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                {# Region Status Card #}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Region Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div style="margin-bottom: 1rem;">
+                            <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0.25rem;">Original Owner</div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if region.original_owner.flag_code %}
+                                <img src="{{ url_for('static', filename='images/country-flags/' + region.original_owner.flag_code + '.png') }}"
+                                     alt="{{ region.original_owner.name }}" style="width: 24px; height: 16px; border-radius: 2px;">
+                                {% endif %}
+                                <a href="{{ url_for('main.country', slug=region.original_owner.slug) }}" style="color: #fff; font-weight: 500;">
+                                    {{ region.original_owner.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0.25rem;">Current Owner</div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if owner_country and owner_country.flag_code %}
+                                <img src="{{ url_for('static', filename='images/country-flags/' + owner_country.flag_code + '.png') }}"
+                                     alt="{{ owner_country.name }}" style="width: 24px; height: 16px; border-radius: 2px;">
+                                {% endif %}
+                                {% if owner_country %}
+                                <a href="{{ url_for('main.country', slug=owner_country.slug) }}" style="color: #fff; font-weight: 500;">
+                                    {{ owner_country.name }}
+                                </a>
+                                {% else %}
+                                <span style="color: rgba(255,255,255,0.5);">Unknown</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0.25rem;">Status</div>
+                            {% if is_conquered %}
+                            <span class="badge" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Occupied
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+                                <i class="fas fa-check-circle me-1"></i>Under Original Ownership
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ========== ADMINISTRATION TAB ========== #}
+    <div class="tab-pane fade" id="administration">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Administration</h5>
+            </div>
+            <div class="card-body">
+                <p style="color: rgba(255,255,255,0.6);">Administration features coming soon...</p>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+function confirmResistance() {
+    if (confirm('Are you sure you want to start a Resistance War?\n\nThis will cost 30 Gold and cannot be refunded.\n\nIf the resistance wins, this region will be liberated to its original owner.')) {
+        document.getElementById('startResistanceForm').submit();
+    }
+}
+</script>
+{% endblock main_layout %}

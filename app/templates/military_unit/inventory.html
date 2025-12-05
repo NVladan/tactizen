@@ -1,0 +1,1083 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ unit.name }} Inventory - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .inventory-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .page-header h2 {
+        color: #22c55e;
+        margin: 0;
+    }
+
+    .treasury-badge {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .treasury-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #22c55e;
+    }
+
+    .treasury-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .section-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-body {
+        padding: 1.25rem;
+    }
+
+    .inventory-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .inventory-item {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .inventory-item:hover {
+        border-color: rgba(34, 197, 94, 0.3);
+        background: rgba(34, 197, 94, 0.05);
+    }
+
+    .item-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 0.75rem;
+        background: rgba(35, 40, 58, 0.8);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(59, 66, 87, 0.5);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .item-icon img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+    }
+
+    .item-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-quality {
+        display: inline-block;
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        padding: 0.15rem 0.5rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-quantity {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+
+    .item-quantity span {
+        color: #22c55e;
+    }
+
+    .btn-distribute {
+        width: 100%;
+        padding: 0.5rem;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-distribute:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        transform: translateY(-1px);
+    }
+
+    .btn-distribute i {
+        margin-right: 0.25rem;
+    }
+
+    /* Distribute Modal Styles */
+    .distribute-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .distribute-modal.active {
+        display: flex;
+    }
+
+    .distribute-modal-content {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 16px;
+        padding: 0;
+        max-width: 420px;
+        width: 90%;
+        overflow: hidden;
+    }
+
+    .distribute-modal-header {
+        background: rgba(59, 130, 246, 0.1);
+        padding: 1.25rem;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .distribute-modal-header h4 {
+        color: #3b82f6;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .distribute-modal-close {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.5rem;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .distribute-modal-close:hover {
+        color: #fff;
+    }
+
+    .distribute-item-preview {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .distribute-item-preview .preview-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(35, 40, 58, 0.8);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(59, 66, 87, 0.5);
+    }
+
+    .distribute-item-preview .preview-icon img {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+    }
+
+    .distribute-item-preview .preview-info h5 {
+        color: #fff;
+        margin: 0 0 0.25rem 0;
+        font-size: 1rem;
+    }
+
+    .distribute-item-preview .preview-info .preview-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+    }
+
+    .distribute-item-preview .preview-info .preview-meta span {
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .distribute-modal-body {
+        padding: 1.25rem;
+    }
+
+    .distribute-form-group {
+        margin-bottom: 1rem;
+    }
+
+    .distribute-form-group label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-weight: 500;
+    }
+
+    .distribute-form-group select,
+    .distribute-form-group input {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        color: #fff;
+        padding: 0.65rem 0.85rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+
+    .distribute-form-group select:focus,
+    .distribute-form-group input:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .distribute-form-group select option {
+        background: #1a1f2e;
+        color: #fff;
+    }
+
+    .member-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .distribute-modal-footer {
+        padding: 1rem 1.25rem;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .distribute-modal-footer button {
+        flex: 1;
+        padding: 0.65rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .btn-distribute-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .btn-distribute-confirm {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        color: #fff;
+    }
+
+    .btn-distribute-confirm:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    }
+
+    .transaction-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .transaction-item {
+        padding: 0.875rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .transaction-item:last-child {
+        border-bottom: none;
+    }
+
+    .transaction-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .transaction-icon.income {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .transaction-icon.expense {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .transaction-icon.transfer {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+
+    .transaction-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .transaction-desc {
+        color: #fff;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .transaction-time {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.75rem;
+    }
+
+    .distribute-form {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control, .form-select {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #fff;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        width: 100%;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: #22c55e;
+        box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.25);
+        color: #fff;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    /* Purchase Section Styles */
+    .purchase-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .purchase-card {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .purchase-card:hover {
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .purchase-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .purchase-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(35, 40, 58, 0.8);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(59, 66, 87, 0.5);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .purchase-icon img {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+    }
+
+    .purchase-icon.weapon { border-color: rgba(239, 68, 68, 0.3); }
+    .purchase-icon.food { border-color: rgba(251, 191, 36, 0.3); }
+
+    .purchase-name {
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .purchase-inputs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .purchase-inputs select,
+    .purchase-inputs input {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #fff;
+        padding: 0.4rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+    }
+
+    .purchase-inputs select:focus,
+    .purchase-inputs input:focus {
+        border-color: #22c55e;
+        outline: none;
+    }
+
+    .purchase-inputs select { flex: 1; }
+    .purchase-inputs input { width: 70px; }
+
+    .price-display {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 0.75rem;
+    }
+
+    .price-display span {
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .btn-purchase {
+        width: 100%;
+        padding: 0.5rem;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+
+    .btn-purchase:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    }
+
+    .btn-purchase:disabled {
+        background: rgba(255, 255, 255, 0.1);
+        cursor: not-allowed;
+    }
+
+    /* Confirmation Modal */
+    .purchase-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .purchase-modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-width: 400px;
+        width: 90%;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .modal-header h4 {
+        color: #22c55e;
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .breakdown-list {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.3rem 0;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .breakdown-total {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .breakdown-total span:last-child {
+        color: #22c55e;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .modal-actions button {
+        flex: 1;
+        padding: 0.6rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .btn-confirm {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="inventory-container">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-boxes me-2"></i>{{ unit.name }} - Inventory</h2>
+            <a href="{{ url_for('military_unit.detail', unit_id=unit.id) }}" class="text-muted" style="font-size: 0.9rem;">
+                <i class="fas fa-arrow-left me-1"></i>Back to Unit
+            </a>
+        </div>
+        <div class="treasury-badge">
+            <div class="treasury-amount">{{ "{:,.2f}".format(unit.treasury) }}</div>
+            <div class="treasury-label">Treasury</div>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <!-- Main Column -->
+        <div>
+            <!-- Inventory Items -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-warehouse"></i> Unit Inventory</h3>
+                </div>
+                <div class="section-body">
+                    {% if inventory_items %}
+                    <div class="inventory-grid">
+                        {% for item in inventory_items %}
+                        <div class="inventory-item"
+                             data-resource-id="{{ item.resource_id }}"
+                             data-resource-name="{{ item.resource.name }}"
+                             data-quality="{{ item.quality }}"
+                             data-quantity="{{ item.quantity }}"
+                             data-icon-path="{{ url_for('static', filename=item.resource.icon_path) }}">
+                            <div class="item-icon">
+                                <img src="{{ url_for('static', filename=item.resource.icon_path) }}" alt="{{ item.resource.name }}">
+                            </div>
+                            <div class="item-name">{{ item.resource.name }}</div>
+                            {% if item.quality > 0 %}
+                            <div class="item-quality">Q{{ item.quality }}</div>
+                            {% endif %}
+                            <div class="item-quantity"><span>{{ "{:,}".format(item.quantity) }}</span> in stock</div>
+                            {% if is_commander %}
+                            <button type="button" class="btn-distribute" onclick="openDistributeModal(this)">
+                                <i class="fas fa-share"></i> Distribute
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <p>Unit inventory is empty</p>
+                        <small>Complete bounty contracts to receive supplies</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if is_commander and market_resources %}
+            <!-- Purchase Supplies -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-shopping-cart"></i> Purchase Supplies</h3>
+                </div>
+                <div class="section-body">
+                    <div class="purchase-grid">
+                        {% for mr in market_resources %}
+                        <div class="purchase-card" data-resource-id="{{ mr.resource.id }}">
+                            <div class="purchase-header">
+                                <div class="purchase-icon {% if mr.resource.slug in ['rifle', 'tank', 'artillery', 'helicopter', 'plane'] %}weapon{% else %}food{% endif %}">
+                                    <img src="{{ url_for('static', filename=mr.resource.icon_path) }}" alt="{{ mr.resource.name }}">
+                                </div>
+                                <div class="purchase-name">{{ mr.resource.name }}</div>
+                            </div>
+                            <div class="purchase-inputs">
+                                <select class="quality-select">
+                                    {% for item in mr.market_items %}
+                                    {% set base_price = (item.initial_price|float + item.price_level|float * item.price_adjustment_per_level|float) * 1.1 %}
+                                    <option value="{{ item.quality }}"
+                                            data-price="{{ "%.4f"|format(base_price) }}">
+                                        Q{{ item.quality }} - {{ "%.2f"|format(base_price) }} {{ unit.country.currency_code }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="number" class="quantity-input" value="10" min="1" max="10000">
+                            </div>
+                            <div class="price-display">
+                                Est. Total: <span class="est-total">0.00</span> {{ unit.country.currency_code }}
+                            </div>
+                            <button type="button" class="btn-purchase" onclick="initiatePurchase(this)">
+                                <i class="fas fa-shopping-cart me-1"></i>Buy
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Transaction Log -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-history"></i> Transaction Log</h3>
+                </div>
+                <div class="section-body">
+                    {% if transactions %}
+                    <div class="transaction-list">
+                        {% for tx in transactions %}
+                        <div class="transaction-item">
+                            <div class="transaction-icon {% if 'received' in tx.transaction_type or 'bounty' in tx.transaction_type %}income{% elif 'given' in tx.transaction_type %}transfer{% else %}expense{% endif %}">
+                                {% if 'bounty' in tx.transaction_type %}
+                                    <i class="fas fa-coins"></i>
+                                {% elif 'given' in tx.transaction_type %}
+                                    <i class="fas fa-hand-holding"></i>
+                                {% else %}
+                                    <i class="fas fa-exchange-alt"></i>
+                                {% endif %}
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-desc">{{ tx.description or tx.transaction_type }}</div>
+                                <div class="transaction-time">{{ tx.created_at.strftime('%b %d, %Y %H:%M') }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <p>No transactions yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Quick Stats -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-chart-bar"></i> Quick Stats</h3>
+                </div>
+                <div class="section-body">
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: rgba(255,255,255,0.6);">Total Items</span>
+                            <span style="color: #22c55e; font-weight: 600;">{{ inventory_items|sum(attribute='quantity') if inventory_items else 0 }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: rgba(255,255,255,0.6);">Treasury</span>
+                            <span style="color: #fbbf24; font-weight: 600;">{{ "{:,.2f}".format(unit.treasury) }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                            <span style="color: rgba(255,255,255,0.6);">Contracts Completed</span>
+                            <span style="color: #3b82f6; font-weight: 600;">{{ unit.contracts_completed }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Distribute Modal -->
+{% if is_commander %}
+<div id="distributeModal" class="distribute-modal">
+    <div class="distribute-modal-content">
+        <div class="distribute-modal-header">
+            <h4><i class="fas fa-share me-2"></i>Distribute to Member</h4>
+            <button type="button" class="distribute-modal-close" onclick="closeDistributeModal()">&times;</button>
+        </div>
+        <div class="distribute-item-preview">
+            <div class="preview-icon">
+                <img id="distributeItemIcon" src="" alt="">
+            </div>
+            <div class="preview-info">
+                <h5 id="distributeItemName">Item Name</h5>
+                <div class="preview-meta">Quality: <span id="distributeItemQuality">Q1</span> &bull; Available: <span id="distributeItemStock">0</span></div>
+            </div>
+        </div>
+        <form id="distributeForm" method="POST" action="{{ url_for('military_unit.distribute_item', unit_id=unit.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="resource_id" id="distributeResourceId" value="">
+            <input type="hidden" name="quality" id="distributeQuality" value="">
+            <div class="distribute-modal-body">
+                <div class="distribute-form-group">
+                    <label><i class="fas fa-user me-1"></i>Select Member</label>
+                    <select name="member_id" id="distributeMemberId" required>
+                        {% for member in unit.get_active_members() %}
+                        <option value="{{ member.user_id }}">{{ member.user.username }} ({{ member.rank.value }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="distribute-form-group">
+                    <label><i class="fas fa-sort-numeric-up me-1"></i>Quantity</label>
+                    <input type="number" name="quantity" id="distributeQuantity" min="1" value="1" required>
+                </div>
+            </div>
+            <div class="distribute-modal-footer">
+                <button type="button" class="btn-distribute-cancel" onclick="closeDistributeModal()">Cancel</button>
+                <button type="submit" class="btn-distribute-confirm">
+                    <i class="fas fa-paper-plane me-1"></i>Send Items
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Purchase Confirmation Modal -->
+<div id="purchaseModal" class="purchase-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4><i class="fas fa-shopping-cart me-2"></i>Confirm Purchase</h4>
+            <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div id="modalBody">
+            <!-- Dynamic content -->
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button type="button" class="btn-confirm" id="confirmPurchaseBtn">Confirm Purchase</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const unitId = {{ unit.id }};
+const csrfToken = '{{ csrf_token() }}';
+let pendingPurchase = null;
+
+// Distribute Modal Functions
+function openDistributeModal(btn) {
+    const itemCard = btn.closest('.inventory-item');
+    const resourceId = itemCard.dataset.resourceId;
+    const resourceName = itemCard.dataset.resourceName;
+    const quality = itemCard.dataset.quality;
+    const quantity = itemCard.dataset.quantity;
+    const iconPath = itemCard.dataset.iconPath;
+
+    // Populate modal with item data
+    document.getElementById('distributeItemIcon').src = iconPath;
+    document.getElementById('distributeItemIcon').alt = resourceName;
+    document.getElementById('distributeItemName').textContent = resourceName;
+    document.getElementById('distributeItemQuality').textContent = quality > 0 ? 'Q' + quality : 'N/A';
+    document.getElementById('distributeItemStock').textContent = parseInt(quantity).toLocaleString();
+
+    // Set hidden form values
+    document.getElementById('distributeResourceId').value = resourceId;
+    document.getElementById('distributeQuality').value = quality;
+
+    // Set max quantity
+    const quantityInput = document.getElementById('distributeQuantity');
+    quantityInput.max = quantity;
+    quantityInput.value = 1;
+
+    // Show modal
+    document.getElementById('distributeModal').classList.add('active');
+}
+
+function closeDistributeModal() {
+    document.getElementById('distributeModal').classList.remove('active');
+}
+
+// Close distribute modal on outside click
+document.getElementById('distributeModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDistributeModal();
+    }
+});
+
+// Update estimated totals on input change
+document.querySelectorAll('.purchase-card').forEach(card => {
+    const qualitySelect = card.querySelector('.quality-select');
+    const quantityInput = card.querySelector('.quantity-input');
+    const estTotal = card.querySelector('.est-total');
+
+    function updateEstimate() {
+        const price = parseFloat(qualitySelect.selectedOptions[0].dataset.price);
+        const qty = parseInt(quantityInput.value) || 0;
+        estTotal.textContent = (price * qty).toFixed(2);
+    }
+
+    qualitySelect.addEventListener('change', updateEstimate);
+    quantityInput.addEventListener('input', updateEstimate);
+    updateEstimate();
+});
+
+function initiatePurchase(btn) {
+    const card = btn.closest('.purchase-card');
+    const resourceId = card.dataset.resourceId;
+    const quality = card.querySelector('.quality-select').value;
+    const quantity = card.querySelector('.quantity-input').value;
+
+    if (quantity < 1) {
+        alert('Quantity must be at least 1');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+    const formData = new FormData();
+    formData.append('resource_id', resourceId);
+    formData.append('quality', quality);
+    formData.append('quantity', quantity);
+    formData.append('csrf_token', csrfToken);
+
+    fetch(`/military-unit/${unitId}/inventory/buy`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-shopping-cart me-1"></i>Buy';
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        // Show confirmation modal
+        pendingPurchase = {
+            resourceId: resourceId,
+            quality: quality,
+            quantity: quantity,
+            priceLevel: data.current_price_level
+        };
+
+        let breakdownHtml = '<div class="breakdown-list">';
+        breakdownHtml += `<div style="margin-bottom: 0.5rem; color: #fff;"><strong>${data.quantity}x Q${data.quality} ${data.resource_name}</strong></div>`;
+
+        data.breakdown.forEach(item => {
+            breakdownHtml += `<div class="breakdown-item"><span>${item[0]} units</span><span>${item[1].toFixed(2)} ${data.currency_code} each</span></div>`;
+        });
+
+        breakdownHtml += `<div class="breakdown-total"><span>Total Cost</span><span>${data.total_cost.toFixed(2)} ${data.currency_code}</span></div>`;
+        breakdownHtml += '</div>';
+
+        document.getElementById('modalBody').innerHTML = breakdownHtml;
+        document.getElementById('purchaseModal').classList.add('active');
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-shopping-cart me-1"></i>Buy';
+        alert('An error occurred. Please try again.');
+        console.error(error);
+    });
+}
+
+function closeModal() {
+    document.getElementById('purchaseModal').classList.remove('active');
+    pendingPurchase = null;
+}
+
+document.getElementById('confirmPurchaseBtn').addEventListener('click', function() {
+    if (!pendingPurchase) return;
+
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+    const formData = new FormData();
+    formData.append('resource_id', pendingPurchase.resourceId);
+    formData.append('quality', pendingPurchase.quality);
+    formData.append('quantity', pendingPurchase.quantity);
+    formData.append('confirmed', 'true');
+    formData.append('expected_price_level', pendingPurchase.priceLevel);
+    formData.append('csrf_token', csrfToken);
+
+    fetch(`/military-unit/${unitId}/inventory/buy`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            btn.disabled = false;
+            btn.innerHTML = 'Confirm Purchase';
+            return;
+        }
+
+        // Success - reload page
+        window.location.reload();
+    })
+    .catch(error => {
+        alert('An error occurred. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm Purchase';
+        console.error(error);
+    });
+});
+
+// Close modal on outside click
+document.getElementById('purchaseModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

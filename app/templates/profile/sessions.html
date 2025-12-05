@@ -1,0 +1,220 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-shield-alt"></i> Active Sessions</h2>
+            <p class="text-muted">Manage your active login sessions across different devices</p>
+            <hr>
+
+            <!-- Current Session Info -->
+            {% if current_session %}
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-desktop"></i> Current Session</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Session ID:</strong> <code>{{ current_session.session_id[:16] }}...</code></p>
+                            <p><strong>Created:</strong> {{ current_session.created_at }}</p>
+                            <p><strong>IP Address:</strong> <code>{{ current_session.ip_address }}</code></p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if current_session.session_age_seconds %}
+                            <p><strong>Session Age:</strong> {{ (current_session.session_age_seconds / 3600)|round(1) }} hours</p>
+                            {% endif %}
+                            {% if current_session.inactive_seconds %}
+                            <p><strong>Last Activity:</strong> {{ (current_session.inactive_seconds / 60)|round(0)|int }} minutes ago</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if current_session.user_agent %}
+                    <p class="mb-0"><strong>Device:</strong> <small>{{ current_session.user_agent[:100] }}{% if current_session.user_agent|length > 100 %}...{% endif %}</small></p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- All Active Sessions -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> All Active Sessions ({{ sessions|length }})</h5>
+                    {% if sessions|length > 1 %}
+                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#terminateAllModal">
+                        <i class="fas fa-sign-out-alt"></i> Log Out All Other Devices
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if sessions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Last Activity</th>
+                                    <th>IP Address</th>
+                                    <th>Device</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in sessions %}
+                                <tr{% if session.is_current %} class="table-primary"{% endif %}>
+                                    <td>
+                                        {% if session.is_current %}
+                                            <span class="badge bg-success"><i class="fas fa-check-circle"></i> Current</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary"><i class="fas fa-circle"></i> Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ session.created_at }}<br>
+                                        <small class="text-muted">{{ (session.session_age_seconds / 3600)|round(1) }} hours ago</small>
+                                    </td>
+                                    <td>
+                                        {{ session.last_activity }}<br>
+                                        <small class="text-muted">{{ (session.inactive_seconds / 60)|round(0)|int }} min ago</small>
+                                    </td>
+                                    <td><code>{{ session.ip_address }}</code></td>
+                                    <td>
+                                        <small>{{ session.user_agent[:60] }}{% if session.user_agent|length > 60 %}...{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        {% if not session.is_current %}
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#terminateModal{{ loop.index }}">
+                                            <i class="fas fa-times-circle"></i> Terminate
+                                        </button>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No active sessions found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Security Information -->
+            <div class="card mb-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Security Information</h5>
+                </div>
+                <div class="card-body">
+                    <h6>About Sessions</h6>
+                    <p>Each time you log in from a device, a new session is created. You can have up to 3 concurrent sessions.</p>
+
+                    <h6>Session Timeouts</h6>
+                    <ul>
+                        <li><strong>Absolute Timeout:</strong> Sessions expire after 24 hours (7 days in production)</li>
+                        <li><strong>Inactivity Timeout:</strong> Sessions expire after 1 hour of inactivity (30 minutes in production)</li>
+                    </ul>
+
+                    <h6>Security Features</h6>
+                    <ul>
+                        <li><i class="fas fa-check text-success"></i> Session regeneration on login (prevents session fixation)</li>
+                        <li><i class="fas fa-check text-success"></i> Fingerprint validation (detects session hijacking)</li>
+                        <li><i class="fas fa-check text-success"></i> Automatic timeout on inactivity</li>
+                        <li><i class="fas fa-check text-success"></i> Concurrent session limit (max 3 devices)</li>
+                    </ul>
+
+                    <h6>What to Do If You See Suspicious Sessions</h6>
+                    <ol>
+                        <li>Click "Log Out All Other Devices" immediately</li>
+                        <li>Change your password/wallet (if applicable)</li>
+                        <li>Check your account activity</li>
+                        <li>Contact support if you notice unauthorized access</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="mt-4">
+                <a href="{{ url_for('main.edit_profile') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Profile
+                </a>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Terminate All Sessions Modal #}
+{% if sessions|length > 1 %}
+<div class="modal fade" id="terminateAllModal" tabindex="-1" aria-labelledby="terminateAllModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-warning">
+            <div class="modal-header border-warning">
+                <h5 class="modal-title text-white" id="terminateAllModalLabel">
+                    <i class="fas fa-sign-out-alt me-2 text-warning"></i>Log Out All Other Devices
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <p class="mb-0">Are you sure you want to log out all other devices?</p>
+                <p class="text-muted small mt-2 mb-0">
+                    <i class="fas fa-info-circle me-1"></i>You will remain logged in on this device.
+                </p>
+            </div>
+            <div class="modal-footer border-warning">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('main.terminate_all_sessions') }}" style="margin: 0; display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-sign-out-alt me-1"></i>Log Out All
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# Individual Session Terminate Modals #}
+{% for session in sessions %}
+{% if not session.is_current %}
+<div class="modal fade" id="terminateModal{{ loop.index }}" tabindex="-1" aria-labelledby="terminateModalLabel{{ loop.index }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-danger">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-white" id="terminateModalLabel{{ loop.index }}">
+                    <i class="fas fa-times-circle me-2 text-danger"></i>Terminate Session
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <p class="mb-0">Are you sure you want to terminate this session?</p>
+                <p class="text-muted small mt-2 mb-1">
+                    <strong>IP:</strong> {{ session.ip_address }}<br>
+                    <strong>Device:</strong> {{ session.user_agent[:60] }}...
+                </p>
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>This device will be logged out immediately.
+                </p>
+            </div>
+            <div class="modal-footer border-danger">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('main.terminate_session', session_id=session.session_id) }}" style="margin: 0; display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times-circle me-1"></i>Terminate
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}

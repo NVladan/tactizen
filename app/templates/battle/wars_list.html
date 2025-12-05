@@ -1,0 +1,702 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Wars - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    /* Wars content section - styled like dashboard content */
+    .wars-content-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #0a0e1a;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        color: #ef4444;
+        font-size: 1.75rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title-icon {
+        font-size: 1.5rem;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        padding: 1rem 1.25rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ef4444;
+        line-height: 1.2;
+    }
+
+    .stat-value.green { color: #22c55e; }
+    .stat-value.yellow { color: #fbbf24; }
+    .stat-value.gray { color: #94a3b8; }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+
+    /* Your Country Status Banner */
+    .country-status-banner {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .country-status-banner.at-peace {
+        border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .country-status-banner.at-war {
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, #0f1419 100%);
+    }
+
+    .status-icon-container {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        flex-shrink: 0;
+    }
+
+    .at-peace .status-icon-container {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .at-war .status-icon-container {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        animation: pulse-red 2s infinite;
+    }
+
+    @keyframes pulse-red {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    }
+
+    .status-content {
+        flex: 1;
+    }
+
+    .status-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .at-peace .status-title { color: #22c55e; }
+    .at-war .status-title { color: #ef4444; }
+
+    .status-description {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .war-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .war-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 20px;
+        padding: 0.35rem 1rem;
+        font-size: 0.85rem;
+        color: #ffffff;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .war-chip:hover {
+        background: rgba(239, 68, 68, 0.3);
+        color: #fff;
+    }
+
+    /* Section */
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .section.peace {
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    .section.history {
+        border-color: rgba(100, 116, 139, 0.2);
+    }
+
+    .section-title {
+        color: #ef4444;
+        font-size: 1.1rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section.peace .section-title {
+        color: #22c55e;
+        border-bottom-color: rgba(34, 197, 94, 0.2);
+    }
+
+    .section.history .section-title {
+        color: #94a3b8;
+        border-bottom-color: rgba(100, 116, 139, 0.2);
+    }
+
+    /* War Card */
+    .war-card {
+        background: rgba(26, 31, 46, 0.6);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s ease;
+    }
+
+    .war-card:hover {
+        border-color: rgba(239, 68, 68, 0.5);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15);
+    }
+
+    .war-card.peace-card {
+        border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    .war-card.peace-card:hover {
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.15);
+    }
+
+    .war-card.ended-card {
+        border-color: rgba(100, 116, 139, 0.25);
+        opacity: 0.85;
+    }
+
+    .war-card.ended-card:hover {
+        border-color: rgba(100, 116, 139, 0.5);
+        box-shadow: 0 8px 25px rgba(100, 116, 139, 0.1);
+        opacity: 1;
+    }
+
+    .war-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .war-participants {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+
+    .participant {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .participant-flag {
+        width: 48px;
+        height: 32px;
+        border-radius: 4px;
+        object-fit: cover;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .participant-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .participant-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .participant-role {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .vs-divider {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 0.5rem;
+    }
+
+    .vs-badge {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: #fff;
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+    }
+
+    .peace-card .vs-badge {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    }
+
+    .ended-card .vs-badge {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    }
+
+    .war-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .war-status-badge.active {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        animation: pulse-badge 2s infinite;
+    }
+
+    @keyframes pulse-badge {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .war-status-badge.peace-proposed {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .war-status-badge.ended {
+        background: rgba(100, 116, 139, 0.15);
+        color: #94a3b8;
+    }
+
+    .war-card-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .war-stat {
+        text-align: center;
+    }
+
+    .war-stat-value {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .war-stat-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        margin-top: 0.15rem;
+    }
+
+    .war-stat-value.has-battle {
+        color: #fbbf24;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: rgba(34, 197, 94, 0.4);
+    }
+
+    .empty-state-title {
+        color: #fff;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state-text {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.95rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .war-participants {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .vs-divider {
+            padding: 0.5rem 0;
+        }
+
+        .war-card-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .country-status-banner {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<!-- Wars Content Section -->
+<div class="wars-content-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-icon"><i class="fas fa-crosshairs"></i></span>
+            Wars
+        </h1>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value">{{ active_wars|length }}</div>
+            <div class="stat-label">Active Wars</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value yellow">{{ peace_wars|length }}</div>
+            <div class="stat-label">Peace Negotiations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value gray">{{ ended_wars|length }}</div>
+            <div class="stat-label">Recent History</div>
+        </div>
+        {% if current_user.citizenship %}
+        <div class="stat-card">
+            <div class="stat-value {% if user_country_at_war %}{% else %}green{% endif %}">
+                {% if user_country_at_war %}
+                <i class="fas fa-skull-crossbones"></i>
+                {% else %}
+                <i class="fas fa-dove"></i>
+                {% endif %}
+            </div>
+            <div class="stat-label">{{ current_user.citizenship.name }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Your Country Status -->
+    {% if current_user.citizenship %}
+    <div class="country-status-banner {% if user_country_at_war %}at-war{% else %}at-peace{% endif %}">
+        <div class="status-icon-container">
+            {% if user_country_at_war %}
+            <i class="fas fa-skull-crossbones"></i>
+            {% else %}
+            <i class="fas fa-dove"></i>
+            {% endif %}
+        </div>
+        <div class="status-content">
+            {% if user_country_at_war %}
+            <div class="status-title">Your Country is at War!</div>
+            <div class="status-description">
+                {{ current_user.citizenship.name }} is currently engaged in {{ user_country_wars|length }} war{% if user_country_wars|length > 1 %}s{% endif %}
+            </div>
+            <div class="war-chips">
+                {% for war in user_country_wars %}
+                <a href="{{ url_for('main.war_detail', war_id=war.id) }}" class="war-chip">
+                    <i class="fas fa-crosshairs"></i>
+                    {% if war.attacker_country_id == current_user.citizenship_id %}
+                    vs {{ war.defender_country.name }}
+                    {% else %}
+                    vs {{ war.attacker_country.name }}
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="status-title">Your Country is at Peace</div>
+            <div class="status-description">
+                {{ current_user.citizenship.name }} is not currently involved in any wars. Enjoy the peace!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Active Wars -->
+    <div class="section">
+        <h2 class="section-title">
+            <i class="fas fa-fire"></i>
+            Active Wars
+        </h2>
+
+        {% if active_wars %}
+            {% for war in active_wars %}
+            <a href="{{ url_for('main.war_detail', war_id=war.id) }}" class="war-card">
+                <div class="war-card-header">
+                    <div class="war-participants">
+                        <div class="participant">
+                            <img src="{{ url_for('static', filename='images/country-flags/' ~ war.attacker_country.flag_code ~ '.png') }}"
+                                 alt="{{ war.attacker_country.name }}" class="participant-flag"
+                                 onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                            <div class="participant-info">
+                                <span class="participant-name">{{ war.attacker_country.name }}</span>
+                                <span class="participant-role">Attacker</span>
+                            </div>
+                        </div>
+
+                        <div class="vs-divider">
+                            <span class="vs-badge">VS</span>
+                        </div>
+
+                        <div class="participant">
+                            <img src="{{ url_for('static', filename='images/country-flags/' ~ war.defender_country.flag_code ~ '.png') }}"
+                                 alt="{{ war.defender_country.name }}" class="participant-flag"
+                                 onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                            <div class="participant-info">
+                                <span class="participant-name">{{ war.defender_country.name }}</span>
+                                <span class="participant-role">Defender</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <span class="war-status-badge active">
+                        <i class="fas fa-fire"></i> Active
+                    </span>
+                </div>
+
+                <div class="war-card-stats">
+                    <div class="war-stat">
+                        <div class="war-stat-value">{{ war.started_at.strftime('%b %d') }}</div>
+                        <div class="war-stat-label">Started</div>
+                    </div>
+                    <div class="war-stat">
+                        <div class="war-stat-value">
+                            {% if war.scheduled_end_at %}
+                            {{ ((war.scheduled_end_at - now).days)|abs }} days
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </div>
+                        <div class="war-stat-label">Remaining</div>
+                    </div>
+                    <div class="war-stat">
+                        <div class="war-stat-value {% if war.has_active_battle() %}has-battle{% endif %}">
+                            {% if war.has_active_battle() %}
+                            <i class="fas fa-bolt"></i> Yes
+                            {% else %}
+                            No
+                            {% endif %}
+                        </div>
+                        <div class="war-stat-label">Active Battle</div>
+                    </div>
+                    <div class="war-stat">
+                        <div class="war-stat-value">{{ war.battles|list|length }}</div>
+                        <div class="war-stat-label">Total Battles</div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-peace"></i></div>
+                <div class="empty-state-title">No Active Wars</div>
+                <div class="empty-state-text">Peace prevails across all nations... for now.</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Peace Negotiations -->
+    {% if peace_wars %}
+    <div class="section peace">
+        <h2 class="section-title">
+            <i class="fas fa-dove"></i>
+            Peace Negotiations
+        </h2>
+
+        {% for war in peace_wars %}
+        <a href="{{ url_for('main.war_detail', war_id=war.id) }}" class="war-card peace-card">
+            <div class="war-card-header">
+                <div class="war-participants">
+                    <div class="participant">
+                        <img src="{{ url_for('static', filename='images/country-flags/' ~ war.attacker_country.flag_code ~ '.png') }}"
+                             alt="{{ war.attacker_country.name }}" class="participant-flag"
+                             onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                        <div class="participant-info">
+                            <span class="participant-name">{{ war.attacker_country.name }}</span>
+                            <span class="participant-role">Attacker</span>
+                        </div>
+                    </div>
+
+                    <div class="vs-divider">
+                        <span class="vs-badge"><i class="fas fa-handshake"></i></span>
+                    </div>
+
+                    <div class="participant">
+                        <img src="{{ url_for('static', filename='images/country-flags/' ~ war.defender_country.flag_code ~ '.png') }}"
+                             alt="{{ war.defender_country.name }}" class="participant-flag"
+                             onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                        <div class="participant-info">
+                            <span class="participant-name">{{ war.defender_country.name }}</span>
+                            <span class="participant-role">Defender</span>
+                        </div>
+                    </div>
+                </div>
+
+                <span class="war-status-badge peace-proposed">
+                    <i class="fas fa-handshake"></i> Peace Proposed
+                </span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Recent History -->
+    {% if ended_wars %}
+    <div class="section history">
+        <h2 class="section-title">
+            <i class="fas fa-history"></i>
+            Recent History
+        </h2>
+
+        {% for war in ended_wars %}
+        <a href="{{ url_for('main.war_detail', war_id=war.id) }}" class="war-card ended-card">
+            <div class="war-card-header">
+                <div class="war-participants">
+                    <div class="participant">
+                        <img src="{{ url_for('static', filename='images/country-flags/' ~ war.attacker_country.flag_code ~ '.png') }}"
+                             alt="{{ war.attacker_country.name }}" class="participant-flag"
+                             onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                        <div class="participant-info">
+                            <span class="participant-name">{{ war.attacker_country.name }}</span>
+                            <span class="participant-role">Attacker</span>
+                        </div>
+                    </div>
+
+                    <div class="vs-divider">
+                        <span class="vs-badge">VS</span>
+                    </div>
+
+                    <div class="participant">
+                        <img src="{{ url_for('static', filename='images/country-flags/' ~ war.defender_country.flag_code ~ '.png') }}"
+                             alt="{{ war.defender_country.name }}" class="participant-flag"
+                             onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                        <div class="participant-info">
+                            <span class="participant-name">{{ war.defender_country.name }}</span>
+                            <span class="participant-role">Defender</span>
+                        </div>
+                    </div>
+                </div>
+
+                <span class="war-status-badge ended">
+                    {% if war.status.value == 'ended_peace' %}
+                    <i class="fas fa-handshake"></i> Peace
+                    {% else %}
+                    <i class="fas fa-clock"></i> Expired
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="war-card-stats">
+                <div class="war-stat">
+                    <div class="war-stat-value">{{ war.started_at.strftime('%b %d') }}</div>
+                    <div class="war-stat-label">Started</div>
+                </div>
+                <div class="war-stat">
+                    <div class="war-stat-value">{{ war.ended_at.strftime('%b %d') if war.ended_at else 'N/A' }}</div>
+                    <div class="war-stat-label">Ended</div>
+                </div>
+                <div class="war-stat">
+                    <div class="war-stat-value">
+                        {% if war.ended_at and war.started_at %}
+                        {{ (war.ended_at - war.started_at).days }} days
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                    <div class="war-stat-label">Duration</div>
+                </div>
+                <div class="war-stat">
+                    <div class="war-stat-value">{{ war.battles|list|length }}</div>
+                    <div class="war-stat-label">Battles</div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}

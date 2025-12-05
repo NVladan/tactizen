@@ -1,0 +1,187 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="mb-4">
+        <h2>
+            <i class="fas fa-{% if update %}edit{% else %}plus{% endif %}"></i>
+            {{ 'Edit' if update else 'Create' }} Game Update
+        </h2>
+        <p class="text-muted">
+            {% if update %}
+            Edit update #{{ update.id }} - Created {{ update.created_at.strftime('%Y-%m-%d %H:%M') }}
+            {% else %}
+            Create a new game update, patch note, or announcement
+            {% endif %}
+        </p>
+    </div>
+
+    <form method="post" class="needs-validation" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Main Content -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title"
+                                   value="{{ update.title if update else '' }}" required maxlength="200"
+                                   placeholder="e.g., Version 2.0 - Combat System Overhaul">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="summary" class="form-label">Summary</label>
+                            <input type="text" class="form-control" id="summary" name="summary"
+                                   value="{{ update.summary if update else '' }}" maxlength="500"
+                                   placeholder="Brief description shown in previews (optional)">
+                            <div class="form-text">Optional short summary for update previews</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Content <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="content" name="content" rows="15" required
+                                      placeholder="Write your update content here. HTML is supported for formatting.">{{ update.content if update else '' }}</textarea>
+                            <div class="form-text">
+                                Supports HTML for formatting. Use &lt;h3&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;, etc.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Settings -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" name="category" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat.name }}"
+                                        {% if update and update.category == cat %}selected{% endif %}>
+                                    {{ cat.name.replace('_', ' ').title() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="version" class="form-label">Version</label>
+                            <input type="text" class="form-control" id="version" name="version"
+                                   value="{{ update.version if update else '' }}" maxlength="20"
+                                   placeholder="e.g., 2.0.0">
+                            <div class="form-text">Optional version number</div>
+                        </div>
+
+                        <hr>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_pinned" name="is_pinned"
+                                   {% if update and update.is_pinned %}checked{% endif %}>
+                            <label class="form-check-label" for="is_pinned">
+                                <i class="fas fa-thumbtack text-warning me-1"></i> Pin to top
+                            </label>
+                            <div class="form-text">Pinned updates appear at the top of the list</div>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="is_important" name="is_important"
+                                   {% if update and update.is_important %}checked{% endif %}>
+                            <label class="form-check-label" for="is_important">
+                                <i class="fas fa-exclamation-circle text-danger me-1"></i> Mark as important
+                            </label>
+                            <div class="form-text">Important updates are highlighted</div>
+                        </div>
+
+                        {% if not update %}
+                        <hr>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="publish_now" name="publish_now">
+                            <label class="form-check-label" for="publish_now">
+                                <i class="fas fa-eye text-success me-1"></i> Publish immediately
+                            </label>
+                            <div class="form-text">If unchecked, the update will be saved as a draft</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Status Info (Edit only) -->
+                {% if update %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Status:</strong>
+                            {% if update.is_published %}
+                            <span class="badge bg-success">Published</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Draft</span>
+                            {% endif %}
+                        </p>
+                        {% if update.published_at %}
+                        <p class="mb-2">
+                            <strong>Published:</strong>
+                            {{ update.published_at.strftime('%Y-%m-%d %H:%M') }}
+                        </p>
+                        {% endif %}
+                        <p class="mb-0">
+                            <strong>Author:</strong>
+                            {{ update.author.username }}
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Category Legend -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Category Legend</h5>
+                    </div>
+                    <div class="card-body">
+                        <small>
+                            {% for cat in categories %}
+                            <span class="d-block mb-1">
+                                <i class="fas fa-circle" style="color: {{ cat.value }}; font-size: 0.5rem;"></i>
+                                <strong>{{ cat.name.replace('_', ' ').title() }}</strong>
+                            </span>
+                            {% endfor %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save me-2"></i>
+                {{ 'Save Changes' if update else 'Create Update' }}
+            </button>
+            <a href="{{ url_for('admin.game_updates') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times me-2"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    #content {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}

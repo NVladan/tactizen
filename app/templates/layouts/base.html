@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}{{ title | default('Tactizen') }}{% endblock %}</title>
+    {# --- CSS Includes --- #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    {# --- Google Font Link --- #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    {# --- Your Custom CSS (AFTER FONT) --- #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: #0a0e1a;
+            color: #ffffff;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%) !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            padding: 0.5rem 0;
+            color: #ffffff !important;
+            text-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-brand:hover {
+            text-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+        }
+
+        .navbar-brand img {
+            height: 64px;
+            width: auto;
+            filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.5));
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.8) !important;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(34, 197, 94, 0.1);
+            border-radius: 8px;
+            color: #22c55e !important;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+        }
+
+        .nav-link i {
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover i {
+            color: #22c55e;
+            filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.5));
+        }
+
+        .dropdown-menu {
+            background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%) !important;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            margin-top: 0.5rem;
+            transform-origin: top;
+            animation: dropdownFade 0.2s ease;
+            padding: 0.5rem 0;
+            border-radius: 12px;
+        }
+
+        .dropdown-item {
+            color: #ffffff !important;
+            padding: 0.75rem 1.25rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            background-color: transparent !important;
+            margin: 0.25rem 0.5rem;
+            border-radius: 8px;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(34, 197, 94, 0.1) !important;
+            color: #22c55e !important;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.15);
+        }
+
+        .dropdown-item:hover i {
+            color: #22c55e;
+            filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.5));
+        }
+
+        .dropdown-item.disabled {
+            color: rgba(255, 255, 255, 0.3) !important;
+            pointer-events: none;
+            background-color: transparent !important;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 0.75rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-divider {
+            border-top: 1px solid rgba(34, 197, 94, 0.2);
+            margin: 0.5rem 0;
+        }
+
+        .navbar-toggler {
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 0.5rem;
+            color: #22c55e;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-toggler:hover {
+            background: rgba(34, 197, 94, 0.1);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.25);
+        }
+
+        .navbar-toggler-icon {
+            filter: brightness(0) invert(1);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-menu .nav-link {
+            padding: 0.5rem 1rem !important;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(34, 197, 94, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            border-color: rgba(34, 197, 94, 0.6);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .wallet-connect {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .wallet-connect:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            background: #0a0e1a;
+            min-height: calc(100vh - 60px);
+            margin-top: 60px;
+            padding: 2rem;
+            border-radius: 16px;
+        }
+
+        .card {
+            background: #1a1f2e;
+            border: 1px solid rgba(34, 197, 94, 0.15);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            background: #0f1419;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+            color: #ffffff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: none;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            transform: translateY(-2px);
+        }
+
+        .form-control {
+            background: #0f1419;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #ffffff;
+        }
+
+        .form-control:focus {
+            background: #0f1419;
+            border-color: #22c55e;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.25);
+        }
+
+        .form-select {
+            background: #0f1419;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #ffffff;
+        }
+
+        .form-select:focus {
+            background: #0f1419;
+            border-color: #22c55e;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.25);
+        }
+
+        .text-muted {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        /* Tabs Styling */
+        #myPlacesTab.nav-tabs {
+            border-bottom: 1px solid rgba(34, 197, 94, 0.2) !important;
+            gap: 0.5rem;
+        }
+
+        #myPlacesTab.nav-tabs .nav-link {
+            color: rgba(255, 255, 255, 0.7) !important;
+            border: none !important;
+            padding: 0.75rem 1.25rem;
+            transition: all 0.3s ease;
+            border-radius: 8px 8px 0 0;
+            background-color: #1a1f2e !important;
+            margin-right: 0 !important;
+            font-weight: 500;
+        }
+
+        #myPlacesTab.nav-tabs .nav-link:hover {
+            color: #ffffff !important;
+            background-color: #1f2634 !important;
+        }
+
+        #myPlacesTab.nav-tabs .nav-link.active {
+            color: #22c55e !important;
+            background: rgba(34, 197, 94, 0.1) !important;
+            border: none !important;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+        }
+
+        #myPlacesTab.nav-tabs .nav-link.active:hover {
+            background: rgba(34, 197, 94, 0.15) !important;
+        }
+
+        /* Navbar Dropdown Toggle */
+        .navbar .nav-item .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .navbar .nav-item .nav-link:hover {
+            color: #22c55e;
+        }
+
+        .navbar .nav-item.show .nav-link {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        @keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Messages Dropdown Styling */
+        .messages-dropdown {
+            background: #1a1f2e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+        }
+
+        .messages-dropdown .message-item {
+            transition: all 0.3s ease;
+        }
+
+        .messages-dropdown .message-item:hover {
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .messages-dropdown .message-item.unread-message {
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .messages-dropdown .message-item.unread-message:hover {
+            background: rgba(34, 197, 94, 0.15);
+        }
+    </style>
+    {# --- Block for extra CSS or meta tags --- #}
+    {% block head_extra %}{% endblock %}
+  </head>
+  <body>
+
+    {# --- Top Navigation Bar --- #}
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+      <div class="container">
+        {# Brand #}
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="" onerror="this.style.display='none'">Tactizen
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMainContent" aria-controls="navbarMainContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMainContent">
+            {# --- Main Menu Items --- #}
+            <ul class="navbar-nav align-items-center ms-auto main-menu-group">
+                {% if current_user.is_authenticated and current_user.citizenship_id %}
+                    {# My places Dropdown #}
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarMyPlacesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-map-marker-alt"></i> My places
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarMyPlacesDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('company.my_companies') }}"><i class="fas fa-building"></i> Companies</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.training') }}"><i class="fas fa-dumbbell"></i> Training</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.study') }}"><i class="fas fa-graduation-cap"></i> Study</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.storage') }}"><i class="fas fa-warehouse"></i> Storage</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.travel') }}"><i class="fas fa-plane"></i> Travel</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.residence') }}"><i class="fas fa-home"></i> Residence</a></li>
+                    </ul>
+                  </li>
+
+                    {# Wars Link #}
+                  <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.wars_list') }}">
+                            <i class="fas fa-fist-raised"></i> Wars
+                    </a>
+                  </li>
+
+                    {# Government Dropdown #}
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarGovernmentDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-university"></i> Government
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarGovernmentDropdown">
+                        {% if current_user.citizenship %}
+                            <li><a class="dropdown-item" href="{{ url_for('government.president', country_id=current_user.citizenship_id) }}"><i class="fas fa-crown"></i> President</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('government.congress', country_id=current_user.citizenship_id) }}"><i class="fas fa-balance-scale"></i> Congress</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('government.elections') }}"><i class="fas fa-vote-yea"></i> Elections</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('government.propose_law') }}"><i class="fas fa-scroll"></i> Laws</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('government.ministry_of_defense') }}"><i class="fas fa-shield-alt"></i> Ministry of Defense</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('government.ministry_of_foreign_affairs') }}"><i class="fas fa-globe"></i> Ministry of Foreign Affairs</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('government.ministry_of_finance') }}"><i class="fas fa-coins"></i> Ministry of Finance</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('government.alliances') }}"><i class="fas fa-handshake"></i> Alliances</a></li>
+                        {% else %}
+                            <li><a class="dropdown-item disabled" href="#"><i class="fas fa-crown"></i> President</a></li>
+                            <li><a class="dropdown-item disabled" href="#"><i class="fas fa-balance-scale"></i> Congress</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item disabled" href="#"><i class="fas fa-vote-yea"></i> Elections</a></li>
+                            <li><a class="dropdown-item disabled" href="#"><i class="fas fa-scroll"></i> Laws</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item disabled" href="#"><i class="fas fa-shield-alt"></i> Ministry of Defense</a></li>
+                            <li><a class="dropdown-item disabled" href="#"><i class="fas fa-globe"></i> Ministry of Foreign Affairs</a></li>
+                            <li><a class="dropdown-item disabled" href="#"><i class="fas fa-coins"></i> Ministry of Finance</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('government.alliances') }}"><i class="fas fa-handshake"></i> Alliances</a></li>
+                        {% endif %}
+                    </ul>
+                  </li>
+
+                    {# Market Dropdown #}
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarMarketDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-cart"></i> Market
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarMarketDropdown">
+                        {% if current_user.citizenship %}
+                                <li><a class="dropdown-item" href="{{ url_for('main.marketplace', country_slug=current_user.citizenship.slug) }}"><i class="fas fa-store"></i> Marketplace</a></li>
+                        {% else %}
+                                <li><a class="dropdown-item disabled" href="#"><i class="fas fa-store"></i> Marketplace</a></li>
+                        {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('company.job_market') }}"><i class="fas fa-briefcase"></i> Job Market</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.currency_market_default') }}"><i class="fas fa-money-bill-wave"></i> Currency Market</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.zen_market') }}"><i class="fas fa-coins"></i> Zen Market</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('marketplace.marketplace_page') }}"><i class="fas fa-gem"></i> NFT Market</a></li>
+                    </ul>
+                  </li>
+
+                    {# Community Dropdown #}
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarCommunityDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-users"></i> Community
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarCommunityDropdown">
+                        {% if current_user.citizenship %}
+                                <li><a class="dropdown-item" href="{{ url_for('main.country', slug=current_user.citizenship.slug) }}"><i class="fas fa-flag"></i> My Country</a></li>
+                        {% else %}
+                                <li><a class="dropdown-item disabled" href="#"><i class="fas fa-flag"></i> My Country</a></li>
+                        {% endif %}
+                        {% if current_user.citizenship %}
+                            {% if current_user.party %}
+                                <li><a class="dropdown-item" href="{{ url_for('party.detail', party_id=current_user.party.id) }}"><i class="fas fa-landmark"></i> My Party</a></li>
+                            {% else %}
+                                <li><a class="dropdown-item" href="{{ url_for('party.browse') }}"><i class="fas fa-landmark"></i> My Party</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li><a class="dropdown-item disabled" href="#"><i class="fas fa-landmark"></i> My Party</a></li>
+                        {% endif %}
+                        {% if current_user.military_unit %}
+                            <li><a class="dropdown-item" href="{{ url_for('military_unit.detail', unit_id=current_user.military_unit.id) }}"><i class="fas fa-shield-alt"></i> My Military Unit</a></li>
+                        {% else %}
+                            <li><a class="dropdown-item" href="{{ url_for('military_unit.browse') }}"><i class="fas fa-shield-alt"></i> My Military Unit</a></li>
+                        {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('main.my_newspaper') }}"><i class="fas fa-newspaper"></i> My Newspaper</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.game_guide') }}"><i class="fas fa-book-open"></i> Game Guide</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.world_map') }}"><i class="fas fa-globe"></i> World Map</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('wallet.connect_page') }}"><i class="fas fa-wallet"></i> Connect Wallet</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('nft.inventory_page') }}"><i class="fas fa-gem"></i> NFT Inventory</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.referral') }}"><i class="fas fa-gift"></i> Referral rewards</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.leaderboards') }}"><i class="fas fa-trophy"></i> Leaderboards</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.latest_updates') }}"><i class="fas fa-bell"></i> Latest Updates</a></li>
+                    </ul>
+                  </li>
+                {% endif %}
+            </ul>
+
+            {# --- User Menu --- #}
+            <ul class="navbar-nav user-menu">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('main.edit_profile') }}"><i class="fas fa-edit"></i> Edit Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.achievements') }}"><i class="fas fa-trophy"></i> Achievements</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.referral') }}"><i class="fas fa-gift"></i> Referral Program</a></li>
+                            {% if current_user.is_admin %}
+                            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}"><i class="fas fa-shield-alt"></i> Admin Panel</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('support.admin_tickets') }}"><i class="fas fa-ticket-alt"></i> Manage Tickets</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('support.admin_reports') }}"><i class="fas fa-flag"></i> Manage Reports</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <button id="connectWalletBtn" class="btn wallet-connect" type="button">
+                            <i class="fas fa-wallet"></i> Connect Wallet
+                        </button>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <div id="walletStatus"></div>
+                    </li>
+                      {% endif %}
+                    </ul>
+        </div>
+      </div>
+    </nav>
+
+    {# --- Ban Notification Modal --- #}
+    <div class="modal fade" id="banModal" tabindex="-1" aria-labelledby="banModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0" style="background: #1f2937;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-gray-200" id="banModalLabel">
+                        <i class="fas fa-ban me-2"></i>Account Banned
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <div class="notification-icon mb-3">
+                            <i class="fas fa-user-slash fa-3x text-danger"></i>
+                        </div>
+                        <div id="banModalMessage" class="h5 mb-3 text-gray-200"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Flash Messages Modal --- #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="modal fade" id="flashModal" tabindex="-1" aria-labelledby="flashModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0" style="background: #1f2937; border: 2px solid rgba(34, 197, 94, 0.4) !important;">
+                    <div class="modal-header border-0" style="border-bottom: 2px solid rgba(34, 197, 94, 0.3) !important; background: #1a1f2e;">
+                        <h5 class="modal-title text-gray-200" id="flashModalLabel">
+                            {% set first_category = messages[0][0] %}
+                            {% if first_category == 'success' %}
+                                <i class="fas fa-check-circle me-2" style="color: #22c55e;"></i>Success
+                            {% elif first_category == 'danger' or first_category == 'error' %}
+                                <i class="fas fa-times-circle me-2" style="color: #ef4444;"></i>Error
+                            {% elif first_category == 'warning' %}
+                                <i class="fas fa-exclamation-triangle me-2" style="color: #f59e0b;"></i>Warning
+                            {% else %}
+                                <i class="fas fa-info-circle me-2" style="color: #3b82f6;"></i>Notification
+                            {% endif %}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        {% for category, message in messages %}
+                        <div class="{% if not loop.last %}mb-3 pb-3{% endif %}" style="{% if not loop.last %}border-bottom: 1px solid rgba(34, 197, 94, 0.2);{% endif %}">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0 mt-1">
+                                    {% if category == 'success' %}
+                                        <i class="fas fa-check-circle fa-2x" style="color: #22c55e;"></i>
+                                    {% elif category == 'danger' or category == 'error' %}
+                                        <i class="fas fa-times-circle fa-2x" style="color: #ef4444;"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle fa-2x" style="color: #f59e0b;"></i>
+                                    {% else %}
+                                        <i class="fas fa-info-circle fa-2x" style="color: #3b82f6;"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <p class="text-gray-200 mb-0" style="font-size: 1rem; line-height: 1.6;">{{ message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="modal-footer" style="background-color: #2d3748 !important; border-top: 1px solid #4ade80 !important; padding: 1rem !important; text-align: center !important;">
+                        <button type="button" id="flashModalContinueBtn" style="display: inline-block !important; background-color: #22c55e !important; color: #000000 !important; border: 2px solid #4ade80 !important; padding: 8px 24px !important; font-size: 15px !important; font-weight: 700 !important; border-radius: 6px !important; cursor: pointer !important; box-shadow: 0 0 15px rgba(74, 222, 128, 0.5) !important;">
+                            <i class="fas fa-check me-2"></i>Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to clean up modal artifacts
+            function cleanupModalArtifacts() {
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                    backdrop.remove();
+                });
+
+                // Reset body styles
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            }
+
+            // Clean up any leftover modal backdrops and reset body scroll
+            cleanupModalArtifacts();
+
+            var flashModalElement = document.getElementById('flashModal');
+            if (flashModalElement) {
+                var flashModalInstance = new bootstrap.Modal(flashModalElement);
+                flashModalInstance.show();
+
+                // Add click handler to Continue button
+                var continueBtn = document.getElementById('flashModalContinueBtn');
+                if (continueBtn) {
+                    continueBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Hide the modal
+                        flashModalInstance.hide();
+
+                        // Aggressive cleanup after a short delay
+                        setTimeout(function() {
+                            cleanupModalArtifacts();
+
+                            // Force remove modal element visibility
+                            flashModalElement.style.display = 'none';
+                            flashModalElement.classList.remove('show');
+
+                            // Double check cleanup
+                            setTimeout(cleanupModalArtifacts, 100);
+                        }, 150);
+                    });
+                }
+
+                // Ensure cleanup when flash modal is closed by other means
+                flashModalElement.addEventListener('hidden.bs.modal', function() {
+                    cleanupModalArtifacts();
+                });
+            }
+        });
+        </script>
+        {% endif %}
+    {% endwith %}
+
+    {# --- Main Content Area Wrapper --- #}
+    <div class="container main-container">
+
+        {# --- Define main layout block (can be overridden by child templates) --- #}
+        {% block main_layout %}
+            <div class="row">
+                <div class="col-12">
+                  <div class="content-area"> {# Styled via style.css #}
+                    {% block app_content %}{% endblock app_content %}
+                  </div>
+                </div>
+            </div>
+        {% endblock main_layout %} {# --- End main_layout block --- #}
+
+    </div> {# End main-container #}
+
+    {# --- Footer --- #}
+    {% block footer %}
+    <footer class="container mt-4 py-3" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
+        <div class="row">
+            <div class="col-md-6 text-center text-md-start">
+                <p class="text-muted small mb-0">
+                    Copyright © {{ current_year }} Tactizen Recreation. All rights reserved.
+                </p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <a href="{{ url_for('support.my_tickets') }}" class="text-muted small me-3 text-decoration-none">
+                    <i class="fas fa-ticket-alt me-1"></i>Support Tickets
+                </a>
+                <a href="{{ url_for('support.create_ticket') }}" class="text-muted small text-decoration-none">
+                    <i class="fas fa-question-circle me-1"></i>Help / Report Issue
+                </a>
+            </div>
+        </div>
+    </footer>
+    {% endblock footer %}
+
+    {# --- Global Alert Modal --- #}
+    <div class="modal fade" id="globalAlertModal" tabindex="-1" aria-labelledby="globalAlertModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0" style="background: #1f2937; border: 2px solid rgba(34, 197, 94, 0.4) !important;">
+                <div class="modal-header border-0" id="globalAlertModalHeader" style="border-bottom: 2px solid rgba(34, 197, 94, 0.3) !important; background: #1a1f2e;">
+                    <h5 class="modal-title text-gray-200" id="globalAlertModalLabel">
+                        <i class="fas fa-info-circle me-2" id="globalAlertModalIcon" style="color: #3b82f6;"></i>
+                        <span id="globalAlertModalTitle">Notification</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-info-circle fa-2x" id="globalAlertModalBodyIcon" style="color: #3b82f6;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="text-gray-200 mb-0" id="globalAlertModalMessage" style="font-size: 1rem; line-height: 1.6;"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background-color: #2d3748 !important; border-top: 1px solid #4ade80 !important; padding: 1rem !important;">
+                    <button type="button" class="btn" id="globalAlertModalBtn" data-bs-dismiss="modal" style="display: inline-block !important; background-color: #22c55e !important; color: #000000 !important; border: 2px solid #4ade80 !important; padding: 8px 24px !important; font-size: 15px !important; font-weight: 700 !important; border-radius: 6px !important; cursor: pointer !important; box-shadow: 0 0 15px rgba(74, 222, 128, 0.5) !important;">
+                        <i class="fas fa-check me-2"></i>OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Scripts --- #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/metamask_auth.js') }}"></script>
+
+    {# --- Global showAlert Function --- #}
+    <script>
+    /**
+     * Show a modal alert instead of browser's native alert()
+     * @param {string} message - The message to display
+     * @param {string} type - 'success', 'error', 'warning', or 'info' (default: 'info')
+     * @param {string} title - Optional custom title (auto-generated if not provided)
+     */
+    function showAlert(message, type = 'info', title = null) {
+        const modal = document.getElementById('globalAlertModal');
+        const modalTitle = document.getElementById('globalAlertModalTitle');
+        const modalMessage = document.getElementById('globalAlertModalMessage');
+        const modalIcon = document.getElementById('globalAlertModalIcon');
+        const modalBodyIcon = document.getElementById('globalAlertModalBodyIcon');
+        const modalHeader = document.getElementById('globalAlertModalHeader');
+        const modalBtn = document.getElementById('globalAlertModalBtn');
+
+        // Set colors and icons based on type
+        const config = {
+            success: {
+                icon: 'fa-check-circle',
+                color: '#22c55e',
+                title: 'Success',
+                borderColor: 'rgba(34, 197, 94, 0.4)',
+                btnBg: '#22c55e',
+                btnBorder: '#4ade80'
+            },
+            error: {
+                icon: 'fa-times-circle',
+                color: '#ef4444',
+                title: 'Error',
+                borderColor: 'rgba(239, 68, 68, 0.4)',
+                btnBg: '#ef4444',
+                btnBorder: '#f87171'
+            },
+            warning: {
+                icon: 'fa-exclamation-triangle',
+                color: '#f59e0b',
+                title: 'Warning',
+                borderColor: 'rgba(245, 158, 11, 0.4)',
+                btnBg: '#f59e0b',
+                btnBorder: '#fbbf24'
+            },
+            info: {
+                icon: 'fa-info-circle',
+                color: '#3b82f6',
+                title: 'Notification',
+                borderColor: 'rgba(59, 130, 246, 0.4)',
+                btnBg: '#3b82f6',
+                btnBorder: '#60a5fa'
+            }
+        };
+
+        const cfg = config[type] || config.info;
+
+        // Update modal content
+        modalTitle.textContent = title || cfg.title;
+        modalMessage.textContent = message;
+
+        // Update icons
+        modalIcon.className = 'fas ' + cfg.icon + ' me-2';
+        modalIcon.style.color = cfg.color;
+        modalBodyIcon.className = 'fas ' + cfg.icon + ' fa-2x';
+        modalBodyIcon.style.color = cfg.color;
+
+        // Update modal border
+        modal.querySelector('.modal-content').style.border = '2px solid ' + cfg.borderColor + ' !important';
+        modalHeader.style.borderBottom = '2px solid ' + cfg.borderColor + ' !important';
+
+        // Update button style
+        modalBtn.style.backgroundColor = cfg.btnBg + ' !important';
+        modalBtn.style.borderColor = cfg.btnBorder + ' !important';
+        modalBtn.style.boxShadow = '0 0 15px ' + cfg.borderColor + ' !important';
+
+        // Show the modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+    // Convenience functions
+    function showSuccess(message, title = null) { showAlert(message, 'success', title); }
+    function showError(message, title = null) { showAlert(message, 'error', title); }
+    function showWarning(message, title = null) { showAlert(message, 'warning', title); }
+    function showInfo(message, title = null) { showAlert(message, 'info', title); }
+    </script>
+
+    {# --- CSRF Token Setup for AJAX Requests --- #}
+    <script>
+    // Setup CSRF token for all AJAX requests
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get CSRF token from meta tag
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+
+        if (csrfToken) {
+            var token = csrfToken.getAttribute('content');
+
+            // Setup CSRF token for fetch requests
+            var originalFetch = window.fetch;
+            window.fetch = function(url, options) {
+                options = options || {};
+                options.headers = options.headers || {};
+
+                // Add CSRF token to POST, PUT, PATCH, DELETE requests
+                if (options.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method.toUpperCase())) {
+                    options.headers['X-CSRFToken'] = token;
+                }
+
+                return originalFetch(url, options);
+            };
+
+            // Setup CSRF token for jQuery AJAX requests (if jQuery is used)
+            if (typeof $ !== 'undefined' && $.ajaxSetup) {
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", token);
+                        }
+                    }
+                });
+            }
+        }
+    });
+    </script>
+
+    {# --- Block for other page-specific scripts --- #}
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

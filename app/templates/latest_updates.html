@@ -1,0 +1,377 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Latest Updates - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* Page Header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        box-shadow: 0 4px 30px rgba(99, 102, 241, 0.2);
+    }
+
+    .page-header h1 {
+        color: #6366f1;
+        margin-bottom: 0.5rem;
+        font-size: 2.25rem;
+        font-weight: 700;
+    }
+
+    .page-header h1 i {
+        filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.6));
+    }
+
+    .page-header p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 0;
+        font-size: 1.1rem;
+    }
+
+    /* Category Filter */
+    .category-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .category-btn {
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .category-btn:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.4);
+        color: #ffffff;
+    }
+
+    .category-btn.active {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border-color: #6366f1;
+        color: #ffffff;
+    }
+
+    /* Update Cards */
+    .updates-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .update-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .update-card:hover {
+        border-color: rgba(99, 102, 241, 0.4);
+        box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+    }
+
+    .update-card.pinned {
+        border-color: rgba(251, 191, 36, 0.4);
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, #0f1419 100%);
+    }
+
+    .update-card.important {
+        border-color: rgba(239, 68, 68, 0.4);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, #0f1419 100%);
+    }
+
+    .update-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .update-title-section {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .update-badges {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .update-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-pinned {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+
+    .badge-important {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .update-title {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .update-meta {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.875rem;
+        flex-wrap: wrap;
+    }
+
+    .update-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .update-meta-item i {
+        color: rgba(99, 102, 241, 0.7);
+    }
+
+    .category-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #fff;
+        white-space: nowrap;
+    }
+
+    .version-tag {
+        background: rgba(99, 102, 241, 0.2);
+        color: #a5b4fc;
+        padding: 0.35rem 0.85rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: 'Monaco', 'Menlo', monospace;
+    }
+
+    .update-content {
+        padding: 1.5rem;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.7;
+    }
+
+    .update-content h3 {
+        color: #6366f1;
+        font-size: 1.1rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .update-content h3:first-child {
+        margin-top: 0;
+    }
+
+    .update-content ul {
+        margin: 0.75rem 0;
+        padding-left: 1.5rem;
+    }
+
+    .update-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    .update-content strong {
+        color: #ffffff;
+    }
+
+    .update-content code {
+        background: rgba(99, 102, 241, 0.2);
+        color: #a5b4fc;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+
+    .update-summary {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1rem;
+        font-style: italic;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255, 255, 255, 0.6);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #6366f1;
+        opacity: 0.5;
+    }
+
+    .empty-state h4 {
+        color: #6366f1;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .update-header {
+            flex-direction: column;
+        }
+
+        .update-title {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <div class="page-header">
+            <h1><i class="fas fa-bullhorn me-2"></i>Latest Updates</h1>
+            <p>Stay informed about game changes, new features, and balance updates</p>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="category-filter">
+            <a href="{{ url_for('main.latest_updates') }}"
+               class="category-btn {% if not category_filter %}active{% endif %}">
+                All Updates
+            </a>
+            <a href="{{ url_for('main.latest_updates', category='FEATURE') }}"
+               class="category-btn {% if category_filter == 'FEATURE' %}active{% endif %}">
+                <i class="fas fa-star me-1"></i> Features
+            </a>
+            <a href="{{ url_for('main.latest_updates', category='BALANCE') }}"
+               class="category-btn {% if category_filter == 'BALANCE' %}active{% endif %}">
+                <i class="fas fa-balance-scale me-1"></i> Balance
+            </a>
+            <a href="{{ url_for('main.latest_updates', category='BUGFIX') }}"
+               class="category-btn {% if category_filter == 'BUGFIX' %}active{% endif %}">
+                <i class="fas fa-bug me-1"></i> Bug Fixes
+            </a>
+            <a href="{{ url_for('main.latest_updates', category='CONTENT') }}"
+               class="category-btn {% if category_filter == 'CONTENT' %}active{% endif %}">
+                <i class="fas fa-box me-1"></i> Content
+            </a>
+            <a href="{{ url_for('main.latest_updates', category='ANNOUNCEMENT') }}"
+               class="category-btn {% if category_filter == 'ANNOUNCEMENT' %}active{% endif %}">
+                <i class="fas fa-bullhorn me-1"></i> Announcements
+            </a>
+        </div>
+
+        <!-- Updates List -->
+        {% if updates %}
+        <div class="updates-list">
+            {% for update in updates %}
+            <article class="update-card {% if update.is_pinned %}pinned{% endif %} {% if update.is_important %}important{% endif %}">
+                <div class="update-header">
+                    <div class="update-title-section">
+                        <div class="update-badges">
+                            {% if update.is_pinned %}
+                            <span class="update-badge badge-pinned">
+                                <i class="fas fa-thumbtack"></i> Pinned
+                            </span>
+                            {% endif %}
+                            {% if update.is_important %}
+                            <span class="update-badge badge-important">
+                                <i class="fas fa-exclamation-circle"></i> Important
+                            </span>
+                            {% endif %}
+                            <span class="category-tag" style="background-color: {{ update.category_color }}">
+                                <i class="fas {{ update.category_icon }}"></i>
+                                {{ update.category_label }}
+                            </span>
+                            {% if update.version %}
+                            <span class="version-tag">v{{ update.version }}</span>
+                            {% endif %}
+                        </div>
+                        <h2 class="update-title">{{ update.title }}</h2>
+                        <div class="update-meta">
+                            <span class="update-meta-item">
+                                <i class="fas fa-calendar"></i>
+                                {{ update.published_at.strftime('%B %d, %Y') }}
+                            </span>
+                            <span class="update-meta-item">
+                                <i class="fas fa-user"></i>
+                                {{ update.author.username }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="update-content">
+                    {% if update.summary %}
+                    <p class="update-summary">{{ update.summary }}</p>
+                    {% endif %}
+                    {{ update.content|safe }}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-newspaper"></i>
+            <h4>No Updates Yet</h4>
+            <p>Check back later for game updates and announcements!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,370 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Connect Wallet - {{ super() }}{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="wallet-connect-container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4><i class="fas fa-wallet"></i> Connect Your Wallet</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Wallet Status -->
+                    <div id="wallet-status" class="text-center mb-4">
+                        <div id="not-connected" style="display: block;">
+                            <i class="fas fa-unlink fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No wallet connected</p>
+                        </div>
+                        <div id="connected" style="display: none;">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <p class="mb-1"><strong>Connected Wallet:</strong></p>
+                            <p class="text-break"><code id="connected-address">0x...</code></p>
+                            <p class="mb-1"><strong>ZEN Balance:</strong></p>
+                            <p><span id="zen-balance" class="badge bg-success">0 ZEN</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Connect Button -->
+                    <div id="connect-section" class="text-center mb-4">
+                        <button id="connect-wallet-btn" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plug"></i> Connect MetaMask
+                        </button>
+                    </div>
+
+                    <!-- Verify Ownership -->
+                    <div id="verify-section" style="display: none;">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Verify Ownership:</strong> Sign a message to prove you own this wallet.
+                        </div>
+                        <button id="verify-wallet-btn" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-pen"></i> Sign Message to Verify
+                        </button>
+                    </div>
+
+                    <!-- Already Verified -->
+                    <div id="verified-section" style="display: none;">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Wallet Verified!</strong> You can now purchase NFTs with ZEN tokens.
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('nft.inventory_page') }}" class="btn btn-primary">
+                                <i class="fas fa-gem"></i> Go to NFT Inventory
+                            </a>
+                            <button id="disconnect-wallet-btn" class="btn btn-outline-secondary">
+                                <i class="fas fa-unlink"></i> Disconnect Wallet
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Network Info -->
+                    <div class="mt-4 p-3" style="background: rgba(34, 197, 94, 0.1); border-radius: 8px;">
+                        <h6><i class="fas fa-network-wired"></i> Network Requirements</h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Network:</strong> Horizen L3 Testnet (Chain ID: 2651420)</li>
+                            <li><strong>RPC URL:</strong> https://horizen-testnet.rpc.caldera.xyz/http</li>
+                            <li><strong>Currency:</strong> ETH (for gas)</li>
+                            <li><strong>Block Explorer:</strong> https://horizen-testnet.explorer.caldera.xyz</li>
+                        </ul>
+                        <button id="add-network-btn" class="btn btn-sm btn-outline-success mt-2">
+                            <i class="fas fa-plus"></i> Add Horizen L3 Testnet to MetaMask
+                        </button>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="mt-4">
+                        <h6><i class="fas fa-info-circle"></i> How it Works</h6>
+                        <ol class="small">
+                            <li>Install <a href="https://metamask.io" target="_blank">MetaMask</a> browser extension</li>
+                            <li>Create or import a wallet</li>
+                            <li>Switch to Horizen L3 Testnet</li>
+                            <li>Connect your wallet to Tactizen</li>
+                            <li>Sign a message to verify ownership</li>
+                            <li>Purchase NFTs with ZEN tokens!</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    background: #1a1f2e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.card-header {
+    background: #0f1419;
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+code {
+    background: rgba(34, 197, 94, 0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    color: #22c55e;
+}
+</style>
+
+<script>
+const EXPECTED_CHAIN_ID = '0x28751c'; // 2651420 in hex (Horizen L3 Testnet)
+const CHAIN_NAME = 'Horizen L3 Testnet';
+const RPC_URL = 'https://horizen-testnet.rpc.caldera.xyz/http';
+
+let currentAccount = null;
+
+// Check if MetaMask is installed
+function isMetaMaskInstalled() {
+    return typeof window.ethereum !== 'undefined';
+}
+
+// Connect wallet
+async function connectWallet() {
+    // Check global connection flag to prevent conflicts
+    if (window.isWalletConnecting) {
+        console.log('Connection already in progress from another script');
+        return;
+    }
+
+    if (!isMetaMaskInstalled()) {
+        showWarning('Please install MetaMask first: https://metamask.io');
+        window.open('https://metamask.io', '_blank');
+        return;
+    }
+
+    try {
+        window.isWalletConnecting = true;
+        // Request account access
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        currentAccount = accounts[0];
+
+        // Check if on correct network
+        const chainId = await ethereum.request({ method: 'eth_chainId' });
+
+        if (chainId !== EXPECTED_CHAIN_ID) {
+            const switched = await switchToHorizenL3();
+            if (!switched) return;
+        }
+
+        // Update UI
+        updateWalletUI(currentAccount);
+
+        // Load ZEN balance
+        await loadZenBalance(currentAccount);
+
+        // Check if already verified
+        await checkWalletVerification(currentAccount);
+
+    } catch (error) {
+        console.error('Error connecting wallet:', error);
+        showError('Error connecting wallet: ' + error.message);
+    } finally {
+        window.isWalletConnecting = false;
+    }
+}
+
+// Switch to Horizen L3 Testnet network
+async function switchToHorizenL3() {
+    try {
+        await ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: EXPECTED_CHAIN_ID }],
+        });
+        return true;
+    } catch (switchError) {
+        // Network doesn't exist, add it
+        if (switchError.code === 4902) {
+            try {
+                await ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: EXPECTED_CHAIN_ID,
+                        chainName: 'Horizen L3 Testnet',
+                        nativeCurrency: {
+                            name: 'Ethereum',
+                            symbol: 'ETH',
+                            decimals: 18
+                        },
+                        rpcUrls: ['https://horizen-testnet.rpc.caldera.xyz/http'],
+                        blockExplorerUrls: ['https://horizen-testnet.explorer.caldera.xyz']
+                    }],
+                });
+                return true;
+            } catch (addError) {
+                console.error('Error adding network:', addError);
+                showError('Error adding Horizen L3 Testnet network');
+                return false;
+            }
+        }
+        console.error('Error switching network:', switchError);
+        return false;
+    }
+}
+
+// Add network button handler
+document.getElementById('add-network-btn').addEventListener('click', async function() {
+    if (!isMetaMaskInstalled()) {
+        showWarning('Please install MetaMask first');
+        return;
+    }
+    await switchToHorizenL3();
+});
+
+// Update UI with connected wallet
+function updateWalletUI(address) {
+    document.getElementById('not-connected').style.display = 'none';
+    document.getElementById('connected').style.display = 'block';
+    document.getElementById('connected-address').textContent = address;
+    document.getElementById('connect-section').style.display = 'none';
+}
+
+// Load ZEN balance from blockchain
+async function loadZenBalance(address) {
+    try {
+        const response = await fetch(`/api/wallet/zen-balance?address=${address}`);
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('zen-balance').textContent = `${data.balance} ZEN`;
+        }
+    } catch (error) {
+        console.error('Error loading ZEN balance:', error);
+        document.getElementById('zen-balance').textContent = 'Error loading';
+    }
+}
+
+// Check if wallet is already verified
+async function checkWalletVerification(address) {
+    try {
+        const response = await fetch(`/api/wallet/check-verified?address=${address}`);
+        const data = await response.json();
+
+        if (data.verified) {
+            document.getElementById('verified-section').style.display = 'block';
+            document.getElementById('verify-section').style.display = 'none';
+        } else {
+            document.getElementById('verify-section').style.display = 'block';
+            document.getElementById('verified-section').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error checking verification:', error);
+    }
+}
+
+// Verify wallet ownership
+async function verifyWallet() {
+    if (!currentAccount) return;
+
+    try {
+        // Get message to sign from backend
+        const response = await fetch('/api/wallet/get-verification-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: currentAccount })
+        });
+
+        const data = await response.json();
+        const message = data.message;
+
+        // Request signature from MetaMask
+        const signature = await ethereum.request({
+            method: 'personal_sign',
+            params: [message, currentAccount],
+        });
+
+        // Verify signature on backend
+        const verifyResponse = await fetch('/api/wallet/verify-signature', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                address: currentAccount,
+                signature: signature,
+                message: message
+            })
+        });
+
+        const verifyData = await verifyResponse.json();
+
+        if (verifyData.success) {
+            showSuccess('Wallet verified successfully!');
+            document.getElementById('verify-section').style.display = 'none';
+            document.getElementById('verified-section').style.display = 'block';
+        } else {
+            showError('Verification failed: ' + verifyData.error);
+        }
+
+    } catch (error) {
+        console.error('Error verifying wallet:', error);
+        showError('Error verifying wallet: ' + error.message);
+    }
+}
+
+// Disconnect wallet
+function disconnectWallet() {
+    currentAccount = null;
+    document.getElementById('not-connected').style.display = 'block';
+    document.getElementById('connected').style.display = 'none';
+    document.getElementById('connect-section').style.display = 'block';
+    document.getElementById('verify-section').style.display = 'none';
+    document.getElementById('verified-section').style.display = 'none';
+}
+
+// Event listeners
+document.getElementById('connect-wallet-btn').addEventListener('click', connectWallet);
+document.getElementById('verify-wallet-btn').addEventListener('click', verifyWallet);
+document.getElementById('disconnect-wallet-btn').addEventListener('click', disconnectWallet);
+
+// Listen for account changes
+if (isMetaMaskInstalled()) {
+    ethereum.on('accountsChanged', function (accounts) {
+        if (accounts.length === 0) {
+            disconnectWallet();
+        } else {
+            currentAccount = accounts[0];
+            updateWalletUI(currentAccount);
+            loadZenBalance(currentAccount);
+            checkWalletVerification(currentAccount);
+        }
+    });
+
+    ethereum.on('chainChanged', function (chainId) {
+        if (chainId !== EXPECTED_CHAIN_ID) {
+            showWarning('Please switch to Horizen L3 Testnet');
+            switchToHorizenL3();
+        }
+    });
+}
+
+// Auto-connect if already connected
+window.addEventListener('load', async function() {
+    if (isMetaMaskInstalled()) {
+        // Use eth_accounts instead of eth_requestAccounts to avoid popup
+        // This only retrieves already-connected accounts without requesting permission
+        const accounts = await ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+            currentAccount = accounts[0];
+            updateWalletUI(currentAccount);
+            loadZenBalance(currentAccount);
+            checkWalletVerification(currentAccount);
+        }
+    }
+});
+</script>
+</div>
+{% endblock main_layout %}

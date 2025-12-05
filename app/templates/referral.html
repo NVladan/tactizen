@@ -1,0 +1,397 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Referral Program - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* User Info Panel Styles */
+
+    .referral-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .referral-header h2 {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .referral-header p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1rem;
+    }
+
+    .referral-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .referral-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(34, 197, 94, 0.1);
+    }
+
+    .referral-link-section {
+        background: rgba(34, 197, 94, 0.1);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .link-label {
+        color: #22c55e;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .link-container {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .link-input {
+        flex: 1;
+        background: #0a0e1a;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: #ffffff;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .link-input:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(34, 197, 94, 0.2);
+    }
+
+    .copy-btn {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #ffffff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .copy-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(34, 197, 94, 0.4);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(34, 197, 94, 0.2);
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #22c55e;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.95rem;
+    }
+
+    .stat-card.gold .stat-value {
+        color: #fbbf24;
+        text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+    }
+
+    .referral-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .referral-table th {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .referral-table td {
+        padding: 1rem;
+        color: #ffffff;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .referral-table tr {
+        transition: all 0.3s ease;
+    }
+
+    .referral-table tr:hover {
+        background: rgba(34, 197, 94, 0.05);
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: inline-block;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .status-pending {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .status-completed {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .info-box {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .info-box h3 {
+        color: #22c55e;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .info-box ul {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .info-box li {
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+        color: #22c55e;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <div class="referral-header">
+            <h2><i class="fas fa-gift me-2"></i>Referral Program</h2>
+            <p>Invite friends and earn 10 Gold when they reach Level 10!</p>
+        </div>
+
+        <!-- How it Works -->
+        <div class="info-box">
+            <h3>
+                <i class="fas fa-info-circle"></i>
+                How it Works
+            </h3>
+            <ul>
+                <li>Share your unique referral link with friends</li>
+                <li>When they sign up using your link and reach <strong>Level 10</strong>, you automatically receive <strong>10 Gold</strong></li>
+                <li>There's no limit to how many friends you can refer!</li>
+                <li>Unlock special Recruiter achievements at 10, 100, and 1000 successful referrals!</li>
+                <li>Track your referrals and earnings in real-time below</li>
+            </ul>
+        </div>
+
+        <!-- Referral Link Section -->
+        <div class="referral-card">
+            <div class="referral-link-section">
+                <div class="link-label">
+                    <i class="fas fa-link"></i>
+                    Your Referral Link
+                </div>
+                <div class="link-container">
+                    <input type="text" class="link-input" id="referral-link" value="{{ referral_link }}" readonly>
+                    <button class="copy-btn" onclick="copyReferralLink()">
+                        <i class="fas fa-copy"></i>
+                        Copy Link
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total }}</div>
+                    <div class="stat-label">Total Referrals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.pending }}</div>
+                    <div class="stat-label">Pending (Not Level 10 Yet)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.completed }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card gold">
+                    <div class="stat-value">{{ stats.gold_earned|round(2) }}</div>
+                    <div class="stat-label">Gold Earned</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Referral History -->
+        <div class="referral-card">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-history me-2"></i>
+                Referral History
+            </h3>
+
+            {% if referrals %}
+                <table class="referral-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Level</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Gold Earned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for referral in referrals %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('main.view_profile', username=referral.referee.username) }}" class="text-white text-decoration-none">
+                                    {{ referral.referee.username or referral.referee.wallet_address[:10] + '...' }}
+                                </a>
+                            </td>
+                            <td>Level {{ referral.referee.level }}</td>
+                            <td>
+                                {% if referral.status.value == 'PENDING' %}
+                                    <span class="status-badge status-pending">
+                                        <i class="fas fa-clock me-1"></i>Pending
+                                    </span>
+                                {% elif referral.status.value == 'COMPLETED' %}
+                                    <span class="status-badge status-completed">
+                                        <i class="fas fa-check-circle me-1"></i>Completed
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ referral.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>
+                                {% if referral.is_completed %}
+                                    <span style="color: #fbbf24; font-weight: 600;">
+                                        <i class="fas fa-coins me-1"></i>{{ referral.gold_awarded }} Gold
+                                    </span>
+                                {% else %}
+                                    <span style="color: rgba(255, 255, 255, 0.4);">
+                                        {{ 10 - referral.referee.level }} level(s) to go
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <p>You haven't referred anyone yet. Share your link to get started!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+function copyReferralLink() {
+    const linkInput = document.getElementById('referral-link');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999); // For mobile
+
+    try {
+        document.execCommand('copy');
+        const btn = document.querySelector('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+        btn.style.background = 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)';
+
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+        }, 2000);
+    } catch (err) {
+        showError('Failed to copy link. Please copy it manually.');
+    }
+}
+</script>
+{% endblock %}

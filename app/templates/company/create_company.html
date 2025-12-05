@@ -1,0 +1,275 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Create Company - Tactizen{% endblock %}
+
+{% block head_extra %}
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 1rem;
+    }
+
+    .profile-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .profile-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .profile-header h2 {
+        color: #22c55e;
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .form-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        background: #0f1419;
+        color: #fff;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: #0f1419;
+        color: #fff;
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .text-muted {
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    .info-box {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box h5 {
+        color: #22c55e;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .info-value {
+        color: #22c55e;
+        font-weight: 500;
+    }
+
+    .company-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 12px;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .help-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .help-section h5 {
+        color: #22c55e;
+        margin-bottom: 1rem;
+    }
+
+    .help-section ul {
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.8;
+    }
+
+    select.form-control option {
+        background: #1a1f2e;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="company-icon">
+                <i class="fas fa-building" style="font-size: 3rem; color: #22c55e;"></i>
+            </div>
+            <h2><i class="fas fa-plus-circle me-2"></i>Create New Company</h2>
+            <p class="text-muted mb-0">Start your business empire</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('company.create_company') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label for="name" class="form-label">Company Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="name" name="name" required minlength="3" maxlength="100" placeholder="Enter company name...">
+                <small class="text-muted">Minimum 3 characters</small>
+            </div>
+
+            <div class="mb-3">
+                <label for="company_type" class="form-label">Company Type <span class="text-danger">*</span></label>
+                <select class="form-control" id="company_type" name="company_type" required>
+                    <option value="">-- Select Type --</option>
+                    {% for ct in company_types %}
+                    <option value="{{ ct.value }}">
+                        {{ ct.label }} - Produces: {{ ct.resources }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Company Description</label>
+                <textarea class="form-control" id="description" name="description" rows="5" maxlength="500" placeholder="Tell others about your company..."></textarea>
+                <small class="text-muted">Maximum 500 characters (optional)</small>
+            </div>
+
+            <div class="info-box">
+                <h5><i class="fas fa-info-circle me-2"></i>Company Details</h5>
+                <div class="info-item">
+                    <span class="info-label">Creation Cost:</span>
+                    <span class="info-value">{{ creation_cost }} <i class="fas fa-coins"></i> Gold</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Starting Quality:</span>
+                    <span class="info-value">Q1 (2 employee slots)</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">{% if current_user.current_region %}{{ current_user.current_region.original_owner.name }}{% else %}{{ current_user.citizenship.name }}{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Included:</span>
+                    <span class="info-value">Export license for home country</span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="fas fa-check me-2"></i>Create Company ({{ creation_cost }} Gold)
+                </button>
+                <a href="{{ url_for('company.my_companies') }}" class="btn btn-secondary flex-fill">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+
+        <div class="help-section">
+            <h5><i class="fas fa-question-circle me-2"></i>Company Types Explained</h5>
+
+            <div class="mb-3">
+                <strong style="color: #22c55e;">Raw Material Production</strong>
+                <ul class="mt-2">
+                    <li><strong>Mining:</strong> Extracts Coal, Iron Ore, Stone</li>
+                    <li><strong>Resource Extraction:</strong> Harvests Clay, Oil, Sand</li>
+                    <li><strong>Farming:</strong> Grows Wheat or Grape</li>
+                </ul>
+                <p class="text-muted small"><em>These companies produce more units at higher quality levels and employ more workers. Can optionally use Electricity for +30% production boost.</em></p>
+            </div>
+
+            <div>
+                <strong style="color: #22c55e;">Weapon Manufacturing</strong>
+                <ul class="mt-2">
+                    <li><strong>Rifle Company:</strong> Produces Rifles (requires Iron Bar + Coal)</li>
+                    <li><strong>Tank Company:</strong> Produces Tanks (requires Steel + Oil)</li>
+                    <li><strong>Helicopter Company:</strong> Produces Helicopters (requires Steel + Oil)</li>
+                </ul>
+            </div>
+
+            <div class="mt-3">
+                <strong style="color: #22c55e;">Food & Beverages</strong>
+                <ul class="mt-2">
+                    <li><strong>Bakery:</strong> Produces Bread (requires Wheat)</li>
+                    <li><strong>Brewery:</strong> Produces Beer (requires Wheat)</li>
+                    <li><strong>Winery:</strong> Produces Wine (requires Grape)</li>
+                </ul>
+            </div>
+
+            <div class="mt-3">
+                <strong style="color: #22c55e;">Other Manufacturing</strong>
+                <ul class="mt-2">
+                    <li><strong>Semi-Product:</strong> Manufactures Steel, Iron Bar (Iron Ore + Coal), Bricks (Clay + Coal), Concrete (Stone + Sand), Electricity (Oil)</li>
+                    <li><strong>Construction:</strong> Builds Houses, Forts, Hospitals (requires Bricks + Concrete)</li>
+                </ul>
+                <p class="text-muted small"><em>Manufacturing companies produce quality items (Q1-Q5). Higher quality requires more input resources but produces better products. Can optionally use Electricity for +30% production boost.</em></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

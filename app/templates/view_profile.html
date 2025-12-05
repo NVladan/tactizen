@@ -1,0 +1,1783 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block app_content %}
+<style>
+/* Modern Profile Styles with Glow Effects */
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+}
+
+/* Profile Header Card */
+.profile-header-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 24px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 40px rgba(59, 130, 246, 0.1);
+}
+
+.profile-header-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #3b82f6 100%);
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.profile-header-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+    border: 3px solid rgba(59, 130, 246, 0.4);
+    object-fit: cover;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+    transition: all 0.4s ease;
+}
+
+.profile-avatar:hover {
+    border-color: rgba(59, 130, 246, 0.7);
+    box-shadow: 0 0 50px rgba(59, 130, 246, 0.5), 0 12px 40px rgba(0, 0, 0, 0.5);
+    transform: scale(1.02);
+}
+
+.profile-avatar-glow {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+    border-radius: 28px;
+    z-index: -1;
+    animation: avatarPulse 3s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* Online Status Indicator */
+.online-status-indicator {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 3px solid rgba(15, 23, 42, 0.9);
+    z-index: 10;
+}
+
+.online-status-indicator.online {
+    background: #22c55e;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.6), 0 0 20px rgba(34, 197, 94, 0.3);
+    animation: onlinePulse 2s ease-in-out infinite;
+}
+
+.online-status-indicator.offline {
+    background: #6b7280;
+}
+
+@keyframes onlinePulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.6), 0 0 20px rgba(34, 197, 94, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.8), 0 0 30px rgba(34, 197, 94, 0.5); }
+}
+
+.online-status-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.online-status-text.online {
+    color: #22c55e;
+}
+
+.online-status-text.offline {
+    color: #9ca3af;
+}
+
+.online-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.online-status-dot.online {
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.online-status-dot.offline {
+    background: #6b7280;
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.profile-username {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.2;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.profile-level-badge {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.profile-actions {
+    margin-top: 1.25rem;
+}
+
+/* Action Buttons */
+.action-btn {
+    padding: 0.65rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.action-btn:hover::before {
+    left: 100%;
+}
+
+.action-btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.action-btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.action-btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.action-btn-success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.action-btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.action-btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.action-btn-secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+}
+
+/* Content Cards with Glow */
+.content-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: 20px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.content-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.content-card:hover {
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 30px rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+}
+
+.content-card-header {
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.content-card-header i {
+    color: #3b82f6;
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Stat Cards */
+.stat-section {
+    margin-bottom: 1.5rem;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.stat-value {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* XP Progress Bar */
+.xp-bar-container {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    height: 14px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.xp-bar {
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    position: relative;
+}
+
+.xp-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: xpShine 2s ease-in-out infinite;
+}
+
+@keyframes xpShine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.xp-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+/* Rank Bar */
+.rank-bar {
+    background: linear-gradient(90deg, #f59e0b 0%, #dc2626 100%);
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Info Items */
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.info-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 10px;
+    color: #3b82f6;
+    font-size: 1rem;
+}
+
+.info-content .info-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-content .info-value {
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.info-content .info-value a {
+    color: #3b82f6;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.info-content .info-value a:hover {
+    color: #60a5fa;
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Skills Section */
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.skill-category-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.skill-category-title.military { color: #3b82f6; }
+.skill-category-title.work { color: #8b5cf6; }
+
+.skill-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.skill-item:last-child {
+    border-bottom: none;
+}
+
+.skill-name {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+}
+
+.skill-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-shadow: 0 0 10px currentColor;
+}
+
+.skill-value.military { color: #3b82f6; }
+.skill-value.work { color: #8b5cf6; }
+
+/* Tab Navigation */
+.tab-nav {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.tab-button {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    font-weight: 600;
+    font-size: 0.95rem;
+    position: relative;
+}
+
+.tab-button:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.tab-button.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+}
+
+/* Achievement Cards */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.achievement-card {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.02) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+}
+
+.achievement-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2), 0 0 20px rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.4);
+}
+
+.achievement-card.locked {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.05) 0%, rgba(107, 114, 128, 0.02) 100%);
+    border-color: rgba(107, 114, 128, 0.2);
+}
+
+.achievement-card.locked::before {
+    background: linear-gradient(180deg, #6b7280 0%, #4b5563 100%);
+}
+
+.achievement-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.achievement-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+    border-radius: 12px;
+    color: #22c55e;
+    font-size: 1.5rem;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+.achievement-card.locked .achievement-icon {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.2) 0%, rgba(107, 114, 128, 0.1) 100%);
+    color: #6b7280;
+    box-shadow: none;
+}
+
+.achievement-info h6 {
+    color: #fff;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+}
+
+.achievement-info .category-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.achievement-card.locked .achievement-info .category-badge {
+    background: rgba(107, 114, 128, 0.2);
+    color: #9ca3af;
+}
+
+.achievement-description {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.achievement-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.achievement-reward {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fbbf24;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.achievement-date {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+}
+
+.no-achievements {
+    text-align: center;
+    padding: 3rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.no-achievements i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+/* Friends Cards */
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.friend-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.friend-card:hover {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: translateX(4px);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+}
+
+.friend-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.friend-card:hover .friend-avatar {
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.friend-name {
+    color: #fff;
+    font-weight: 600;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.friend-level {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+}
+
+/* NFT Slots */
+.nft-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+@media (max-width: 992px) {
+    .nft-slots-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .nft-slots-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.nft-slot-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 2px solid rgba(34, 197, 94, 0.2);
+    border-radius: 20px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.nft-slot-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at top center, rgba(34, 197, 94, 0.05) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.nft-slot-card:hover {
+    border-color: rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3);
+    transform: translateY(-4px);
+}
+
+.nft-slot-card.equipped {
+    border-color: rgba(34, 197, 94, 0.4);
+}
+
+.nft-slot-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.nft-slot-number {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nft-slot-content {
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nft-slot-content.has-nft {
+    background: transparent;
+    border: none;
+    min-height: auto;
+}
+
+.nft-slot-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.nft-slot-actions .btn {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+}
+
+/* Equipped NFT Card Styling */
+.equipped-nft-card {
+    width: 100%;
+    text-align: center;
+}
+
+.equipped-nft-image-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.equipped-nft-tier-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    padding: 0.35rem 1rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.equipped-nft-tier-badge.q1 {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+}
+
+.equipped-nft-tier-badge.q2 {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.equipped-nft-tier-badge.q3 {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.equipped-nft-tier-badge.q4 {
+    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+    color: white;
+}
+
+.equipped-nft-tier-badge.q5 {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.equipped-nft-image {
+    width: 140px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 3px solid rgba(34, 197, 94, 0.3);
+    background: #0a0e1a;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.equipped-nft-image:hover {
+    border-color: rgba(34, 197, 94, 0.6);
+    box-shadow: 0 0 25px rgba(34, 197, 94, 0.3), 0 12px 30px rgba(0, 0, 0, 0.5);
+    transform: scale(1.03);
+}
+
+.equipped-nft-info {
+    padding: 0 0.5rem;
+}
+
+.equipped-nft-name {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.equipped-nft-tags {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.equipped-nft-tag {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.25rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.equipped-nft-description {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.equipped-nft-bonus {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.equipped-nft-bonus i {
+    color: #fbbf24;
+}
+
+.equipped-nft-bonus span {
+    color: #22c55e;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* Empty slot styling */
+.empty-slot-content {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.empty-slot-content i {
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.15);
+    margin-bottom: 1rem;
+}
+
+.empty-slot-content p {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Divider */
+.section-divider {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+    margin: 1.5rem 0;
+}
+
+/* About Me */
+.about-text {
+    white-space: pre-line;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+/* Max Rank Badge */
+.max-rank-badge {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.1) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    color: #fbbf24;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+}
+
+/* Damage bonus */
+.damage-bonus {
+    color: #10b981;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+</style>
+
+<div class="profile-container">
+    {# Profile Header Card #}
+    <div class="profile-header-card">
+        <div class="profile-header-content">
+            <div class="profile-avatar-wrapper">
+                <div class="profile-avatar-glow"></div>
+                <img src="{{ avatar_url if avatar_url else url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                     alt="{{ user.username }}'s Avatar"
+                     class="profile-avatar">
+                {# Online Status Indicator on Avatar #}
+                <div class="online-status-indicator {{ 'online' if is_online else 'offline' }}" title="{{ 'Online' if is_online else 'Offline' }}"></div>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-username">{{ user.username }} <small class="text-muted" style="font-size: 0.5em;">#{{ user.id }}</small></h1>
+                <div>
+                    <span class="profile-level-badge">Level {{ user.level }}</span>
+                </div>
+                {# Online Status Text #}
+                <div class="online-status-text {{ 'online' if is_online else 'offline' }}">
+                    <span class="online-status-dot {{ 'online' if is_online else 'offline' }}"></span>
+                    {% if is_online %}
+                        Online now
+                    {% else %}
+                        {% if user.last_seen %}
+                            Last seen {{ user.last_seen | timesince }}
+                        {% else %}
+                            Offline
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                {# Action Buttons #}
+                <div class="profile-actions">
+                    {% if current_user.is_authenticated and current_user.id != user.id %}
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ url_for('main.message_thread', user_id=user.id) }}" class="btn action-btn action-btn-primary">
+                            <i class="fas fa-envelope me-2"></i>Send Message
+                        </a>
+
+                        {% if friendship_status == 'friends' %}
+                            <button type="button" class="btn action-btn action-btn-secondary" data-bs-toggle="modal" data-bs-target="#unfriendModal">
+                                <i class="fas fa-user-minus me-2"></i>Unfriend
+                            </button>
+                        {% elif friendship_status == 'request_sent' %}
+                            <form action="{{ url_for('friendship.cancel_request', friendship_id=friendship_id) }}" method="POST" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn action-btn action-btn-warning">
+                                    <i class="fas fa-times me-2"></i>Cancel Request
+                                </button>
+                            </form>
+                        {% elif friendship_status == 'request_received' %}
+                            <form action="{{ url_for('friendship.accept_request', friendship_id=friendship_id) }}" method="POST" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn action-btn action-btn-success">
+                                    <i class="fas fa-check me-2"></i>Accept Friend Request
+                                </button>
+                            </form>
+                            <form action="{{ url_for('friendship.deny_request', friendship_id=friendship_id) }}" method="POST" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn action-btn action-btn-danger">
+                                    <i class="fas fa-times me-2"></i>Deny
+                                </button>
+                            </form>
+                        {% else %}
+                            <form action="{{ url_for('friendship.send_request', user_id=user.id) }}" method="POST" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn action-btn action-btn-success">
+                                    <i class="fas fa-user-plus me-2"></i>Add Friend
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if current_user.is_authenticated and current_user.id == user.id %}
+                    <a href="{{ url_for('main.edit_profile') }}" class="btn action-btn action-btn-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {# Left Sidebar - Stats #}
+        <div class="col-lg-4 mb-4">
+            <div class="content-card">
+                {# Experience Section #}
+                <div class="stat-section">
+                    <div class="stat-label">Experience</div>
+                    <div class="stat-value">{{ user.experience|int }} XP</div>
+                    {% set xp_needed_inc = user.xp_increment_for_current_level %}
+                    {% set xp_progress = user.xp_progress_in_current_level %}
+                    {% set progress_percent = (xp_progress / xp_needed_inc * 100) if xp_needed_inc > 0 else 0 %}
+                    <div class="xp-bar-container mt-3">
+                        <div class="xp-bar" style="width: {{ progress_percent }}%;"></div>
+                    </div>
+                    <div class="xp-text">{{ xp_progress|int }} / {{ xp_needed_inc|int }} to Level {{ user.level + 1 }}</div>
+                </div>
+
+                <hr class="section-divider">
+
+                {# Military Rank Section #}
+                <div class="stat-section">
+                    {% set rank_progress = user.get_rank_progress() %}
+                    <div class="stat-label">Military Rank</div>
+                    <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                        <span class="stat-value" style="font-size: 1.25rem;">{{ rank_progress.current_rank.name }} (Rank {{ rank_progress.current_rank.id }})</span>
+                        <span class="damage-bonus">+{{ rank_progress.current_rank.damage_bonus }}% Damage</span>
+                    </div>
+                    {% if rank_progress.next_rank %}
+                        <div class="xp-bar-container mt-2">
+                            <div class="rank-bar" style="width: {{ rank_progress.progress_percent }}%;"></div>
+                        </div>
+                        <div class="xp-text">{{ rank_progress.current_xp|int }} / {{ rank_progress.xp_needed|int }} to {{ rank_progress.next_rank.name }}</div>
+                    {% else %}
+                        <div class="max-rank-badge mt-2">
+                            <i class="fas fa-crown"></i>MAX RANK ACHIEVED
+                        </div>
+                    {% endif %}
+                </div>
+
+                <hr class="section-divider">
+
+                {# Info Section #}
+                <div class="content-card-header" style="margin-bottom: 1rem; border-bottom: none; padding-bottom: 0;">
+                    <i class="fas fa-id-card"></i>Info
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-flag"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Citizenship</div>
+                        <div class="info-value">
+                            {% if user.citizenship %}
+                                {% if user.citizenship.flag_code %}
+                                <img src="{{ url_for('static', filename='images/country-flags/' + user.citizenship.flag_code + '.png') }}"
+                                     alt="{{ user.citizenship.name }} Flag" class="me-1" style="width: 20px; height: 14px; border: 1px solid #555; vertical-align: middle;">
+                                {% endif %}
+                                <a href="{{ url_for('main.country', slug=user.citizenship.slug) }}">{{ user.citizenship.name }}</a>
+                            {% else %}
+                                <span style="color: rgba(255, 255, 255, 0.4);">N/A</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Location</div>
+                        <div class="info-value">
+                            {% if user.current_region %}
+                                {% set owner_country = user.current_region.current_owner %}
+                                {% if owner_country and owner_country.flag_code %}
+                                <img src="{{ url_for('static', filename='images/country-flags/' + owner_country.flag_code + '.png') }}"
+                                     alt="{{ owner_country.name }} Flag" class="me-1" style="width: 20px; height: 14px; border: 1px solid #555; vertical-align: middle;">
+                                {% endif %}
+                                <a href="{{ url_for('main.region', slug=user.current_region.slug) }}">{{ user.current_region.name }}</a>
+                            {% else %}
+                                <span style="color: rgba(255, 255, 255, 0.4);">Unknown</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-birthday-cake"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Birthday</div>
+                        <div class="info-value">
+                            {% if user.birthday %}
+                                {{ user.birthday.strftime('%b %d, %Y') }}
+                                <span style="color: rgba(255, 255, 255, 0.4);"> (Age: {{ current_year - user.birthday.year }})</span>
+                            {% else %}
+                                <span style="color: rgba(255, 255, 255, 0.4);">N/A</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Main Content #}
+        <div class="col-lg-8 mb-4">
+            {# About Me #}
+            {% if user.description %}
+            <div class="content-card">
+                <div class="content-card-header">
+                    <i class="fas fa-user"></i>About Me
+                </div>
+                <p class="about-text">{{ user.description }}</p>
+            </div>
+            {% endif %}
+
+            {# Skills #}
+            <div class="content-card">
+                <div class="content-card-header">
+                    <i class="fas fa-chart-bar"></i>Skills
+                </div>
+                <div class="skills-grid">
+                    <div>
+                        <div class="skill-category-title military">
+                            <i class="fas fa-crosshairs"></i>Military Skills
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Infantry</span>
+                            <span class="skill-value military">{{ user.skill_infantry|round(2) }}</span>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Armoured</span>
+                            <span class="skill-value military">{{ user.skill_armoured|round(2) }}</span>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Aviation</span>
+                            <span class="skill-value military">{{ user.skill_aviation|round(2) }}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="skill-category-title work">
+                            <i class="fas fa-briefcase"></i>Work Skills
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Resource Extraction</span>
+                            <span class="skill-value work">{{ user.skill_resource_extraction|round(2) }}</span>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Manufacture</span>
+                            <span class="skill-value work">{{ user.skill_manufacture|round(2) }}</span>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Construction</span>
+                            <span class="skill-value work">{{ user.skill_construction|round(2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Tabs Section #}
+            <div class="content-card">
+                <div class="tab-nav">
+                    <button class="tab-button active" onclick="switchTab('achievements')">
+                        <i class="fas fa-trophy me-2"></i>Achievements
+                    </button>
+                    <button class="tab-button" onclick="switchTab('friends')">
+                        <i class="fas fa-users me-2"></i>Friends ({{ friends_list|length }})
+                    </button>
+                    {% if is_own_profile %}
+                    <button class="tab-button" onclick="switchTab('nfts')">
+                        <i class="fas fa-gem me-2"></i>NFT Slots
+                    </button>
+                    {% endif %}
+                </div>
+
+                {# Achievements Tab #}
+                <div id="achievements-tab" class="tab-content-pane">
+                    {% if user.achievements_earned %}
+                        <div class="achievements-grid">
+                            {% for user_achievement in user.achievements_earned %}
+                            <div class="achievement-card">
+                                <div class="achievement-header">
+                                    <div class="achievement-icon">
+                                        <i class="fas {{ user_achievement.achievement.icon or 'fa-trophy' }}"></i>
+                                    </div>
+                                    <div class="achievement-info">
+                                        <h6>{{ user_achievement.achievement.name }}</h6>
+                                        <span class="category-badge">{{ user_achievement.achievement.category }}</span>
+                                    </div>
+                                </div>
+                                <p class="achievement-description">{{ user_achievement.achievement.description }}</p>
+                                <div class="achievement-footer">
+                                    <div class="achievement-reward">
+                                        <i class="fas fa-coins"></i>
+                                        +{{ user_achievement.gold_awarded }} Gold
+                                    </div>
+                                    <div class="achievement-date">
+                                        {{ user_achievement.unlocked_at.strftime('%b %d, %Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="no-achievements">
+                            <i class="fas fa-trophy"></i>
+                            <p>No achievements unlocked yet</p>
+                            <small style="color: rgba(255, 255, 255, 0.4);">Complete activities to earn achievements and gold rewards!</small>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Friends Tab #}
+                <div id="friends-tab" class="tab-content-pane" style="display: none;">
+                    {% if friends_list %}
+                        <div class="friends-grid">
+                            {% for friend in friends_list %}
+                            <a href="{{ url_for('main.view_profile', username=friend.username or friend.wallet_address) }}" class="friend-card">
+                                <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                                     alt="{{ friend.username }}'s Avatar"
+                                     class="friend-avatar">
+                                <div>
+                                    <div class="friend-name">{{ friend.username or friend.wallet_address[:10] }}</div>
+                                    <div class="friend-level">Level {{ friend.level }}</div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="no-achievements">
+                            <i class="fas fa-users"></i>
+                            <p>No friends yet</p>
+                            <small style="color: rgba(255, 255, 255, 0.4);">Add friends to see them here!</small>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# NFT Slots Tab #}
+                {% if is_own_profile %}
+                <div id="nfts-tab" class="tab-content-pane" style="display: none;">
+                    <div class="mb-3">
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-info-circle me-1"></i>Equip player NFTs to gain bonuses. Each slot has a 24-hour cooldown after any change.
+                        </p>
+                    </div>
+
+                    <div class="nft-slots-grid">
+                        {% for slot_num in [1, 2, 3] %}
+                        <div class="nft-slot-card" id="player-slot-{{ slot_num }}">
+                            <div class="nft-slot-header">
+                                <span class="nft-slot-number">Slot {{ slot_num }}</span>
+                                <span class="nft-slot-cooldown" id="cooldown-{{ slot_num }}" style="display: none;"></span>
+                            </div>
+                            <div class="nft-slot-content" id="slot-{{ slot_num }}-content">
+                                <div class="text-center py-4">
+                                    <i class="fas fa-plus-circle fa-3x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">Empty Slot</p>
+                                </div>
+                            </div>
+                            <div class="nft-slot-actions">
+                                <button class="btn btn-primary btn-sm w-100" onclick="openEquipModal({{ slot_num }})" id="equip-btn-{{ slot_num }}">
+                                    <i class="fas fa-plus me-1"></i>Equip NFT
+                                </button>
+                                <button class="btn btn-danger btn-sm w-100" onclick="unequipNFT({{ slot_num }})" id="unequip-btn-{{ slot_num }}" style="display: none;">
+                                    <i class="fas fa-minus me-1"></i>Unequip
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content-pane').forEach(pane => {
+        pane.style.display = 'none';
+    });
+
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab and activate button
+    document.getElementById(tabName + '-tab').style.display = 'block';
+    event.target.closest('.tab-button').classList.add('active');
+
+    // Load NFT slots if switching to NFTs tab
+    if (tabName === 'nfts') {
+        loadPlayerNFTSlots();
+    }
+}
+
+// Load player NFT slots
+function loadPlayerNFTSlots() {
+    fetch('/api/nft/slots/profile')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const slots = data.slots;
+                for (let i = 1; i <= 3; i++) {
+                    updateSlotDisplay(i, slots[`slot_${i}_nft`]);
+                }
+            }
+        })
+        .catch(error => console.error('Error loading NFT slots:', error));
+}
+
+// Update slot display
+function updateSlotDisplay(slotNum, nft) {
+    const contentDiv = document.getElementById(`slot-${slotNum}-content`);
+    const slotCard = document.getElementById(`player-slot-${slotNum}`);
+    const equipBtn = document.getElementById(`equip-btn-${slotNum}`);
+    const unequipBtn = document.getElementById(`unequip-btn-${slotNum}`);
+
+    if (nft) {
+        // Add equipped class to slot card
+        slotCard.classList.add('equipped');
+        contentDiv.classList.add('has-nft');
+
+        // Determine tier badge class
+        const tierClass = `q${nft.tier}`;
+
+        // Format bonus display based on category
+        let bonusDisplay = '';
+        if (nft.category === 'energy_regen') {
+            bonusDisplay = `+${nft.bonus_value} energy/hour`;
+        } else if (nft.category === 'wellness_regen') {
+            bonusDisplay = `+${nft.bonus_value} wellness/hour`;
+        } else {
+            bonusDisplay = `+${nft.bonus_value}% ${nft.category.replace('_', ' ')}`;
+        }
+
+        // Format category for tag display
+        const categoryDisplay = nft.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+        contentDiv.innerHTML = `
+            <div class="equipped-nft-card">
+                <div class="equipped-nft-image-container">
+                    <span class="equipped-nft-tier-badge ${tierClass}">Q${nft.tier}</span>
+                    ${nft.image_url ? `
+                        <a href="https://horizen-testnet.explorer.caldera.xyz/token/${nft.contract_address}?a=${nft.token_id}"
+                           target="_blank"
+                           title="View on Horizen Explorer">
+                            <img src="${nft.image_url}"
+                                 alt="${nft.name}"
+                                 class="equipped-nft-image"
+                                 onerror="this.src='/static/images/nft_placeholder.png'">
+                        </a>
+                    ` : `
+                        <div class="equipped-nft-image d-flex align-items-center justify-content-center">
+                            <i class="fas fa-gem fa-3x text-success"></i>
+                        </div>
+                    `}
+                </div>
+                <div class="equipped-nft-info">
+                    <div class="equipped-nft-name">${nft.name}</div>
+                    <div class="equipped-nft-tags">
+                        <span class="equipped-nft-tag"><i class="fas fa-tag"></i>${categoryDisplay}</span>
+                        <span class="equipped-nft-tag"><i class="fas fa-user"></i>Player</span>
+                    </div>
+                    <div class="equipped-nft-bonus">
+                        <i class="fas fa-bolt"></i>
+                        <span>${bonusDisplay}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        equipBtn.style.display = 'none';
+        unequipBtn.style.display = 'block';
+    } else {
+        // Remove equipped class from slot card
+        slotCard.classList.remove('equipped');
+        contentDiv.classList.remove('has-nft');
+
+        contentDiv.innerHTML = `
+            <div class="empty-slot-content">
+                <i class="fas fa-gem"></i>
+                <p>Empty Slot</p>
+            </div>
+        `;
+        equipBtn.style.display = 'block';
+        unequipBtn.style.display = 'none';
+    }
+}
+
+// Open equip modal
+let currentSlotToEquip = null;
+
+function openEquipModal(slotNum) {
+    currentSlotToEquip = slotNum;
+    document.getElementById('modal-slot-number').textContent = slotNum;
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('equipNFTModal'));
+    modal.show();
+
+    // Load available NFTs
+    loadAvailableNFTs();
+}
+
+// Load available player NFTs
+function loadAvailableNFTs() {
+    const container = document.getElementById('nft-list-container');
+    container.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mt-2">Loading your NFTs...</p>
+        </div>
+    `;
+
+    fetch('/api/nft/inventory')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.nfts) {
+                // Filter for player NFTs only
+                const playerNFTs = data.nfts.filter(nft => nft.nft_type === 'player');
+
+                if (playerNFTs.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">You don't have any player NFTs yet.</p>
+                            <a href="/nft-marketplace" class="btn btn-primary btn-sm mt-2">
+                                <i class="fas fa-shopping-cart me-1"></i>Get NFTs
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Display NFTs as clickable cards
+                container.innerHTML = playerNFTs.map(nft => {
+                    const nftName = nft.name || `Q${nft.tier} ${nft.category} NFT`;
+                    const description = nft.description || `Provides +${nft.bonus_value}% boost`;
+
+                    let bonusDisplay = '';
+                    if (nft.category === 'energy_regen') {
+                        bonusDisplay = `+${nft.bonus_value}e/h`;
+                    } else if (nft.category === 'wellness_regen') {
+                        bonusDisplay = `+${nft.bonus_value}w/h`;
+                    } else {
+                        bonusDisplay = `+${nft.bonus_value}%`;
+                    }
+
+                    return `
+                    <div class="nft-select-card ${nft.is_equipped ? 'equipped' : ''}" onclick="selectNFTToEquip(${nft.id})" style="cursor: pointer; margin-bottom: 0.75rem; padding: 1rem; border: 2px solid ${nft.is_equipped ? '#fbbf24' : 'rgba(34, 197, 94, 0.3)'}; border-radius: 8px; background: ${nft.is_equipped ? 'rgba(251, 191, 36, 0.1)' : 'rgba(255, 255, 255, 0.02)'}; transition: all 0.3s ease;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            ${nft.image_url ? `
+                                <a href="https://horizen-testnet.explorer.caldera.xyz/token/${nft.contract_address}?a=${nft.token_id}"
+                                   target="_blank"
+                                   onclick="event.stopPropagation()"
+                                   title="View on Horizen Explorer"
+                                   style="display: block; margin-right: 1rem; transition: all 0.3s ease; flex-shrink: 0;">
+                                    <img src="${nft.image_url}"
+                                         alt="${nftName}"
+                                         style="width: 60px; height: 107px; object-fit: cover; border-radius: 8px;
+                                                border: 2px solid rgba(34, 197, 94, 0.3); background: #0a0e1a;
+                                                display: block; transition: all 0.3s ease;"
+                                         onerror="this.style.display='none'">
+                                </a>
+                            ` : ''}
+                            <div class="flex-grow-1">
+                                <div class="mb-2">
+                                    <span class="badge" style="background: linear-gradient(135deg, #${['6b7280', '10b981', '3b82f6', 'a855f7', 'f59e0b'][nft.tier - 1]} 0%, #${['4b5563', '059669', '2563eb', '9333ea', 'd97706'][nft.tier - 1]} 100%);">Q${nft.tier}</span>
+                                    ${nft.is_equipped ? '<span class="badge bg-warning ms-2">Equipped</span>' : ''}
+                                </div>
+                                <h6 class="mb-1" style="color: #22c55e;">${nftName}</h6>
+                                <p class="text-muted small mb-0">${description}</p>
+                            </div>
+                            <div class="text-end ms-3">
+                                <div class="badge bg-success" style="font-size: 1.1rem; padding: 0.5rem 0.75rem;">${bonusDisplay}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                }).join('');
+            } else {
+                container.innerHTML = `
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Failed to load NFTs. Please try again.
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading NFTs:', error);
+            container.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Error loading NFTs. Please try again.
+                </div>
+            `;
+        });
+}
+
+// Select NFT to equip
+function selectNFTToEquip(nftId) {
+    if (currentSlotToEquip) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('equipNFTModal'));
+        modal.hide();
+        equipNFT(currentSlotToEquip, nftId);
+    }
+}
+
+// Equip NFT
+function equipNFT(slotNum, nftId) {
+    fetch('/api/nft/equip/profile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            nft_id: nftId,
+            slot: slotNum
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNFTAlert('Success', data.message, 'success');
+            loadPlayerNFTSlots();
+        } else {
+            showNFTAlert('Error', data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNFTAlert('Error', 'Failed to equip NFT. Please try again.', 'error');
+    });
+}
+
+// Unequip NFT
+function unequipNFT(slotNum) {
+    showNFTConfirm(
+        'Unequip NFT',
+        `Are you sure you want to unequip the NFT from slot ${slotNum}? This slot will be on cooldown for 24 hours.`,
+        () => {
+            fetch('/api/nft/unequip/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    slot: slotNum
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNFTAlert('Success', data.message, 'success');
+                    loadPlayerNFTSlots();
+                } else {
+                    showNFTAlert('Error', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNFTAlert('Error', 'Failed to unequip NFT. Please try again.', 'error');
+            });
+        }
+    );
+}
+
+// Show NFT alert modal
+function showNFTAlert(title, message, type) {
+    const modalEl = document.getElementById('nftAlertModal');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    const alertContent = document.getElementById('nft-alert-content');
+    const alertHeader = document.getElementById('nft-alert-header');
+    const alertTitle = document.getElementById('nft-alert-title');
+    const alertMessage = document.getElementById('nft-alert-message');
+    const alertFooter = document.getElementById('nft-alert-footer');
+
+    alertTitle.textContent = title;
+    alertMessage.textContent = message;
+
+    alertFooter.innerHTML = '<button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>';
+
+    if (type === 'success') {
+        alertContent.className = 'modal-content bg-dark border-success';
+        alertHeader.className = 'modal-header border-success';
+        alertFooter.className = 'modal-footer border-success';
+        alertTitle.innerHTML = '<i class="fas fa-check-circle me-2 text-success"></i>' + title;
+    } else if (type === 'error') {
+        alertContent.className = 'modal-content bg-dark border-danger';
+        alertHeader.className = 'modal-header border-danger';
+        alertFooter.className = 'modal-footer border-danger';
+        alertTitle.innerHTML = '<i class="fas fa-exclamation-circle me-2 text-danger"></i>' + title;
+    } else {
+        alertContent.className = 'modal-content bg-dark border-info';
+        alertHeader.className = 'modal-header border-info';
+        alertFooter.className = 'modal-footer border-info';
+        alertTitle.innerHTML = '<i class="fas fa-info-circle me-2 text-info"></i>' + title;
+    }
+
+    modal.show();
+}
+
+// Show NFT confirmation modal
+function showNFTConfirm(title, message, onConfirm) {
+    const modalEl = document.getElementById('nftAlertModal');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    const alertContent = document.getElementById('nft-alert-content');
+    const alertHeader = document.getElementById('nft-alert-header');
+    const alertTitle = document.getElementById('nft-alert-title');
+    const alertMessage = document.getElementById('nft-alert-message');
+    const alertFooter = document.getElementById('nft-alert-footer');
+
+    alertTitle.innerHTML = '<i class="fas fa-question-circle me-2 text-warning"></i>' + title;
+    alertMessage.textContent = message;
+
+    alertContent.className = 'modal-content bg-dark border-warning';
+    alertHeader.className = 'modal-header border-warning';
+    alertFooter.className = 'modal-footer border-warning';
+
+    alertFooter.innerHTML = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="nft-confirm-btn">Confirm</button>
+    `;
+
+    const confirmBtn = document.getElementById('nft-confirm-btn');
+    const handleConfirm = function() {
+        modal.hide();
+        if (onConfirm) onConfirm();
+        confirmBtn.removeEventListener('click', handleConfirm);
+    };
+    confirmBtn.addEventListener('click', handleConfirm);
+
+    modal.show();
+}
+</script>
+
+{# NFT Equip Modal #}
+{% if is_own_profile %}
+<div class="modal fade" id="equipNFTModal" tabindex="-1" aria-labelledby="equipNFTModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-success">
+            <div class="modal-header border-success">
+                <h5 class="modal-title text-white" id="equipNFTModalLabel">
+                    <i class="fas fa-gem me-2 text-success"></i>Equip NFT to Slot <span id="modal-slot-number"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <p class="text-muted small mb-3">
+                    <i class="fas fa-info-circle me-1"></i>Select a player NFT from your collection to equip in this slot.
+                </p>
+                <div id="nft-list-container">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading your NFTs...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-success">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# NFT Alert Modal #}
+<div class="modal fade" id="nftAlertModal" tabindex="-1" aria-labelledby="nftAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark" id="nft-alert-content">
+            <div class="modal-header" id="nft-alert-header">
+                <h5 class="modal-title text-white" id="nftAlertModalLabel">
+                    <i class="fas fa-info-circle me-2"></i><span id="nft-alert-title">Notification</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white" id="nft-alert-body">
+                <p id="nft-alert-message"></p>
+            </div>
+            <div class="modal-footer" id="nft-alert-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# Unfriend Confirmation Modal #}
+{% if friendship_status == 'friends' %}
+<div class="modal fade" id="unfriendModal" tabindex="-1" aria-labelledby="unfriendModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-warning">
+            <div class="modal-header border-warning">
+                <h5 class="modal-title text-white" id="unfriendModalLabel">
+                    <i class="fas fa-user-minus me-2 text-warning"></i>Confirm Unfriend
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <p class="mb-0">Are you sure you want to unfriend <strong class="text-warning">{{ user.username }}</strong>?</p>
+                <p class="text-muted small mt-2 mb-0">
+                    <i class="fas fa-info-circle me-1"></i>You can send a new friend request later.
+                </p>
+            </div>
+            <div class="modal-footer border-warning">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('friendship.unfriend', user_id=user.id) }}" method="POST" style="margin: 0; display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-user-minus me-1"></i>Unfriend
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

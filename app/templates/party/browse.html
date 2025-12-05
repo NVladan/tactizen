@@ -1,0 +1,525 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Political Parties - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    /* Modern dark theme with green accents */
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* Page Header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-header h2 {
+        color: #22c55e;
+        margin-bottom: 0.5rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+    }
+
+    .page-header h2 i {
+        filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.5));
+    }
+
+    .page-header p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 0;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .action-buttons .btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .action-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    /* Stats Summary */
+    .stats-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.25rem;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-card-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #22c55e;
+        line-height: 1;
+    }
+
+    .stat-card-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    /* User Party Banner */
+    .user-party-banner {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+        flex-wrap: wrap;
+    }
+
+    .user-party-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-party-info i {
+        color: #22c55e;
+        font-size: 2rem;
+        filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.5));
+    }
+
+    .user-party-details h4 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .user-party-details span {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.875rem;
+    }
+
+    /* Party Cards */
+    .party-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .party-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .party-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .party-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2);
+    }
+
+    .party-card:hover::before {
+        opacity: 1;
+    }
+
+    .party-card.my-party {
+        border-color: rgba(34, 197, 94, 0.5);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, #0f1419 100%);
+    }
+
+    .party-card.my-party::before {
+        opacity: 1;
+    }
+
+    .party-info {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .party-logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+        flex-shrink: 0;
+    }
+
+    .party-logo-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, #0f1419 100%);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+        flex-shrink: 0;
+    }
+
+    .party-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .party-name-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .party-name {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .my-party-badge {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #000;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .rank-badge {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .party-description {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .party-meta {
+        display: flex;
+        gap: 1.5rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        flex-wrap: wrap;
+    }
+
+    .party-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .party-stat i {
+        color: #22c55e;
+        width: 16px;
+        text-align: center;
+    }
+
+    /* Party Stats Sidebar */
+    .party-stats-sidebar {
+        text-align: right;
+        min-width: 120px;
+        flex-shrink: 0;
+    }
+
+    .party-member-count {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #22c55e;
+        line-height: 1;
+    }
+
+    .party-member-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        margin-top: 0.25rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255, 255, 255, 0.6);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #22c55e;
+        opacity: 0.5;
+    }
+
+    .empty-state h4 {
+        color: #22c55e;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state .btn i {
+        font-size: 1rem;
+        opacity: 1;
+    }
+
+    /* Results Info */
+    .results-info {
+        text-align: center;
+        margin-top: 2rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.875rem;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .party-info {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .party-details {
+            text-align: center;
+        }
+
+        .party-name-row {
+            justify-content: center;
+        }
+
+        .party-meta {
+            justify-content: center;
+        }
+
+        .party-stats-sidebar {
+            text-align: center;
+            width: 100%;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(34, 197, 94, 0.1);
+            margin-top: 1rem;
+        }
+
+        .user-party-banner {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .user-party-info {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <div class="page-header">
+            <h2><i class="fas fa-landmark me-2"></i>Political Parties</h2>
+            <p>Join or create a political party to participate in your country's politics</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            {% if not current_user.party %}
+            <a href="{{ url_for('party.create') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle me-2"></i>Create New Party (5 Gold)
+            </a>
+            {% endif %}
+            <a href="{{ url_for('main.leaderboards', tab='parties') }}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-trophy me-2"></i>Party Rankings
+            </a>
+            <a href="{{ url_for('government.elections') }}" class="btn btn-outline-success btn-lg">
+                <i class="fas fa-vote-yea me-2"></i>Elections
+            </a>
+        </div>
+
+        <!-- Stats Summary -->
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-card-value">{{ parties|length if parties else 0 }}</div>
+                <div class="stat-card-label">Total Parties</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">{{ parties|sum(attribute='member_count') if parties else 0 }}</div>
+                <div class="stat-card-label">Total Members</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">{{ (parties|sort(attribute='member_count', reverse=true)|first).name[:12] if parties else 'N/A' }}{% if parties and (parties|sort(attribute='member_count', reverse=true)|first).name|length > 12 %}...{% endif %}</div>
+                <div class="stat-card-label">Largest Party</div>
+            </div>
+        </div>
+
+        <!-- User's Party Banner -->
+        {% if current_user.party %}
+        <div class="user-party-banner">
+            <div class="user-party-info">
+                <i class="fas fa-flag"></i>
+                <div class="user-party-details">
+                    <h4>You are a member of {{ current_user.party.name }}</h4>
+                    <span>
+                        {% if current_user.id == current_user.party.president_id %}
+                            <i class="fas fa-crown me-1"></i>Party President
+                        {% else %}
+                            <i class="fas fa-user me-1"></i>Member
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <a href="{{ url_for('party.detail', party_id=current_user.party.id) }}" class="btn btn-success">
+                <i class="fas fa-arrow-right me-2"></i>Go to My Party
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Party List -->
+        {% if parties %}
+            <div class="party-grid">
+                {% for party in parties|sort(attribute='member_count', reverse=true) %}
+                <div class="party-card {% if current_user.party and current_user.party.id == party.id %}my-party{% endif %}" onclick="window.location='{{ url_for('party.detail', party_id=party.id) }}'">
+                    <div class="party-info">
+                        {% if party.logo_path %}
+                            <img src="{{ url_for('static', filename=party.logo_path) }}" alt="{{ party.name }}" class="party-logo">
+                        {% else %}
+                            <div class="party-logo-placeholder">
+                                <i class="fas fa-flag"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="party-details">
+                            <div class="party-name-row">
+                                <span class="party-name">{{ party.name }}</span>
+                                {% if current_user.party and current_user.party.id == party.id %}
+                                <span class="my-party-badge">My Party</span>
+                                {% endif %}
+                                {% if loop.index == 1 %}
+                                <span class="rank-badge"><i class="fas fa-crown me-1"></i>#1</span>
+                                {% elif loop.index <= 3 %}
+                                <span class="rank-badge">#{{ loop.index }}</span>
+                                {% endif %}
+                            </div>
+                            {% if party.description %}
+                                <div class="party-description">{{ party.description }}</div>
+                            {% endif %}
+                            <div class="party-meta">
+                                <div class="party-stat">
+                                    <i class="fas fa-crown"></i>
+                                    <span>{{ party.president.username }}</span>
+                                </div>
+                                <div class="party-stat">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>{{ party.founded_date.strftime('%b %d, %Y') }}</span>
+                                </div>
+                                <div class="party-stat">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>{{ ((party.member_count / (parties|sum(attribute='member_count'))) * 100)|round(1) if parties|sum(attribute='member_count') > 0 else 0 }}% of members</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="party-stats-sidebar">
+                            <div class="party-member-count">{{ party.member_count }}</div>
+                            <div class="party-member-label">member{{ 's' if party.member_count != 1 else '' }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="results-info">
+                Showing {{ parties|length }} political part{{ 'ies' if parties|length != 1 else 'y' }} in your country
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-landmark"></i>
+                <h4>No Political Parties Yet</h4>
+                <p>Be the first to create a political party in your country and lead it to victory!</p>
+                {% if not current_user.party %}
+                <a href="{{ url_for('party.create') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Create First Party
+                </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

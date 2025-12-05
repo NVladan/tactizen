@@ -1,0 +1,4449 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ company.name }}{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    /* Dashboard content container */
+    .dashboard-content-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #0a0e1a;
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .training-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .training-header:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .training-header h2 {
+        color: #22c55e;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+        transform: translateY(-2px);
+    }
+
+    /* Modern Section Styles */
+    .modern-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 0;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .modern-section:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .modern-section-header {
+        background: rgba(34, 197, 94, 0.1);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .modern-section-header h4 {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .modern-section-body {
+        padding: 1.5rem;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(34, 197, 94, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .stat-card h5 {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-card .h3 {
+        color: #22c55e;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 0 5px rgba(34, 197, 94, 0.2);
+    }
+
+    /* Employee Cards */
+    .employee-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .employee-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .employee-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(34, 197, 94, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .employee-info {
+        margin-bottom: 1rem;
+    }
+
+    .employee-name {
+        color: #22c55e;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .employee-stat {
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .employee-stat strong {
+        color: #ffffff;
+    }
+
+    /* Today's Work Badge */
+    .today-work-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
+    .today-work-badge.worked {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .today-work-badge.not-worked {
+        background: rgba(156, 163, 175, 0.1);
+        color: rgba(156, 163, 175, 0.8);
+        border: 1px solid rgba(156, 163, 175, 0.2);
+    }
+
+    /* Today's Stats Container */
+    .today-stats-container {
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .today-stats-header {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .today-stats-header i {
+        font-size: 0.65rem;
+        color: #22c55e;
+    }
+
+    .today-stats-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .today-stat-box {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .today-stat-box i {
+        font-size: 0.85rem;
+    }
+
+    .today-stat-box .today-stat-value {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .text-purple {
+        color: #a855f7 !important;
+    }
+
+    .no-employees {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255, 255, 255, 0.5);
+        background: rgba(34, 197, 94, 0.03);
+        border-radius: 12px;
+        border: 1px dashed rgba(34, 197, 94, 0.2);
+    }
+
+    .no-employees-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .no-employees-icon i {
+        font-size: 2rem;
+        color: rgba(34, 197, 94, 0.4);
+    }
+
+    .no-employees h5 {
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .no-employees p {
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Employee Capacity Progress */
+    .employee-capacity-wrapper {
+        margin-bottom: 1.5rem;
+    }
+
+    .employee-capacity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .employee-capacity-label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .employee-capacity-count {
+        font-size: 0.85rem;
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .employee-capacity-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .employee-capacity-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+
+    .employee-capacity-fill.empty {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Production Selector Styles */
+    .production-resource-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .production-resource-card {
+        position: relative;
+        background: rgba(255, 255, 255, 0.02);
+        border: 2px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .production-resource-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(34, 197, 94, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .production-resource-card.selected {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: #22c55e;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .production-resource-card.selected::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 20px;
+        height: 20px;
+        background: #22c55e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        color: #fff;
+    }
+
+    .production-resource-card input[type="radio"] {
+        display: none;
+    }
+
+    .production-resource-img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        margin-bottom: 0.75rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .production-resource-placeholder {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 1.5rem;
+    }
+
+    .production-resource-name {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .production-resource-card.selected .production-resource-name {
+        color: #22c55e;
+    }
+
+    /* Single Resource Display */
+    .production-single-resource {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(34, 197, 94, 0.05);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .production-single-resource img {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .production-single-resource .resource-info {
+        flex: 1;
+    }
+
+    .production-single-resource .resource-name {
+        color: #22c55e;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .production-single-resource .resource-status {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+    }
+
+    /* Production Progress Card */
+    .production-progress-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .production-progress-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .production-progress-img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        padding: 8px;
+    }
+
+    .production-progress-info {
+        flex: 1;
+    }
+
+    .production-progress-name {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .production-progress-pp {
+        color: #22c55e;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .production-progress-bar-wrapper {
+        margin-bottom: 1rem;
+    }
+
+    .production-progress-bar {
+        height: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .production-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border-radius: 6px;
+        transition: width 0.5s ease;
+        position: relative;
+    }
+
+    .production-progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .production-progress-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+    }
+
+    .production-progress-stat {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .production-progress-stat strong {
+        color: #ffffff;
+    }
+
+    .production-no-set {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .production-no-set-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .production-no-set-icon i {
+        font-size: 1.5rem;
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Production Timeline Visualization */
+    .production-timeline {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .production-timeline-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .production-timeline-title {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .production-timeline-title i {
+        color: #22c55e;
+    }
+
+    .production-units-completed {
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .production-queue-visual {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        overflow-x: auto;
+    }
+
+    .production-unit {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .production-unit.completed {
+        background: rgba(34, 197, 94, 0.2);
+        border: 2px solid #22c55e;
+    }
+
+    .production-unit.completed i {
+        color: #22c55e;
+        font-size: 1.25rem;
+    }
+
+    .production-unit.in-progress {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(34, 197, 94, 0.2) 100%);
+        border: 2px solid #fbbf24;
+        animation: pulseProgress 2s ease-in-out infinite;
+    }
+
+    .production-unit.in-progress .unit-progress-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+
+    .production-unit.in-progress i {
+        color: #fbbf24;
+        font-size: 1.1rem;
+    }
+
+    .production-unit.pending {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    .production-unit.pending i {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 1rem;
+    }
+
+    @keyframes pulseProgress {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); }
+    }
+
+    .production-arrow {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.8rem;
+    }
+
+    .production-estimate {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 8px;
+    }
+
+    .production-estimate-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .production-estimate-label i {
+        color: #3b82f6;
+    }
+
+    .production-estimate-value {
+        color: #3b82f6;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .production-rate-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .production-rate-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 0.75rem;
+        text-align: center;
+    }
+
+    .production-rate-item .rate-value {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .production-rate-item .rate-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Profit/Loss Calculator */
+    .profit-calculator {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .profit-calculator-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .profit-calculator-title {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .profit-calculator-title i {
+        color: #22c55e;
+    }
+
+    .profit-breakdown {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .profit-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .profit-row:last-child {
+        border-bottom: none;
+    }
+
+    .profit-row.total {
+        border-top: 2px solid rgba(255, 255, 255, 0.1);
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+    }
+
+    .profit-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .profit-label i {
+        width: 18px;
+        text-align: center;
+    }
+
+    .profit-label .label-icon.revenue {
+        color: #22c55e;
+    }
+
+    .profit-label .label-icon.cost {
+        color: #ef4444;
+    }
+
+    .profit-label .label-icon.neutral {
+        color: #fbbf24;
+    }
+
+    .profit-value {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .profit-value.positive {
+        color: #22c55e;
+    }
+
+    .profit-value.negative {
+        color: #ef4444;
+    }
+
+    .profit-value.neutral {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .profit-total {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .profit-note {
+        margin-top: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .profit-note i {
+        color: #3b82f6;
+    }
+
+    .profit-margin-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .profit-margin-badge.positive {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .profit-margin-badge.negative {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    /* Electricity Toggle Improved */
+    .electricity-toggle-card {
+        background: rgba(251, 191, 36, 0.05);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+    }
+
+    .electricity-toggle-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .electricity-toggle-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #fbbf24;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .electricity-toggle-desc {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    /* Finances Tab Styles */
+    .finance-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 16px;
+        padding: 1.5rem;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .finance-card:hover {
+        border-color: rgba(34, 197, 94, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .finance-card.deposit {
+        border-color: rgba(34, 197, 94, 0.2);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.02) 100%);
+    }
+
+    .finance-card.withdraw {
+        border-color: rgba(234, 179, 8, 0.2);
+        background: linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, rgba(234, 179, 8, 0.02) 100%);
+    }
+
+    .finance-card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .finance-card-icon.deposit {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .finance-card-icon.withdraw {
+        background: rgba(234, 179, 8, 0.15);
+        color: #eab308;
+    }
+
+    .finance-card-icon i {
+        font-size: 1.5rem;
+    }
+
+    .finance-card-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .finance-card-desc {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .finance-input-group {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .finance-input-group input {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: #ffffff;
+        padding: 0.875rem 1rem;
+        padding-right: 70px;
+        font-size: 1rem;
+        width: 100%;
+        transition: all 0.2s ease;
+    }
+
+    .finance-input-group input:focus {
+        outline: none;
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+
+    .finance-input-group input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .finance-input-suffix {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .finance-btn {
+        width: 100%;
+        padding: 0.875rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .finance-btn.deposit {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #ffffff;
+    }
+
+    .finance-btn.deposit:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .finance-btn.withdraw {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+        color: #000000;
+    }
+
+    .finance-btn.withdraw:hover {
+        background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+    }
+
+    /* Exchange Section Styles */
+    .exchange-rates-card {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.03) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .exchange-rates-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #22c55e;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .exchange-rates-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .exchange-rate-item {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        text-align: center;
+    }
+
+    .exchange-rate-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.35rem;
+    }
+
+    .exchange-rate-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .exchange-rate-value.buy {
+        color: #ef4444;
+    }
+
+    .exchange-rate-value.sell {
+        color: #22c55e;
+    }
+
+    .exchange-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1.25rem;
+        height: 100%;
+    }
+
+    .exchange-card.sell-gold {
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    .exchange-card.buy-gold {
+        border-color: rgba(234, 179, 8, 0.2);
+    }
+
+    .exchange-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .exchange-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .exchange-card-icon.sell {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .exchange-card-icon.buy {
+        background: rgba(234, 179, 8, 0.15);
+        color: #eab308;
+    }
+
+    .exchange-card-title {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .exchange-card-subtitle {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+    }
+
+    .exchange-preview {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .exchange-preview-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 0.25rem;
+    }
+
+    .exchange-preview-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    /* Upgrade Section Styles */
+    .upgrade-card {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.02) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.25);
+        border-radius: 16px;
+        padding: 1.5rem;
+        height: 100%;
+    }
+
+    .upgrade-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .upgrade-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(34, 197, 94, 0.15);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+        font-size: 1.5rem;
+    }
+
+    .upgrade-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .upgrade-subtitle {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+
+    .upgrade-benefits {
+        margin-bottom: 1.25rem;
+    }
+
+    .upgrade-benefit {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .upgrade-benefit:last-child {
+        border-bottom: none;
+    }
+
+    .upgrade-benefit-icon {
+        width: 28px;
+        height: 28px;
+        background: rgba(34, 197, 94, 0.15);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+        font-size: 0.75rem;
+    }
+
+    .upgrade-benefit-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+    }
+
+    .upgrade-cost {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .upgrade-cost-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.35rem;
+    }
+
+    .upgrade-cost-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #eab308;
+    }
+
+    .upgrade-cost-value i {
+        margin-right: 0.5rem;
+    }
+
+    .upgrade-btn {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #ffffff;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .upgrade-btn:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    }
+
+    /* Dissolve Section Styles */
+    .dissolve-card {
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(220, 38, 38, 0.02) 100%);
+        border: 1px solid rgba(220, 38, 38, 0.25);
+        border-radius: 16px;
+        padding: 1.5rem;
+        height: 100%;
+    }
+
+    .dissolve-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .dissolve-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(220, 38, 38, 0.15);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #dc2626;
+        font-size: 1.5rem;
+    }
+
+    .dissolve-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .dissolve-subtitle {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+
+    .dissolve-warning {
+        background: rgba(220, 38, 38, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .dissolve-warning-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #dc2626;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .dissolve-warning-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .dissolve-warning-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        padding: 0.35rem 0;
+    }
+
+    .dissolve-warning-list li i {
+        color: #dc2626;
+        font-size: 0.7rem;
+    }
+
+    .dissolve-refund {
+        background: rgba(234, 179, 8, 0.1);
+        border: 1px solid rgba(234, 179, 8, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .dissolve-refund-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.35rem;
+    }
+
+    .dissolve-refund-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #eab308;
+    }
+
+    .dissolve-btn {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        background: rgba(220, 38, 38, 0.15);
+        color: #dc2626;
+        border: 1px solid rgba(220, 38, 38, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .dissolve-btn:hover {
+        background: rgba(220, 38, 38, 0.25);
+        border-color: rgba(220, 38, 38, 0.5);
+        color: #ef4444;
+    }
+
+    /* Inventory Table Styles */
+    .inventory-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+    .inventory-table thead th {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.75rem 1rem;
+        border: none;
+    }
+
+    .inventory-row {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        transition: all 0.3s ease;
+    }
+
+    .inventory-row:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(34, 197, 94, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 8px rgba(34, 197, 94, 0.15);
+    }
+
+    .inventory-row td {
+        padding: 1rem;
+        color: #ffffff;
+        border: none;
+    }
+
+    .inventory-row td:first-child {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        border-left: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .inventory-row td:last-child {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-right: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .inventory-row:hover td:first-child {
+        border-left-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .inventory-row:hover td:last-child {
+        border-right-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .resource-name {
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .form-control-sm {
+        background: #0f1419;
+        color: #fff;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 6px;
+    }
+
+    .form-control-sm:focus {
+        background: #0f1419;
+        color: #fff;
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    /* Form Elements */
+    .form-control, .form-select {
+        background: #0f1419;
+        color: #fff;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: #0f1419;
+        color: #fff;
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .form-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+    }
+
+    /* NFT Tab Styles */
+    .nft-tab-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .nft-tab-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a855f7;
+        font-size: 1.5rem;
+    }
+
+    .nft-tab-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .nft-tab-subtitle {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+
+    .nft-slots-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(168, 85, 247, 0.1);
+        border: 1px solid rgba(168, 85, 247, 0.2);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .nft-slots-info i {
+        color: #a855f7;
+    }
+
+    .nft-slots-info span {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+    }
+
+    .nft-slots-count {
+        color: #a855f7;
+        font-weight: 700;
+    }
+
+    /* NFT Slot Card Styles - Enhanced */
+    .nft-slot-card {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(168, 85, 247, 0.02) 100%);
+        border: 2px solid rgba(168, 85, 247, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        min-height: 420px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nft-slot-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 50%, #7c3aed 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .nft-slot-card:hover {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.04) 100%);
+        border-color: rgba(168, 85, 247, 0.4);
+        box-shadow: 0 8px 32px rgba(168, 85, 247, 0.15), 0 0 20px rgba(168, 85, 247, 0.1);
+        transform: translateY(-4px);
+    }
+
+    .nft-slot-card:hover::before {
+        opacity: 1;
+    }
+
+    .nft-slot-card.has-nft {
+        border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    .nft-slot-card.has-nft::before {
+        opacity: 1;
+    }
+
+    .nft-slot-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+    }
+
+    .nft-slot-number {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #a855f7;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .nft-slot-number i {
+        font-size: 0.9rem;
+    }
+
+    .nft-slot-badge {
+        background: rgba(168, 85, 247, 0.15);
+        color: #a855f7;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .nft-slot-badge.equipped {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .nft-slot-cooldown {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        color: #fbbf24;
+        background: rgba(251, 191, 36, 0.1);
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid rgba(251, 191, 36, 0.25);
+    }
+
+    .nft-slot-cooldown i {
+        font-size: 0.7rem;
+    }
+
+    .nft-slot-content {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+        min-height: 260px;
+    }
+
+    .nft-slot-actions {
+        margin-top: auto;
+    }
+
+    .nft-slot-actions .btn {
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .nft-slot-actions .btn-primary {
+        background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+        border: none;
+    }
+
+    .nft-slot-actions .btn-primary:hover {
+        background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    }
+
+    .nft-slot-actions .btn-danger {
+        background: rgba(220, 38, 38, 0.15);
+        border: 1px solid rgba(220, 38, 38, 0.3);
+        color: #dc2626;
+    }
+
+    .nft-slot-actions .btn-danger:hover {
+        background: rgba(220, 38, 38, 0.25);
+        border-color: rgba(220, 38, 38, 0.5);
+    }
+
+    /* Empty Slot State */
+    .nft-empty-slot {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .nft-empty-slot-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.25rem;
+        background: rgba(168, 85, 247, 0.1);
+        border: 2px dashed rgba(168, 85, 247, 0.3);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .nft-empty-slot-icon i {
+        font-size: 2rem;
+        color: rgba(168, 85, 247, 0.4);
+    }
+
+    .nft-empty-slot h5 {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .nft-empty-slot p {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    /* Equipped NFT Display - Enhanced */
+    .nft-equipped-display {
+        text-align: center;
+        width: 100%;
+    }
+
+    .nft-image-wrapper {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .nft-image-wrapper img {
+        width: 140px;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 3px solid rgba(168, 85, 247, 0.4);
+        background: #0a0e1a;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(168, 85, 247, 0.2);
+    }
+
+    .nft-image-wrapper:hover img {
+        border-color: rgba(168, 85, 247, 0.7);
+        box-shadow: 0 8px 30px rgba(168, 85, 247, 0.3);
+        transform: scale(1.03);
+    }
+
+    .nft-image-wrapper .nft-tier-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.35rem 0.6rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4);
+    }
+
+    .nft-equipped-display .nft-name {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .nft-equipped-display .nft-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        text-align: left;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+    }
+
+    .nft-detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .nft-detail-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .nft-detail-value {
+        font-size: 0.85rem;
+        color: #ffffff;
+        font-weight: 600;
+    }
+
+    .nft-detail-value.bonus {
+        color: #22c55e;
+    }
+
+    .nft-detail-value.tier {
+        color: #a855f7;
+    }
+
+    /* Not Owner State */
+    .nft-not-owner {
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .nft-not-owner-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .nft-not-owner-icon i {
+        font-size: 2rem;
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .nft-not-owner h5 {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .nft-not-owner p {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Hour Slider Styles */
+    .hour-slider {
+        width: 100%;
+        height: 8px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        outline: none;
+        -webkit-appearance: none;
+    }
+
+    .hour-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #22c55e;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .hour-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #22c55e;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .hour-display {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #22c55e;
+        text-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+    }
+
+    /* Company Management Tabs */
+    .company-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid rgba(34, 197, 94, 0.2);
+        padding-bottom: 0;
+        flex-wrap: wrap;
+    }
+
+    .company-tab {
+        padding: 0.75rem 1.5rem;
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 500;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: -2px;
+    }
+
+    .company-tab:hover {
+        color: #22c55e;
+        background: rgba(34, 197, 94, 0.05);
+    }
+
+    .company-tab.active {
+        color: #22c55e;
+        border-bottom-color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .company-tab i {
+        font-size: 1rem;
+    }
+
+    .tab-content-section {
+        display: none;
+    }
+
+    .tab-content-section.active {
+        display: block;
+    }
+
+    /* Job Offers Cards */
+    .job-offers-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .job-offers-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .job-offers-header h5 {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .job-offers-header .badge {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        font-weight: 500;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+
+    .job-offer-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .job-offer-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .job-offer-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    .job-offer-details {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .job-offer-stat {
+        text-align: center;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+    }
+
+    .job-offer-stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 0.35rem;
+    }
+
+    .job-offer-stat-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    .job-offer-stat-value.wage {
+        color: #22c55e;
+    }
+
+    .job-offer-positions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .job-offer-positions-bar {
+        flex: 1;
+        max-width: 60px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .job-offer-positions-fill {
+        height: 100%;
+        background: #22c55e;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    .job-offer-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .job-offer-actions .btn-cancel {
+        background: rgba(234, 179, 8, 0.1);
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        color: #eab308;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .job-offer-actions .btn-cancel:hover {
+        background: rgba(234, 179, 8, 0.2);
+        border-color: rgba(234, 179, 8, 0.5);
+    }
+
+    /* Legacy table support - keeping for backwards compatibility */
+    .job-offers-table {
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+
+    .job-offers-table thead th {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .job-offers-table tbody td {
+        padding: 1rem;
+        color: #ffffff;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<!-- Fire Employee Confirmation Modal -->
+<div class="modal fade" id="fireEmployeeModal" tabindex="-1" aria-labelledby="fireEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-gray-200" id="fireEmployeeModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>127.0.0.1:5000 says
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-3">
+                    <p class="h5 mb-3 text-gray-200">Fire employee?</p>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" id="confirmFireEmployeeBtn">OK</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Job Offer Confirmation Modal -->
+<div class="modal fade" id="cancelJobOfferModal" tabindex="-1" aria-labelledby="cancelJobOfferModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-gray-200" id="cancelJobOfferModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>127.0.0.1:5000 says
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-3">
+                    <p class="h5 mb-3 text-gray-200">Cancel this job offer?</p>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" id="confirmCancelJobOfferBtn">OK</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle fire employee confirmation
+    let fireEmployeeFormToSubmit = null;
+
+    // Handle cancel job offer confirmation
+    let cancelJobOfferFormToSubmit = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle fire employee button clicks
+        document.querySelectorAll('.fire-employee-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                fireEmployeeFormToSubmit = this.closest('form');
+                var fireModal = new bootstrap.Modal(document.getElementById('fireEmployeeModal'));
+                fireModal.show();
+            });
+        });
+
+        // Handle confirm fire employee
+        document.getElementById('confirmFireEmployeeBtn').addEventListener('click', function() {
+            if (fireEmployeeFormToSubmit) {
+                fireEmployeeFormToSubmit.submit();
+            }
+        });
+
+        // Handle cancel job offer button clicks
+        document.querySelectorAll('.cancel-job-offer-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                cancelJobOfferFormToSubmit = this.closest('form');
+                var cancelModal = new bootstrap.Modal(document.getElementById('cancelJobOfferModal'));
+                cancelModal.show();
+            });
+        });
+
+        // Handle confirm cancel job offer
+        document.getElementById('confirmCancelJobOfferBtn').addEventListener('click', function() {
+            if (cancelJobOfferFormToSubmit) {
+                cancelJobOfferFormToSubmit.submit();
+            }
+        });
+    });
+</script>
+
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Tab Navigation Header -->
+        <ul class="nav nav-tabs mb-4" id="myPlacesTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('company.my_companies') }}"><i class="fas fa-building me-1"></i>Companies</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.training') }}"><i class="fas fa-dumbbell me-1"></i>Training Grounds</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.study') }}"><i class="fas fa-graduation-cap me-1"></i>Study</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.storage') }}"><i class="fas fa-warehouse me-1"></i>Storage</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.travel') }}"><i class="fas fa-plane me-1"></i>Travel</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.residence') }}"><i class="fas fa-home me-1"></i>Residence</a>
+          </li>
+        </ul>
+
+        <!-- Company Header -->
+        <div class="training-header">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename=get_company_image(company.company_type, company.quality_level)) }}"
+                     alt="{{ company.name }}" style="width: 200px; height: 200px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); margin-right: 2rem; flex-shrink: 0;">
+                <div>
+                    <h2 class="mb-2">{{ company.name }} <small class="text-muted" style="font-size: 0.5em;">#{{ company.id }}</small> <span class="badge bg-primary">Q{{ company.quality_level }}</span></h2>
+                    <p class="text-muted mb-1">{{ company.company_type.value }} | {{ company.country.name }}</p>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-user-tie me-1"></i>Manager:
+                        <a href="{{ url_for('main.view_profile', username=company.owner.username or company.owner.wallet_address) }}" class="text-success text-decoration-none">
+                            {{ company.owner.username or company.owner.wallet_address[:8] ~ '...' }}
+                        </a>
+                    </p>
+                    {% if company.description %}
+                        <p class="text-white mt-2 mb-0">{{ company.description }}</p>
+                    {% endif %}
+                    {% if is_owner %}
+                        <div class="mt-3">
+                            <a href="{{ url_for('company.edit_company_profile', company_id=company.id) }}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-edit me-1"></i>Edit Company Profile
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-grid">
+            {% if is_owner %}
+            <div class="stat-card">
+                <h5><i class="fas fa-coins me-2"></i>Gold Balance</h5>
+                <p class="h3">{{ "%.2f"|format(company.gold_balance|float) }}</p>
+            </div>
+            <div class="stat-card">
+                <h5><i class="fas fa-money-bill me-2"></i>Currency Balance</h5>
+                <p class="h3">{{ "%.2f"|format(company.currency_balance|float) }} {{ company.country.currency_name }}</p>
+            </div>
+            {% endif %}
+            <div class="stat-card">
+                <h5><i class="fas fa-users me-2"></i>Employees</h5>
+                <p class="h3">{{ company.current_employee_count }}/{{ company.max_employees }}</p>
+            </div>
+            <div class="stat-card">
+                <h5><i class="fas fa-chart-line me-2"></i>Quality Bonus</h5>
+                <p class="h3">+{{ ((company.quality_production_bonus - 1) * 100)|int }}%</p>
+            </div>
+            <div class="stat-card">
+                <h5><i class="fas fa-industry me-2"></i>Production</h5>
+                <p class="h3">{{ current_production.name if current_production else 'Not Set' }}</p>
+            </div>
+        </div>
+
+        <!-- Owner Controls -->
+        {% if is_owner %}
+        <!-- Company Management Tabs -->
+        <div class="company-tabs">
+            <button class="company-tab active" data-tab="production" onclick="switchCompanyTab('production')">
+                <i class="fas fa-industry"></i>Production
+            </button>
+            <button class="company-tab" data-tab="finances" onclick="switchCompanyTab('finances')">
+                <i class="fas fa-coins"></i>Finances
+            </button>
+            <button class="company-tab" data-tab="inventory" onclick="switchCompanyTab('inventory')">
+                <i class="fas fa-boxes"></i>Inventory
+            </button>
+            <button class="company-tab" data-tab="nft" onclick="switchCompanyTab('nft')">
+                <i class="fas fa-gem"></i>NFT
+            </button>
+        </div>
+
+        <!-- Production Tab Content -->
+        <div id="tab-production" class="tab-content-section active">
+        <!-- Production -->
+        <div class="row g-3">
+            <!-- Left: Production Selector -->
+            <div class="col-md-6 d-flex">
+                <div class="modern-section flex-fill">
+                    <div class="modern-section-header">
+                        <h4><i class="fas fa-industry me-2"></i>Production</h4>
+                    </div>
+                    <div class="modern-section-body">
+                        {% if available_resources|length == 1 %}
+                        <!-- Single Resource - Auto Selected Display -->
+                        {% set single_resource = available_resources[0] %}
+                        <div class="production-single-resource">
+                            {% if single_resource.icon_path %}
+                                <img src="{{ url_for('static', filename=single_resource.icon_path) }}" alt="{{ single_resource.name }}">
+                            {% else %}
+                                <div class="production-resource-placeholder">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                            {% endif %}
+                            <div class="resource-info">
+                                <div class="resource-name">{{ single_resource.name }}</div>
+                                <div class="resource-status">
+                                    {% if current_production and current_production.id == single_resource.id %}
+                                        <i class="fas fa-check-circle me-1" style="color: #22c55e;"></i>Currently Producing
+                                    {% else %}
+                                        <i class="fas fa-circle me-1" style="color: rgba(255,255,255,0.3);"></i>Available to Produce
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if not current_production or current_production.id != single_resource.id %}
+                        <form method="POST" action="{{ url_for('company.set_production', company_id=company.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="resource_id" value="{{ single_resource.id }}">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-play me-2"></i>Start Production
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% else %}
+                        <!-- Multiple Resources - Grid Selection -->
+                        <form method="POST" action="{{ url_for('company.set_production', company_id=company.id) }}" id="productionForm">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="production-resource-grid">
+                                {% for resource in available_resources %}
+                                <label class="production-resource-card {% if current_production and resource.id == current_production.id %}selected{% endif %}">
+                                    <input type="radio" name="resource_id" value="{{ resource.id }}"
+                                           {% if current_production and resource.id == current_production.id %}checked{% endif %}
+                                           onchange="this.form.submit()">
+                                    {% if resource.icon_path %}
+                                        <img src="{{ url_for('static', filename=resource.icon_path) }}" alt="{{ resource.name }}" class="production-resource-img">
+                                    {% else %}
+                                        <div class="production-resource-placeholder">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="production-resource-name">{{ resource.name }}</div>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </form>
+                        {% endif %}
+
+                        <!-- Electricity Boost Toggle -->
+                        <div class="electricity-toggle-card mt-3">
+                            <form method="POST" action="{{ url_for('company.toggle_electricity', company_id=company.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="electricity-toggle-header">
+                                    <div class="electricity-toggle-title">
+                                        <i class="fas fa-bolt"></i>
+                                        <span>Electricity Boost</span>
+                                        {% if company.use_electricity %}
+                                            <span class="badge bg-success" style="font-size: 0.7rem;">ON</span>
+                                        {% endif %}
+                                    </div>
+                                    <button type="submit" class="btn btn-sm {% if company.use_electricity %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                                        {% if company.use_electricity %}
+                                            <i class="fas fa-toggle-on me-1"></i>Disable
+                                        {% else %}
+                                            <i class="fas fa-toggle-off me-1"></i>Enable
+                                        {% endif %}
+                                    </button>
+                                </div>
+                                <p class="electricity-toggle-desc">+30% production boost (2 electricity per 10 PP)</p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Production Progress -->
+            <div class="col-md-6 d-flex">
+                <div class="modern-section flex-fill">
+                    <div class="modern-section-header">
+                        {% if company.company_type.name in ['MINING', 'RESOURCE_EXTRACTION', 'FARMING'] %}
+                        <h4><i class="fas fa-hammer me-2"></i>Extraction Progress</h4>
+                        {% else %}
+                        <h4><i class="fas fa-cogs me-2"></i>Manufacturing Progress</h4>
+                        {% endif %}
+                    </div>
+                    <div class="modern-section-body">
+                        {% if current_production %}
+                        <div class="production-progress-card">
+                            <div class="production-progress-header">
+                                {% if current_production.icon_path %}
+                                    <img src="{{ url_for('static', filename=current_production.icon_path) }}" alt="{{ current_production.name }}" class="production-progress-img">
+                                {% else %}
+                                    <div class="production-progress-img" style="display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-box" style="font-size: 1.5rem; color: rgba(255,255,255,0.3);"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="production-progress-info">
+                                    <div class="production-progress-name">{{ current_production.name }}</div>
+                                    <div class="production-progress-pp">{{ "%.2f"|format(company.production_progress_display) }} / {{ "%.2f"|format(company.required_pp_display) }} PP</div>
+                                </div>
+                                <div class="text-end">
+                                    <span style="font-size: 1.5rem; font-weight: 700; color: #22c55e;">{{ company.production_progress_percentage|int }}%</span>
+                                </div>
+                            </div>
+                            <div class="production-progress-bar-wrapper">
+                                <div class="production-progress-bar">
+                                    <div class="production-progress-fill" style="width: {{ company.production_progress_percentage|int }}%;"></div>
+                                </div>
+                                <div class="production-progress-stats">
+                                    <span class="production-progress-stat">Progress: <strong>{{ "%.2f"|format(company.production_progress_display) }} PP</strong></span>
+                                    <span class="production-progress-stat">Required: <strong>{{ "%.2f"|format(company.required_pp_display) }} PP</strong></span>
+                                </div>
+                            </div>
+                            {% if company.company_type.name in ['MINING', 'RESOURCE_EXTRACTION', 'FARMING'] %}
+                            <div style="background: rgba(34, 197, 94, 0.1); border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+                                    <i class="fas fa-info-circle" style="color: #22c55e;"></i>
+                                    <span>Extraction Rate: <strong style="color: #22c55e;">1 PP = {{ company.quality_production_bonus }} {{ current_production.name }}</strong></span>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Production Info -->
+                            <div class="production-timeline">
+                                {% set current_inventory = 0 %}
+                                {% for inv in inventory_items %}
+                                    {% if inv.resource_id == company.current_production_resource_id and (inv.quality == company.quality_level or (company.is_extraction_company and inv.quality == 0)) %}
+                                        {% set current_inventory = inv.quantity %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                <!-- Production rate info -->
+                                <div class="production-rate-info">
+                                    <div class="production-rate-item">
+                                        <div class="rate-value">{{ "%.2f"|format(company.required_pp_display) }} PP</div>
+                                        <div class="rate-label">Per Unit</div>
+                                    </div>
+                                    <div class="production-rate-item">
+                                        <div class="rate-value">Q{{ company.quality_level }}</div>
+                                        <div class="rate-label">Quality</div>
+                                    </div>
+                                    <div class="production-rate-item">
+                                        <div class="rate-value">{{ current_inventory }}</div>
+                                        <div class="rate-label">In Stock</div>
+                                    </div>
+                                    {% if company.production_progress > 0 %}
+                                    <div class="production-rate-item">
+                                        <div class="rate-value">{{ "%.1f"|format(company.production_progress_percentage) }}%</div>
+                                        <div class="rate-label">Progress</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Profit/Loss Calculator (Owner Only) -->
+                            {% if is_owner and current_production %}
+                            <div class="profit-calculator">
+                                <div class="profit-calculator-header">
+                                    <div class="profit-calculator-title">
+                                        <i class="fas fa-calculator"></i>
+                                        <span>Profit Calculator (per unit)</span>
+                                    </div>
+                                    {% set product_quality = company.quality_level if not company.is_extraction_company else 0 %}
+                                    {% set market_item = market_items_dict.get((company.current_production_resource_id, product_quality if product_quality > 0 else None)) %}
+                                    {% set sell_price = market_item.sell_price|float if market_item else 0 %}
+
+                                    {# Calculate average wage per PP from employees #}
+                                    {% set total_wage = namespace(value=0) %}
+                                    {% set emp_count = employees|length %}
+                                    {% for emp in employees %}
+                                        {% set total_wage.value = total_wage.value + emp.wage_per_pp|float %}
+                                    {% endfor %}
+                                    {% set avg_wage_per_pp = (total_wage.value / emp_count) if emp_count > 0 else 0 %}
+
+                                    {# Calculate labor cost per unit #}
+                                    {% set labor_cost_per_unit = avg_wage_per_pp * company.required_pp_display %}
+
+                                    {# Calculate raw material cost for manufacturing companies #}
+                                    {% set material_cost = namespace(value=0) %}
+                                    {% if not company.is_extraction_company %}
+                                        {# Get raw material market price (quality 0) #}
+                                        {% set raw_material_market = market_items_dict.get((company.current_production_resource_id, None)) %}
+                                        {% if raw_material_market %}
+                                            {% set material_cost.value = raw_material_market.buy_price|float * company.raw_materials_required %}
+                                        {% endif %}
+                                    {% endif %}
+
+                                    {# Calculate total revenue and costs #}
+                                    {% if company.is_extraction_company %}
+                                        {% set units_per_pp = company.quality_production_bonus %}
+                                        {% set revenue_per_unit = sell_price %}
+                                        {% set total_revenue = sell_price * units_per_pp %}
+                                        {% set total_cost = avg_wage_per_pp %}
+                                        {% set profit = total_revenue - total_cost %}
+                                    {% else %}
+                                        {% set revenue_per_unit = sell_price %}
+                                        {% set total_cost = labor_cost_per_unit + material_cost.value %}
+                                        {% set profit = revenue_per_unit - total_cost %}
+                                    {% endif %}
+
+                                    <span class="profit-margin-badge {% if profit > 0 %}positive{% else %}negative{% endif %}">
+                                        {% if revenue_per_unit > 0 %}
+                                            {{ "%.1f"|format((profit / revenue_per_unit) * 100 if revenue_per_unit > 0 else 0) }}% margin
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                <div class="profit-breakdown">
+                                    <!-- Revenue -->
+                                    <div class="profit-row">
+                                        <span class="profit-label">
+                                            <i class="fas fa-arrow-up label-icon revenue"></i>
+                                            {% if company.is_extraction_company %}
+                                            Sell Price ({{ units_per_pp }}x @ {{ "%.2f"|format(sell_price) }})
+                                            {% else %}
+                                            Sell Price (Q{{ company.quality_level }})
+                                            {% endif %}
+                                        </span>
+                                        <span class="profit-value positive">
+                                            {% if company.is_extraction_company %}
+                                            +{{ "%.2f"|format(total_revenue) }}
+                                            {% else %}
+                                            +{{ "%.2f"|format(revenue_per_unit) }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+
+                                    <!-- Labor Cost -->
+                                    <div class="profit-row">
+                                        <span class="profit-label">
+                                            <i class="fas fa-users label-icon cost"></i>
+                                            {% if emp_count > 0 %}
+                                            Labor ({{ "%.2f"|format(avg_wage_per_pp) }}/PP × {{ "%.1f"|format(company.required_pp_display) if not company.is_extraction_company else "1" }} PP)
+                                            {% else %}
+                                            Labor (no employees)
+                                            {% endif %}
+                                        </span>
+                                        <span class="profit-value {% if emp_count > 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if emp_count > 0 %}
+                                                {% if company.is_extraction_company %}
+                                                -{{ "%.2f"|format(avg_wage_per_pp) }}
+                                                {% else %}
+                                                -{{ "%.2f"|format(labor_cost_per_unit) }}
+                                                {% endif %}
+                                            {% else %}
+                                            0.00
+                                            {% endif %}
+                                        </span>
+                                    </div>
+
+                                    <!-- Android Worker Contribution (if equipped) -->
+                                    {% if android_skill > 0 %}
+                                    {% set android_pp_per_day = 12 * (1 + android_skill) %}
+                                    {% if company.is_extraction_company %}
+                                        {% set android_units_per_day = android_pp_per_day * units_per_pp %}
+                                        {% set android_revenue_per_day = android_units_per_day * sell_price %}
+                                    {% else %}
+                                        {% set android_units_per_day = android_pp_per_day / company.required_pp_display %}
+                                        {% set android_revenue_per_day = android_units_per_day * sell_price %}
+                                        {% set android_material_cost_per_day = android_units_per_day * material_cost.value %}
+                                        {% set android_profit_per_day = android_revenue_per_day - android_material_cost_per_day %}
+                                    {% endif %}
+                                    <div class="profit-row" style="background: rgba(34, 197, 94, 0.1); margin: 0.5rem -0.75rem; padding: 0.5rem 0.75rem; border-radius: 8px;">
+                                        <span class="profit-label">
+                                            <i class="fas fa-robot label-icon" style="color: #22c55e;"></i>
+                                            Android Worker (Skill {{ android_skill }}, {{ android_pp_per_day }} PP/day)
+                                        </span>
+                                        <span class="profit-value positive">
+                                            {% if company.is_extraction_company %}
+                                            +{{ "%.2f"|format(android_revenue_per_day) }}/day
+                                            {% else %}
+                                            +{{ "%.2f"|format(android_profit_per_day) }}/day
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if not company.is_extraction_company %}
+                                    <!-- Raw Materials Cost -->
+                                    <div class="profit-row">
+                                        <span class="profit-label">
+                                            <i class="fas fa-cubes label-icon cost"></i>
+                                            Raw Materials ({{ company.raw_materials_required }}x)
+                                        </span>
+                                        <span class="profit-value {% if material_cost.value > 0 %}negative{% else %}neutral{% endif %}">
+                                            -{{ "%.2f"|format(material_cost.value) }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Total Profit/Loss -->
+                                    <div class="profit-row total">
+                                        <span class="profit-label">
+                                            <i class="fas fa-coins label-icon {% if profit > 0 %}revenue{% else %}cost{% endif %}"></i>
+                                            <strong>{% if company.is_extraction_company %}Profit per 1 PP{% else %}Profit per Unit{% endif %}</strong>
+                                        </span>
+                                        <span class="profit-value profit-total {% if profit > 0 %}positive{% elif profit < 0 %}negative{% else %}neutral{% endif %}">
+                                            {% if profit >= 0 %}+{% endif %}{{ "%.2f"|format(profit) }} {{ company.country.currency_code }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="profit-note">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Based on current market prices. Actual profit may vary with market fluctuations.{% if android_skill > 0 %} Android Worker produces {{ 12 * (1 + android_skill) }} PP/day at zero labor cost.{% endif %}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="production-no-set">
+                            <div class="production-no-set-icon">
+                                <i class="fas fa-pause"></i>
+                            </div>
+                            <h5 style="color: rgba(255,255,255,0.7); margin-bottom: 0.5rem;">No Production Set</h5>
+                            <p style="margin: 0; font-size: 0.9rem;">Select a resource on the left to start producing.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees -->
+        <div class="modern-section">
+            <div class="modern-section-header">
+                <h4><i class="fas fa-users me-2"></i>Employees</h4>
+            </div>
+            <div class="modern-section-body">
+            <!-- Employee Capacity Progress Bar -->
+            <div class="employee-capacity-wrapper">
+                <div class="employee-capacity-header">
+                    <span class="employee-capacity-label">Workforce Capacity</span>
+                    <span class="employee-capacity-count">{{ company.current_employee_count }} / {{ company.max_employees }} positions filled</span>
+                </div>
+                <div class="employee-capacity-bar">
+                    {% set fill_percent = (company.current_employee_count / company.max_employees * 100) if company.max_employees > 0 else 0 %}
+                    <div class="employee-capacity-fill {% if company.current_employee_count == 0 %}empty{% endif %}" style="width: {{ fill_percent }}%;"></div>
+                </div>
+            </div>
+
+            {% if employees or android_skill > 0 %}
+            <div class="employee-grid">
+                <!-- Android Worker Card (if equipped) -->
+                {% if android_skill > 0 %}
+                <div class="employee-card" style="border: 2px solid rgba(34, 197, 94, 0.4); background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(0,0,0,0.3) 100%);">
+                    <div class="employee-info">
+                        <div class="d-flex align-items-center mb-3">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border: 2px solid rgba(34, 197, 94, 0.5); display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                                <i class="fas fa-robot" style="color: white; font-size: 1.4rem;"></i>
+                            </div>
+                            <div>
+                                <div class="employee-name" style="color: #22c55e;">Labor Droid Mk-{{ ['I', 'II', 'III', 'IV', 'V'][android_skill - 1] }}</div>
+                                <span class="badge bg-success" style="font-size: 0.7rem;">Android Worker</span>
+                            </div>
+                        </div>
+                        <div class="employee-stat">
+                            <span>Skill Level:</span>
+                            <strong class="text-success">{{ android_skill }}</strong>
+                        </div>
+                        <div class="employee-stat">
+                            <span>PP per Shift:</span>
+                            <strong>{{ (12 * (1 + android_skill))|int }} PP</strong>
+                        </div>
+                        <div class="employee-stat">
+                            <span>Wage per PP:</span>
+                            <strong class="text-success">0.00 (Free)</strong>
+                        </div>
+                    </div>
+                    {% if is_owner %}
+                        {% if android_can_work %}
+                            {% if current_production %}
+                            <form method="POST" action="{{ url_for('company.activate_android', company_id=company.id) }}" style="display:block;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-play me-2"></i>Activate (12h Shift)
+                                </button>
+                            </form>
+                            {% else %}
+                            <button type="button" class="btn btn-secondary w-100" disabled>
+                                <i class="fas fa-exclamation-triangle me-2"></i>Set Production First
+                            </button>
+                            {% endif %}
+                        {% else %}
+                        <button type="button" class="btn btn-secondary w-100" disabled>
+                            <i class="fas fa-clock me-2"></i>Already Worked Today
+                        </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Regular Employee Cards -->
+                {% for emp in employees %}
+                {% set today_stats = employee_today_stats.get(emp.user_id) %}
+                <div class="employee-card">
+                    <div class="employee-info">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if emp.user.avatar %}
+                                <img src="{{ url_for('static', filename='uploads/avatars/' + emp.user.id|string + '.png') }}?t={{ range(1, 10000) | random }}"
+                                     alt="{{ emp.user.username }}"
+                                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(34, 197, 94, 0.3); margin-right: 12px;">
+                            {% else %}
+                                <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 2px solid rgba(34, 197, 94, 0.3); display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                                    <i class="fas fa-user" style="color: rgba(34, 197, 94, 0.5); font-size: 1.2rem;"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div class="employee-name">{{ emp.user.username }}</div>
+                                {% if today_stats %}
+                                <span class="today-work-badge worked"><i class="fas fa-check-circle"></i> Worked Today</span>
+                                {% else %}
+                                <span class="today-work-badge not-worked"><i class="fas fa-clock"></i> Not Yet Today</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# Today's Work Stats Section #}
+                        {% if today_stats %}
+                        <div class="today-stats-container">
+                            <div class="today-stats-header">
+                                <i class="fas fa-chart-bar"></i> Today's Performance
+                            </div>
+                            <div class="today-stats-row">
+                                <div class="today-stat-box">
+                                    <i class="fas fa-clock text-info"></i>
+                                    <span class="today-stat-value">{{ today_stats.hours_worked }}h</span>
+                                </div>
+                                <div class="today-stat-box">
+                                    <i class="fas fa-cogs text-purple"></i>
+                                    <span class="today-stat-value">{{ "%.1f"|format(today_stats.production_points) }} PP</span>
+                                </div>
+                                <div class="today-stat-box">
+                                    <i class="fas fa-coins text-warning"></i>
+                                    <span class="today-stat-value">{{ "%.2f"|format(today_stats.total_payment) }} {{ company.country.currency_code if company.country.currency_code else company.country.currency_name[:3]|upper }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="employee-stat">
+                            <span>Wage per PP:</span>
+                            <strong>{{ "%.2f"|format(emp.wage_per_pp|float) }} {{ company.country.currency_name }}</strong>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('company.fire_employee', company_id=company.id, employee_id=emp.id) }}" style="display:block;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="button" class="btn btn-danger w-100 fire-employee-btn">
+                            <i class="fas fa-user-times me-2"></i>Fire Employee
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-employees">
+                <div class="no-employees-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h5>No Employees Yet</h5>
+                <p>Post a job offer below to start hiring workers for your company.</p>
+            </div>
+            {% endif %}
+
+            {% if active_job_offers %}
+            <div class="job-offers-section">
+                <div class="job-offers-header">
+                    <i class="fas fa-briefcase" style="color: #22c55e;"></i>
+                    <h5>Active Job Offers</h5>
+                    <span class="badge">{{ active_job_offers|length }} active</span>
+                </div>
+                {% for offer in active_job_offers %}
+                <div class="job-offer-card">
+                    <div class="job-offer-details">
+                        <div class="job-offer-stat">
+                            <div class="job-offer-stat-label">Wage per PP</div>
+                            <div class="job-offer-stat-value wage">{{ "%.2f"|format(offer.wage_per_pp|float) }} {{ company.country.currency_name }}</div>
+                        </div>
+                        <div class="job-offer-stat">
+                            <div class="job-offer-stat-label">Min Skill Level</div>
+                            <div class="job-offer-stat-value">{{ offer.minimum_skill_level }}</div>
+                        </div>
+                        <div class="job-offer-stat">
+                            <div class="job-offer-stat-label">Positions</div>
+                            <div class="job-offer-stat-value">
+                                <div class="job-offer-positions">
+                                    <span>{{ offer.positions_filled }}/{{ offer.positions }}</span>
+                                    <div class="job-offer-positions-bar">
+                                        {% set positions_percent = (offer.positions_filled / offer.positions * 100) if offer.positions > 0 else 0 %}
+                                        <div class="job-offer-positions-fill" style="width: {{ positions_percent }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="job-offer-actions">
+                        <form method="POST" action="{{ url_for('company.cancel_job_offer', company_id=company.id, offer_id=offer.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn-cancel cancel-job-offer-btn">
+                                <i class="fas fa-times me-1"></i>Cancel Offer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if company.available_positions > 0 and not active_job_offers %}
+            <div class="mt-4">
+                <h5 class="text-white mb-3"><i class="fas fa-plus-circle me-2"></i>Post Job Offer</h5>
+                <form method="POST" action="{{ url_for('company.post_job', company_id=company.id) }}" class="row g-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="col-md-4">
+                        <label class="form-label">Wage per PP ({{ company.country.currency_name }})</label>
+                        <input type="number" name="wage" step="0.01" min="0.01" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Minimum Skill Level</label>
+                        <select name="min_skill" class="form-select" required>
+                            <option value="0">0 - No minimum</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="10.01">10+</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Number of Positions</label>
+                        <select name="positions" class="form-select" required>
+                            {% for i in range(1, company.available_positions + 1) %}
+                                <option value="{{ i }}" {% if i == company.available_positions %}selected{% endif %}>{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-paper-plane me-2"></i>Post Job
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+            </div>
+        </div>
+        </div> <!-- End Production Tab -->
+
+        <!-- Finances Tab Content -->
+        <div id="tab-finances" class="tab-content-section">
+        <!-- Treasury Section -->
+        <div class="modern-section">
+            <div class="modern-section-header">
+                <h4><i class="fas fa-vault me-2"></i>Treasury</h4>
+            </div>
+            <div class="modern-section-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="finance-card deposit">
+                            <div class="finance-card-icon deposit">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div class="finance-card-title">Deposit Gold</div>
+                            <div class="finance-card-desc">Transfer gold from your personal wallet to company treasury</div>
+                            <form method="POST" action="{{ url_for('company.deposit_funds', company_id=company.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="currency_type" value="gold">
+                                <div class="finance-input-group">
+                                    <input type="number" name="amount" step="1" min="1" placeholder="Enter amount">
+                                    <span class="finance-input-suffix">GOLD</span>
+                                </div>
+                                <button type="submit" class="finance-btn deposit">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Deposit
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="finance-card withdraw">
+                            <div class="finance-card-icon withdraw">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="finance-card-title">Withdraw Gold</div>
+                            <div class="finance-card-desc">Transfer gold from company treasury to your personal wallet</div>
+                            <form method="POST" action="{{ url_for('company.withdraw_funds', company_id=company.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="currency_type" value="gold">
+                                <div class="finance-input-group">
+                                    <input type="number" name="amount" step="1" min="1" placeholder="Enter amount">
+                                    <span class="finance-input-suffix">GOLD</span>
+                                </div>
+                                <button type="submit" class="finance-btn withdraw">
+                                    <i class="fas fa-minus-circle"></i>
+                                    Withdraw
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Currency Exchange -->
+        {% if gold_market %}
+        <div class="modern-section">
+            <div class="modern-section-header">
+                <h4><i class="fas fa-exchange-alt me-2"></i>Currency Exchange</h4>
+            </div>
+            <div class="modern-section-body">
+            <!-- Exchange Rates Display -->
+            <div class="exchange-rates-card">
+                <div class="exchange-rates-title">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Current Exchange Rates</span>
+                </div>
+                <div class="exchange-rates-grid">
+                    <div class="exchange-rate-item">
+                        <div class="exchange-rate-label">Buy Gold Price</div>
+                        <div class="exchange-rate-value buy">{{ gold_market.buy_gold_price }} {{ company.country.currency_name }}</div>
+                    </div>
+                    <div class="exchange-rate-item">
+                        <div class="exchange-rate-label">Sell Gold Price</div>
+                        <div class="exchange-rate-value sell">{{ gold_market.sell_gold_price }} {{ company.country.currency_name }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exchange Forms -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="exchange-card sell-gold">
+                        <div class="exchange-card-header">
+                            <div class="exchange-card-icon sell">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div>
+                                <div class="exchange-card-title">Sell Gold</div>
+                                <div class="exchange-card-subtitle">Get {{ company.country.currency_name }} for your Gold</div>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ url_for('company.exchange_buy_currency', company_id=company.id) }}" id="sellGoldForm">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="finance-input-group">
+                                <input type="number" name="gold_amount" id="sellGoldAmount" step="1" min="1" placeholder="Gold amount">
+                                <span class="finance-input-suffix">GOLD</span>
+                            </div>
+                            <div class="exchange-preview">
+                                <div class="exchange-preview-label">You will receive</div>
+                                <div class="exchange-preview-value" id="sellGoldPreview">0.00 {{ company.country.currency_name }}</div>
+                            </div>
+                            <button type="submit" class="finance-btn deposit">
+                                <i class="fas fa-exchange-alt"></i>
+                                Sell Gold
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="exchange-card buy-gold">
+                        <div class="exchange-card-header">
+                            <div class="exchange-card-icon buy">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div>
+                                <div class="exchange-card-title">Buy Gold</div>
+                                <div class="exchange-card-subtitle">Spend {{ company.country.currency_name }} to get Gold</div>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ url_for('company.exchange_sell_currency', company_id=company.id) }}" id="buyGoldForm">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="finance-input-group">
+                                <input type="number" name="gold_amount" id="buyGoldAmount" step="1" min="1" placeholder="Gold amount">
+                                <span class="finance-input-suffix">GOLD</span>
+                            </div>
+                            <div class="exchange-preview">
+                                <div class="exchange-preview-label">It will cost you</div>
+                                <div class="exchange-preview-value" id="buyGoldPreview">0.00 {{ company.country.currency_name }}</div>
+                            </div>
+                            <button type="submit" class="finance-btn withdraw">
+                                <i class="fas fa-exchange-alt"></i>
+                                Buy Gold
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sell Gold Confirmation Modal -->
+            <div class="modal fade" id="sellGoldConfirmModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(34, 197, 94, 0.2);">
+                        <div class="modal-header" style="border-bottom: 1px solid rgba(34, 197, 94, 0.2);">
+                            <h5 class="modal-title text-success"><i class="fas fa-coins me-2"></i>Confirm Gold Sale</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="sellGoldBreakdown"></div>
+                        <div class="modal-footer" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="confirmSellGoldBtn">
+                                <i class="fas fa-check me-1"></i>Confirm Sale
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buy Gold Confirmation Modal -->
+            <div class="modal fade" id="buyGoldConfirmModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(34, 197, 94, 0.2);">
+                        <div class="modal-header" style="border-bottom: 1px solid rgba(34, 197, 94, 0.2);">
+                            <h5 class="modal-title text-warning"><i class="fas fa-shopping-cart me-2"></i>Confirm Gold Purchase</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="buyGoldBreakdown"></div>
+                        <div class="modal-footer" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning" id="confirmBuyGoldBtn">
+                                <i class="fas fa-check me-1"></i>Confirm Purchase
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Upgrade / Dissolve -->
+        <div class="row g-4 mt-2">
+            {% if company.quality_level < 5 %}
+            <div class="col-md-6">
+                <div class="upgrade-card">
+                    <div class="upgrade-header">
+                        <div class="upgrade-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div>
+                            <div class="upgrade-title">Upgrade to Q{{ company.quality_level + 1 }}</div>
+                            <div class="upgrade-subtitle">Improve your company's capabilities</div>
+                        </div>
+                    </div>
+                    <div class="upgrade-benefits">
+                        <div class="upgrade-benefit">
+                            <div class="upgrade-benefit-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="upgrade-benefit-text">+2 Employee Slots</span>
+                        </div>
+                        <div class="upgrade-benefit">
+                            <div class="upgrade-benefit-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <span class="upgrade-benefit-text">+25% Production Bonus</span>
+                        </div>
+                        <div class="upgrade-benefit">
+                            <div class="upgrade-benefit-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="upgrade-benefit-text">Higher Quality Products</span>
+                        </div>
+                    </div>
+                    <div class="upgrade-cost">
+                        <div class="upgrade-cost-label">Upgrade Cost</div>
+                        <div class="upgrade-cost-value">
+                            <i class="fas fa-coins"></i>{{ company.upgrade_cost }} Gold
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('company.upgrade_company', company_id=company.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="upgrade-btn">
+                            <i class="fas fa-level-up-alt"></i>
+                            Upgrade Now
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="{% if company.quality_level < 5 %}col-md-6{% else %}col-md-6 mx-auto{% endif %}">
+                <div class="dissolve-card">
+                    <div class="dissolve-header">
+                        <div class="dissolve-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div>
+                            <div class="dissolve-title">Dissolve Company</div>
+                            <div class="dissolve-subtitle">Permanently close your business</div>
+                        </div>
+                    </div>
+                    <div class="dissolve-warning">
+                        <div class="dissolve-warning-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            This action cannot be undone
+                        </div>
+                        <ul class="dissolve-warning-list">
+                            <li><i class="fas fa-times"></i> All employees will be fired</li>
+                            <li><i class="fas fa-times"></i> All job offers will be cancelled</li>
+                            <li><i class="fas fa-times"></i> All inventory will be lost</li>
+                            <li><i class="fas fa-times"></i> All company funds will be lost</li>
+                        </ul>
+                    </div>
+                    {% set refund_amount = [10, 30, 70, 150, 310][company.quality_level - 1] %}
+                    <div class="dissolve-refund">
+                        <div class="dissolve-refund-label">You will receive</div>
+                        <div class="dissolve-refund-value">
+                            <i class="fas fa-coins me-1"></i>{{ refund_amount }} Gold
+                        </div>
+                    </div>
+                    <button type="button" class="dissolve-btn" data-bs-toggle="modal" data-bs-target="#dissolveConfirmModal">
+                        <i class="fas fa-trash-alt"></i>
+                        Dissolve Company
+                    </button>
+                </div>
+            </div>
+        </div>
+        </div> <!-- End Finances Tab -->
+
+        <!-- Inventory Tab Content -->
+        <div id="tab-inventory" class="tab-content-section">
+        <!-- Inventory -->
+        <div class="modern-section">
+            <div class="modern-section-header">
+                <h4><i class="fas fa-boxes me-2"></i>Inventory Management</h4>
+            </div>
+            <div class="modern-section-body">
+            <!-- Current Inventory -->
+            <h5 class="text-white mb-3"><i class="fas fa-warehouse me-2"></i>Sell from Inventory</h5>
+            <p class="text-muted small">Sell resources from your company inventory on the market.</p>
+            {% if inventory_items %}
+            <div class="row g-3 mt-2">
+                {% for item in inventory_items %}
+                {% set quality_key = None if item.quality == 0 else item.quality %}
+                {% set market_key = (item.resource_id, quality_key) %}
+                {% set market_item = market_items_dict.get(market_key) %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow border-0" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border-radius: 16px; border: 1px solid rgba(234, 179, 8, 0.2) !important;">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <!-- Resource Icon -->
+                            <div class="mb-3">
+                                {% if item.resource.icon_path %}
+                                    <img src="{{ url_for('static', filename=item.resource.icon_path) }}" alt="{{ item.resource.name }}" style="width: 80px; height: 80px; object-fit: contain; border-radius: 16px; background: #23283a; border: 2px solid #3b4257; box-shadow: 0 2px 12px rgba(0,0,0,0.2);">
+                                {% else %}
+                                    <span style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: #23283a; border-radius: 16px; border: 2px solid #3b4257; font-size: 2.5rem; color: #aaa;">?</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Resource Name and Level -->
+                            <div class="w-100 d-flex align-items-center justify-content-between mb-2">
+                                <h5 class="mb-0 flex-grow-1 text-white">{% if item.quality %}Q{{ item.quality }} {% endif %}{{ item.resource.name }}</h5>
+                                {% if market_item %}
+                                <span class="badge bg-info ms-2" title="Price Level">Lvl: {{ market_item.price_level|default(0)|int }}</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Price and Stock Info -->
+                            <div class="w-100 mb-2">
+                                {% if market_item %}
+                                <span class="fs-6">Sell: <strong class="text-success">{{ "%.2f"|format(market_item.sell_price) }}</strong> {{ company.country.currency_name }}</span>
+                                {% else %}
+                                <span class="fs-6 text-muted">No market available</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Stock Info -->
+                            <p class="text-warning small text-center mb-3 w-100">
+                                <i class="fas fa-boxes me-1"></i>In Stock: <strong>{{ item.quantity }}</strong> units
+                            </p>
+
+                            <!-- Sell Form -->
+                            {% if market_item and is_owner %}
+                            <form method="POST" action="{{ url_for('company.sell_inventory', company_id=company.id) }}" class="w-100 d-flex gap-2 company-sell-form" data-resource-name="{{ item.resource.name }}" data-max-qty="{{ item.quantity }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="resource_id" value="{{ item.resource_id }}">
+                                <input type="hidden" name="quality" value="{{ item.quality if item.quality else '' }}">
+                                <input type="number" name="quantity" min="1" max="{{ item.quantity }}" class="form-control quantity-input" placeholder="Qty to Sell" required style="background: #0f1419; color: #fff; border: 1.5px solid rgba(234, 179, 8, 0.2); border-radius: 8px;">
+                                <button type="submit" class="btn btn-warning px-4" style="background: linear-gradient(90deg, #eab308 0%, #ca8a04 100%); border-color: #eab308; box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);">Sell</button>
+                            </form>
+                            {% elif not market_item %}
+                            <div class="w-100 text-center">
+                                <span class="text-muted">Cannot sell - no market</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+                <div class="no-employees">
+                    <i class="fas fa-box-open" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; color: #22c55e;"></i>
+                    <p>Inventory is empty.</p>
+                </div>
+            {% endif %}
+
+            <!-- Buy Resources -->
+            {% if is_owner and allowed_purchasable_resource_names|length > 0 %}
+            <hr style="border-color: rgba(34, 197, 94, 0.2); margin: 2rem 0;">
+            <h5 class="text-white mb-3"><i class="fas fa-shopping-cart me-2"></i>Buy Resources from Market</h5>
+            <p class="text-muted small">Resources purchased from the market will be added to inventory as raw materials.</p>
+            <div class="row g-3 mt-2">
+                {% for resource in all_resources %}
+                    {% if resource.name in allowed_purchasable_resource_names %}
+                        {# Check if this is sold without quality (quality=None) or with quality levels (quality 1-5) #}
+                        {# Resources sold without quality: raw materials + semi-products (Steel, Iron Bar, Bricks, Concrete) #}
+                        {% set is_no_quality_item = resource.name in ['Coal', 'Iron ore', 'Clay', 'Stone', 'Sand', 'Wheat', 'Grape', 'Oil', 'Electricity', 'Steel', 'Iron Bar', 'Bricks', 'Concrete'] %}
+
+                        {% if is_no_quality_item %}
+                            {# Items sold without quality level (raw materials + semi-products) #}
+                            {% if (resource.id, None) in market_items_dict %}
+                            {% set market_item = market_items_dict[(resource.id, None)] %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card h-100 shadow border-0" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border-radius: 16px; border: 1px solid rgba(34, 197, 94, 0.2) !important;">
+                                    <div class="card-body d-flex flex-column align-items-center p-4">
+                                        <!-- Resource Icon -->
+                                        <div class="mb-3">
+                                            {% if resource.icon_path %}
+                                                <img src="{{ url_for('static', filename=resource.icon_path) }}" alt="{{ resource.name }}" style="width: 80px; height: 80px; object-fit: contain; border-radius: 16px; background: #23283a; border: 2px solid #3b4257; box-shadow: 0 2px 12px rgba(0,0,0,0.2);">
+                                            {% else %}
+                                                <span style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: #23283a; border-radius: 16px; border: 2px solid #3b4257; font-size: 2.5rem; color: #aaa;">?</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Resource Name and Level -->
+                                        <div class="w-100 d-flex align-items-center justify-content-between mb-2">
+                                            <h5 class="mb-0 flex-grow-1 text-white">{{ resource.name }}</h5>
+                                            <span class="badge bg-info ms-2" title="Price Level">Lvl: {{ market_item.price_level|default(0)|int }}</span>
+                                        </div>
+
+                                        <!-- Price -->
+                                        <div class="w-100 mb-3">
+                                            <span class="fs-6">Buy: <strong class="text-danger">{{ "%.2f"|format(market_item.buy_price) }}</strong> {{ company.country.currency_name }}</span>
+                                            <span class="fs-6 float-end">Sell: <strong class="text-success">{{ "%.2f"|format(market_item.sell_price) }}</strong> {{ company.country.currency_name }}</span>
+                                        </div>
+
+                                        <!-- Volume Progress -->
+                                        <p class="text-muted small text-center mb-3 w-100">
+                                            {{ market_item.volume_to_next_level|int }} purchases until price increases.
+                                        </p>
+
+                                        <!-- Buy Form -->
+                                        <form method="POST" action="{{ url_for('company.buy_inventory', company_id=company.id) }}" class="w-100 d-flex gap-2 company-buy-form" data-resource-name="{{ resource.name }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="resource_id" value="{{ resource.id }}">
+                                            <input type="hidden" name="quality" value="">
+                                            <input type="number" name="quantity" min="1" class="form-control quantity-input" placeholder="Qty to Buy" required style="background: #0f1419; color: #fff; border: 1.5px solid rgba(34, 197, 94, 0.2); border-radius: 8px;">
+                                            <button type="submit" class="btn btn-success px-4" style="background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%); border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);">Buy</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            {# Items with quality levels (finished products) - show Q1-Q5 #}
+                            {% for quality in range(1, 6) %}
+                                {% if (resource.id, quality) in market_items_dict %}
+                                {% set market_item = market_items_dict[(resource.id, quality)] %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card h-100 shadow border-0" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border-radius: 16px; border: 1px solid rgba(34, 197, 94, 0.2) !important;">
+                                        <div class="card-body d-flex flex-column align-items-center p-4">
+                                            <!-- Resource Icon -->
+                                            <div class="mb-3">
+                                                {% if resource.icon_path %}
+                                                    <img src="{{ url_for('static', filename=resource.icon_path) }}" alt="{{ resource.name }}" style="width: 80px; height: 80px; object-fit: contain; border-radius: 16px; background: #23283a; border: 2px solid #3b4257; box-shadow: 0 2px 12px rgba(0,0,0,0.2);">
+                                                {% else %}
+                                                    <span style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: #23283a; border-radius: 16px; border: 2px solid #3b4257; font-size: 2.5rem; color: #aaa;">?</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Resource Name and Level -->
+                                            <div class="w-100 d-flex align-items-center justify-content-between mb-2">
+                                                <h5 class="mb-0 flex-grow-1 text-white">Q{{ quality }} {{ resource.name }}</h5>
+                                                <span class="badge bg-info ms-2" title="Price Level">Lvl: {{ market_item.price_level|default(0)|int }}</span>
+                                            </div>
+
+                                            <!-- Price -->
+                                            <div class="w-100 mb-3">
+                                                <span class="fs-6">Buy: <strong class="text-danger">{{ "%.2f"|format(market_item.buy_price) }}</strong> {{ company.country.currency_name }}</span>
+                                                <span class="fs-6 float-end">Sell: <strong class="text-success">{{ "%.2f"|format(market_item.sell_price) }}</strong> {{ company.country.currency_name }}</span>
+                                            </div>
+
+                                            <!-- Volume Progress -->
+                                            <p class="text-muted small text-center mb-3 w-100">
+                                                {{ market_item.volume_to_next_level|int }} purchases until price increases.
+                                            </p>
+
+                                            <!-- Buy Form -->
+                                            <form method="POST" action="{{ url_for('company.buy_inventory', company_id=company.id) }}" class="w-100 d-flex gap-2 company-buy-form" data-resource-name="{{ resource.name }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <input type="hidden" name="resource_id" value="{{ resource.id }}">
+                                                <input type="hidden" name="quality" value="{{ quality }}">
+                                                <input type="number" name="quantity" min="1" class="form-control quantity-input" placeholder="Qty to Buy" required style="background: #0f1419; color: #fff; border: 1.5px solid rgba(34, 197, 94, 0.2); border-radius: 8px;">
+                                                <button type="submit" class="btn btn-success px-4" style="background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%); border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);">Buy</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            </div>
+        </div>
+        </div> <!-- End Inventory Tab -->
+
+        <!-- NFT Tab Content -->
+        <div id="tab-nft" class="tab-content-section">
+        <!-- Company NFT Slots -->
+        {% if is_owner %}
+        <div class="modern-section">
+            <div class="modern-section-header">
+                <h4><i class="fas fa-gem me-2"></i>Company NFT Slots</h4>
+            </div>
+            <div class="modern-section-body">
+                <!-- NFT Tab Header -->
+                <div class="nft-tab-header">
+                    <div class="nft-tab-icon">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <div>
+                        <div class="nft-tab-title">Production Boost NFTs</div>
+                        <div class="nft-tab-subtitle">Equip NFTs to enhance your company's production capabilities</div>
+                    </div>
+                </div>
+
+                <!-- Slots Info Badge -->
+                <div class="nft-slots-info">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Quality <strong class="nft-slots-count">Q{{ company.quality_level }}</strong> unlocks <strong class="nft-slots-count" id="max-slots-display">{{ [1, 1, 2, 2, 3][company.quality_level - 1] }}</strong> slot<span id="max-slots-plural">{{ 's' if [1, 1, 2, 2, 3][company.quality_level - 1] > 1 else '' }}</span></span>
+                    <span style="color: rgba(255,255,255,0.3); margin: 0 0.5rem;">|</span>
+                    <i class="fas fa-clock" style="color: #fbbf24;"></i>
+                    <span style="color: #fbbf24;">24h cooldown per slot</span>
+                </div>
+
+                <div class="row g-4" id="company-nft-slots-container">
+                    <!-- Slots will be dynamically loaded based on company quality -->
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="modern-section">
+            <div class="modern-section-header">
+                <h4><i class="fas fa-gem me-2"></i>Company NFT Slots</h4>
+            </div>
+            <div class="modern-section-body">
+                <div class="nft-not-owner">
+                    <div class="nft-not-owner-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h5>Owner Access Required</h5>
+                    <p>Only the company owner can manage NFT slots and equip production boost NFTs.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        </div> <!-- End NFT Tab -->
+
+        {% endif %} <!-- End is_owner check for tabs -->
+    </div> {# End main-container #}
+{% include '_dashboard_wrapper_end.html' %}
+
+<!-- Purchase Confirmation Modal -->
+<div class="modal fade" id="purchaseConfirmModal" tabindex="-1" aria-labelledby="purchaseConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-gray-200" id="purchaseConfirmModalLabel">
+                    <i class="fas fa-shopping-cart me-2"></i>Confirm Purchase
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="purchaseBreakdown"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-success" id="confirmPurchaseBtn">Confirm Purchase</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dissolve Company Confirmation Modal -->
+<div class="modal fade" id="dissolveConfirmModal" tabindex="-1" aria-labelledby="dissolveConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(220, 38, 38, 0.3);">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger" id="dissolveConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Company Dissolution
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-danger mb-3">
+                    <strong><i class="fas fa-exclamation-circle me-2"></i>WARNING: This action cannot be undone!</strong>
+                </div>
+
+                <h6 class="text-warning mb-3">You will receive:</h6>
+                <ul class="text-success">
+                    <li><strong>{{ [10, 30, 70, 150, 310][company.quality_level - 1] }} Gold</strong> refund</li>
+                </ul>
+
+                <h6 class="text-danger mb-3">The following will happen:</h6>
+                <ul class="text-danger">
+                    <li>All <strong>{{ company.employees.count() }} employees</strong> will be fired immediately</li>
+                    <li>All <strong>{{ company.job_offers.filter_by(is_active=True).count() }} job offers</strong> will be cancelled</li>
+                    <li>All company <strong>inventory</strong> ({{ company.inventory.count() }} items) will be permanently lost</li>
+                    <li>All company <strong>funds</strong> ({{ company.currency_balance }} {{ company.country.currency_name }}) will be lost</li>
+                    <li>The company <strong>"{{ company.name }}"</strong> will be permanently deleted</li>
+                </ul>
+
+                <p class="text-muted mt-3 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Type the company name to confirm: <strong>{{ company.name }}</strong>
+                </p>
+                <input type="text" id="dissolveConfirmInput" class="form-control mt-2" placeholder="Enter company name" style="background: #0f1419; color: #fff; border: 1px solid rgba(220, 38, 38, 0.3);">
+            </div>
+            <div class="modal-footer border-0">
+                <form method="POST" action="{{ url_for('company.dissolve_company', id=company.id) }}" id="dissolveForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger" id="confirmDissolveBtn" disabled>
+                        <i class="fas fa-trash-alt me-2"></i>Dissolve Company
+                    </button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tab switching function
+function switchCompanyTab(tabName) {
+    // Hide all tab content sections
+    document.querySelectorAll('.tab-content-section').forEach(function(section) {
+        section.classList.remove('active');
+    });
+
+    // Remove active class from all tabs
+    document.querySelectorAll('.company-tab').forEach(function(tab) {
+        tab.classList.remove('active');
+    });
+
+    // Show the selected tab content
+    const targetTab = document.getElementById('tab-' + tabName);
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+
+    // Add active class to clicked tab
+    const clickedTab = document.querySelector('.company-tab[data-tab="' + tabName + '"]');
+    if (clickedTab) {
+        clickedTab.classList.add('active');
+    }
+}
+
+// --- Global variables for NFT equipping (must be outside DOMContentLoaded for onclick handlers) ---
+let currentEquipSlot = null;
+let equipCompanyNFTCallback = null;
+
+// --- Global function for NFT selection (must be outside DOMContentLoaded for onclick handlers) ---
+function selectCompanyNFT(nftId) {
+    console.log('selectCompanyNFT called with nftId:', nftId, 'currentEquipSlot:', currentEquipSlot);
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('equipCompanyNFTModal'));
+    if (modal) modal.hide();
+
+    // Check if callback function exists and slot is set
+    if (typeof equipCompanyNFTCallback === 'function' && currentEquipSlot) {
+        equipCompanyNFTCallback(currentEquipSlot, nftId);
+    } else {
+        console.error('Cannot equip - callback not set or slot not set');
+        alert('Cannot equip NFT. Please refresh the page and try again.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Exchange preview calculations
+    const sellGoldInput = document.getElementById('sellGoldAmount');
+    const buyGoldInput = document.getElementById('buyGoldAmount');
+    const sellGoldPreview = document.getElementById('sellGoldPreview');
+    const buyGoldPreview = document.getElementById('buyGoldPreview');
+    const sellGoldPrice = {{ gold_market.sell_gold_price if gold_market else 0 }};
+    const buyGoldPrice = {{ gold_market.buy_gold_price if gold_market else 0 }};
+    const currencyName = '{{ company.country.currency_name }}';
+
+    if (sellGoldInput && sellGoldPreview) {
+        sellGoldInput.addEventListener('input', function() {
+            const amount = parseInt(this.value) || 0;
+            const total = (amount * sellGoldPrice).toFixed(2);
+            sellGoldPreview.textContent = total + ' ' + currencyName;
+        });
+    }
+
+    if (buyGoldInput && buyGoldPreview) {
+        buyGoldInput.addEventListener('input', function() {
+            const amount = parseInt(this.value) || 0;
+            const total = (amount * buyGoldPrice).toFixed(2);
+            buyGoldPreview.textContent = total + ' ' + currencyName;
+        });
+    }
+
+    let pendingPurchaseData = null;
+    let isConfirming = false; // Flag to bypass event listener when confirming
+
+    // Handle all buy form submissions
+    document.querySelectorAll('.company-buy-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            // Allow submission if confirming
+            if (isConfirming) {
+                isConfirming = false; // Reset flag
+                return; // Don't prevent default, let form submit
+            }
+
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const quantity = parseInt(formData.get('quantity'));
+
+            if (!quantity || quantity <= 0) {
+                showError('Please enter a valid quantity');
+                return;
+            }
+
+            // Request purchase breakdown
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                // Store pending purchase data
+                pendingPurchaseData = {
+                    form: form,
+                    data: data
+                };
+
+                // Build breakdown HTML
+                let breakdownHTML = `
+                    <h6 class="text-white mb-3">Purchase ${data.quantity} ${data.resource_name}</h6>
+                    <div class="mb-3">
+                `;
+
+                // Show breakdown by price level
+                if (data.breakdown.length === 1) {
+                    const [qty, price] = data.breakdown[0];
+                    breakdownHTML += `
+                        <p class="text-gray-300">
+                            ${qty} units at ${price.toFixed(2)} ${data.currency_name} each = <strong>${(qty * price).toFixed(2)} ${data.currency_name}</strong>
+                        </p>
+                    `;
+                } else {
+                    breakdownHTML += `<p class="text-warning mb-2"><i class="fas fa-info-circle"></i> Purchase spans multiple price levels:</p>`;
+                    data.breakdown.forEach((item, index) => {
+                        const [qty, price] = item;
+                        breakdownHTML += `
+                            <p class="text-gray-300 mb-1">
+                                • ${qty} units at ${price.toFixed(2)} ${data.currency_name} = ${(qty * price).toFixed(2)} ${data.currency_name}
+                            </p>
+                        `;
+                    });
+                }
+
+                breakdownHTML += `
+                    </div>
+                    <div class="border-top border-secondary pt-3 mt-3">
+                        <h5 class="text-success">Total: ${data.total_cost.toFixed(2)} ${data.currency_name}</h5>
+                    </div>
+                `;
+
+                document.getElementById('purchaseBreakdown').innerHTML = breakdownHTML;
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('purchaseConfirmModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('An error occurred. Please try again.');
+            });
+        });
+    });
+
+    // Handle confirm button
+    document.getElementById('confirmPurchaseBtn').addEventListener('click', function() {
+        if (!pendingPurchaseData) return;
+
+        const { form, data } = pendingPurchaseData;
+
+        // Add confirmation flag and expected price level to form
+        const confirmedInput = document.createElement('input');
+        confirmedInput.type = 'hidden';
+        confirmedInput.name = 'confirmed';
+        confirmedInput.value = 'true';
+        form.appendChild(confirmedInput);
+
+        const priceLevelInput = document.createElement('input');
+        priceLevelInput.type = 'hidden';
+        priceLevelInput.name = 'expected_price_level';
+        priceLevelInput.value = data.current_price_level;
+        form.appendChild(priceLevelInput);
+
+        // Set flag to bypass event listener
+        isConfirming = true;
+
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('purchaseConfirmModal'));
+        if (modal) modal.hide();
+
+        // Submit the form using requestSubmit which triggers the submit event
+        if (form.requestSubmit) {
+            form.requestSubmit();
+        } else {
+            // Fallback for older browsers
+            form.submit();
+        }
+    });
+
+    // --- Helper function to show error modal ---
+    function showErrorModal(message) {
+        document.getElementById('errorAlertMessage').textContent = message;
+        const modal = new bootstrap.Modal(document.getElementById('errorAlertModal'));
+        modal.show();
+    }
+
+    // --- Helper functions for NFT slot operations ---
+    function showSuccess(message) {
+        // Use the success modal
+        const messageEl = document.getElementById('successAlertMessage');
+        if (messageEl) {
+            messageEl.textContent = message;
+            const modal = new bootstrap.Modal(document.getElementById('successAlertModal'));
+            modal.show();
+        } else {
+            alert('Success: ' + message);
+        }
+    }
+
+    function showError(message) {
+        // Use existing error modal if available
+        if (document.getElementById('errorAlertMessage')) {
+            showErrorModal(message);
+        } else {
+            alert('Error: ' + message);
+        }
+    }
+
+    // --- Handle Inventory Sell Confirmation ---
+    let pendingSellData = null;
+    let isConfirmingSell = false;
+
+    // Intercept inventory sell form submission
+    document.querySelectorAll('.company-sell-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            // Allow submission if confirming
+            if (isConfirmingSell) {
+                isConfirmingSell = false; // Reset flag
+                return; // Don't prevent default, let form submit
+            }
+
+            e.preventDefault();
+            const formData = new FormData(form);
+            const quantity = parseInt(formData.get('quantity'));
+
+            if (!quantity || quantity <= 0) {
+                showErrorModal('Please enter a valid quantity');
+                return;
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showErrorModal(data.error);
+                    return;
+                }
+
+                pendingSellData = {form: form, data: data};
+
+                let breakdownHTML = `<h6 class="text-white mb-3">Sell ${data.quantity} ${data.resource_name}</h6><div class="mb-3">`;
+
+                if (data.breakdown.length === 1) {
+                    const [qty, price] = data.breakdown[0];
+                    breakdownHTML += `<p class="text-gray-300">${qty} units at ${price.toFixed(2)} ${data.currency_code} each = <strong>${(qty * price).toFixed(2)} ${data.currency_code}</strong></p>`;
+                } else {
+                    breakdownHTML += `<p class="text-warning mb-2"><i class="fas fa-info-circle"></i> Sale spans multiple price levels:</p>`;
+                    data.breakdown.forEach((item) => {
+                        const [qty, price] = item;
+                        breakdownHTML += `<p class="text-gray-300 mb-1">• ${qty} units at ${price.toFixed(2)} ${data.currency_code} = ${(qty * price).toFixed(2)} ${data.currency_code}</p>`;
+                    });
+                }
+
+                breakdownHTML += `</div><div class="border-top border-secondary pt-3 mt-3"><h5 class="text-success">Total Proceeds: ${data.total_proceeds.toFixed(2)} ${data.currency_code}</h5></div>`;
+                document.getElementById('sellBreakdown').innerHTML = breakdownHTML;
+
+                const modal = new bootstrap.Modal(document.getElementById('sellConfirmModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorModal('An error occurred. Please try again.');
+            });
+        });
+    });
+
+    // Confirm sell button
+    document.getElementById('confirmSellBtn').addEventListener('click', function() {
+        if (!pendingSellData) return;
+
+        const {form, data} = pendingSellData;
+
+        // Add hidden inputs for confirmation
+        const confirmedInput = document.createElement('input');
+        confirmedInput.type = 'hidden';
+        confirmedInput.name = 'confirmed';
+        confirmedInput.value = 'true';
+        form.appendChild(confirmedInput);
+
+        const priceLevelInput = document.createElement('input');
+        priceLevelInput.type = 'hidden';
+        priceLevelInput.name = 'expected_price_level';
+        priceLevelInput.value = data.current_price_level;
+        form.appendChild(priceLevelInput);
+
+        // Set flag to bypass event listener
+        isConfirmingSell = true;
+
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('sellConfirmModal'));
+        if (modal) modal.hide();
+
+        // Submit the form
+        if (form.requestSubmit) {
+            form.requestSubmit();
+        } else {
+            form.submit();
+        }
+    });
+
+    // --- Handle Dissolve Company Confirmation ---
+    const dissolveConfirmInput = document.getElementById('dissolveConfirmInput');
+    const confirmDissolveBtn = document.getElementById('confirmDissolveBtn');
+    const dissolveModal = document.getElementById('dissolveConfirmModal');
+    const companyName = '{{ company.name }}';
+
+    if (dissolveConfirmInput && confirmDissolveBtn) {
+        // Enable/disable button based on input matching company name
+        dissolveConfirmInput.addEventListener('input', function() {
+            if (this.value.trim() === companyName) {
+                confirmDissolveBtn.disabled = false;
+            } else {
+                confirmDissolveBtn.disabled = true;
+            }
+        });
+
+        // Reset input when modal is closed
+        if (dissolveModal) {
+            dissolveModal.addEventListener('hidden.bs.modal', function() {
+                dissolveConfirmInput.value = '';
+                confirmDissolveBtn.disabled = true;
+            });
+        }
+    }
+
+    // --- Company NFT Slots Management ---
+    const companyId = {{ company.id }};
+
+    {% if is_owner %}
+    const companyQuality = {{ company.quality_level }};
+    const maxSlots = [1, 1, 2, 2, 3][companyQuality - 1];
+
+    // Set up the global callback for equipping NFTs (will be called by selectCompanyNFT)
+    equipCompanyNFTCallback = equipCompanyNFT;
+
+    // Load company NFT slots on page load
+    loadCompanyNFTSlots();
+
+    function loadCompanyNFTSlots() {
+        fetch(`/api/nft/slots/company/${companyId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderCompanySlots(data.slots);
+                } else {
+                    console.error('Error loading company NFT slots:', data.error);
+                }
+            })
+            .catch(error => console.error('Error loading company NFT slots:', error));
+    }
+
+    function renderCompanySlots(slots) {
+        const container = document.getElementById('company-nft-slots-container');
+        container.innerHTML = '';
+
+        for (let i = 1; i <= maxSlots; i++) {
+            const slotData = slots[`slot_${i}_nft`];
+            const lastModified = slots[`slot_${i}_last_modified`];
+
+            const colDiv = document.createElement('div');
+            colDiv.className = 'col-md-4';
+
+            const slotCard = document.createElement('div');
+            slotCard.className = 'nft-slot-card' + (slotData ? ' has-nft' : '');
+            slotCard.id = `company-slot-${i}`;
+
+            // Slot header
+            const header = document.createElement('div');
+            header.className = 'nft-slot-header';
+
+            const slotNumber = document.createElement('span');
+            slotNumber.className = 'nft-slot-number';
+            slotNumber.innerHTML = `<i class="fas fa-gem"></i> Slot ${i}`;
+            header.appendChild(slotNumber);
+
+            // Right side of header - badge or cooldown
+            const headerRight = document.createElement('div');
+            headerRight.style.display = 'flex';
+            headerRight.style.alignItems = 'center';
+            headerRight.style.gap = '0.5rem';
+
+            if (slotData) {
+                const badge = document.createElement('span');
+                badge.className = 'nft-slot-badge equipped';
+                badge.textContent = 'EQUIPPED';
+                headerRight.appendChild(badge);
+            }
+
+            const cooldownSpan = document.createElement('span');
+            cooldownSpan.className = 'nft-slot-cooldown';
+            cooldownSpan.id = `company-cooldown-${i}`;
+            cooldownSpan.style.display = 'none';
+            headerRight.appendChild(cooldownSpan);
+
+            header.appendChild(headerRight);
+            slotCard.appendChild(header);
+
+            // Slot content
+            const content = document.createElement('div');
+            content.className = 'nft-slot-content';
+            content.id = `company-slot-${i}-content`;
+            slotCard.appendChild(content);
+
+            // Slot actions
+            const actions = document.createElement('div');
+            actions.className = 'nft-slot-actions';
+
+            const equipBtn = document.createElement('button');
+            equipBtn.className = 'btn btn-primary w-100';
+            equipBtn.id = `company-equip-btn-${i}`;
+            equipBtn.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Equip NFT';
+            equipBtn.onclick = () => openCompanyEquipModal(i);
+            actions.appendChild(equipBtn);
+
+            const unequipBtn = document.createElement('button');
+            unequipBtn.className = 'btn btn-danger w-100';
+            unequipBtn.id = `company-unequip-btn-${i}`;
+            unequipBtn.innerHTML = '<i class="fas fa-times-circle me-2"></i>Unequip NFT';
+            unequipBtn.style.display = 'none';
+            unequipBtn.onclick = () => unequipCompanyNFT(i);
+            actions.appendChild(unequipBtn);
+
+            slotCard.appendChild(actions);
+            colDiv.appendChild(slotCard);
+            container.appendChild(colDiv);
+
+            // Update slot display with data
+            updateCompanySlotDisplay(i, slotData, lastModified);
+        }
+    }
+
+    function updateCompanySlotDisplay(slotNum, nftData, lastModified) {
+        const content = document.getElementById(`company-slot-${slotNum}-content`);
+        const equipBtn = document.getElementById(`company-equip-btn-${slotNum}`);
+        const unequipBtn = document.getElementById(`company-unequip-btn-${slotNum}`);
+        const cooldownSpan = document.getElementById(`company-cooldown-${slotNum}`);
+        const slotCard = document.getElementById(`company-slot-${slotNum}`);
+
+        if (nftData) {
+            // NFT is equipped
+            slotCard.classList.add('has-nft');
+            content.innerHTML = `
+                <div class="nft-equipped-display">
+                    ${nftData.image_url ? `
+                        <div class="nft-image-wrapper">
+                            <a href="https://horizen-testnet.explorer.caldera.xyz/token/${nftData.contract_address}?a=${nftData.token_id}"
+                               target="_blank"
+                               title="View on Horizen Explorer">
+                                <img src="${nftData.image_url}"
+                                     alt="${nftData.name}"
+                                     onerror="this.style.display='none'">
+                            </a>
+                            <span class="nft-tier-badge">Q${nftData.tier || '?'}</span>
+                        </div>
+                    ` : `
+                        <div class="nft-image-wrapper">
+                            <div style="width: 140px; height: 200px; background: rgba(168, 85, 247, 0.1); border-radius: 12px; border: 3px solid rgba(168, 85, 247, 0.4); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-gem" style="font-size: 3rem; color: rgba(168, 85, 247, 0.4);"></i>
+                            </div>
+                            <span class="nft-tier-badge">Q${nftData.tier || '?'}</span>
+                        </div>
+                    `}
+                    <div class="nft-name">${nftData.name || 'Unknown NFT'}</div>
+                    <div class="nft-details">
+                        <div class="nft-detail-item">
+                            <span class="nft-detail-label">Type</span>
+                            <span class="nft-detail-value">${nftData.nft_type || 'N/A'}</span>
+                        </div>
+                        <div class="nft-detail-item">
+                            <span class="nft-detail-label">Category</span>
+                            <span class="nft-detail-value">${nftData.category || 'N/A'}</span>
+                        </div>
+                        <div class="nft-detail-item">
+                            <span class="nft-detail-label">Tier</span>
+                            <span class="nft-detail-value tier">Q${nftData.tier || '?'}</span>
+                        </div>
+                        <div class="nft-detail-item">
+                            <span class="nft-detail-label">Bonus</span>
+                            <span class="nft-detail-value bonus">+${nftData.bonus_percentage || 0}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            equipBtn.style.display = 'none';
+            unequipBtn.style.display = 'block';
+        } else {
+            // Slot is empty
+            slotCard.classList.remove('has-nft');
+            content.innerHTML = `
+                <div class="nft-empty-slot">
+                    <div class="nft-empty-slot-icon">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <h5>Empty Slot</h5>
+                    <p>Click below to equip an NFT and boost production</p>
+                </div>
+            `;
+            equipBtn.style.display = 'block';
+            unequipBtn.style.display = 'none';
+        }
+
+        // Update cooldown display
+        if (lastModified) {
+            const lastModifiedDate = new Date(lastModified);
+            const now = new Date();
+            const hoursSince = (now - lastModifiedDate) / (1000 * 60 * 60);
+
+            if (hoursSince < 24) {
+                const hoursRemaining = 24 - hoursSince;
+                cooldownSpan.innerHTML = `<i class="fas fa-clock"></i> ${hoursRemaining.toFixed(1)}h`;
+                cooldownSpan.style.display = 'inline-flex';
+            } else {
+                cooldownSpan.style.display = 'none';
+            }
+        } else {
+            cooldownSpan.style.display = 'none';
+        }
+    }
+
+    function openCompanyEquipModal(slotNum) {
+        currentEquipSlot = slotNum;
+        document.getElementById('equipSlotNumber').textContent = slotNum;
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('equipCompanyNFTModal'));
+        modal.show();
+
+        // Load available company NFTs
+        loadAvailableCompanyNFTs();
+    }
+
+    function loadAvailableCompanyNFTs() {
+        const loadingDiv = document.getElementById('companyNFTsLoading');
+        const emptyDiv = document.getElementById('companyNFTsEmpty');
+        const gridDiv = document.getElementById('companyNFTsGrid');
+
+        // Show loading state
+        loadingDiv.style.display = 'block';
+        emptyDiv.style.display = 'none';
+        gridDiv.style.display = 'none';
+        gridDiv.innerHTML = '';
+
+        // Fetch available company NFTs
+        fetch('/api/nft/available/company')
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+
+                if (data.success && data.nfts.length > 0) {
+                    gridDiv.style.display = 'flex';
+                    renderCompanyNFTCards(data.nfts);
+                } else {
+                    emptyDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading company NFTs:', error);
+                loadingDiv.style.display = 'none';
+                emptyDiv.style.display = 'block';
+            });
+    }
+
+    function renderCompanyNFTCards(nfts) {
+        const gridDiv = document.getElementById('companyNFTsGrid');
+
+        nfts.forEach(nft => {
+            const colDiv = document.createElement('div');
+            colDiv.className = 'col';
+
+            // Determine tier color
+            const tierColors = {
+                1: '#9ca3af',  // Common - gray
+                2: '#22c55e',  // Uncommon - green
+                3: '#3b82f6',  // Rare - blue
+                4: '#a855f7',  // Epic - purple
+                5: '#f59e0b'   // Legendary - orange
+            };
+            const tierColor = tierColors[nft.tier] || '#9ca3af';
+
+            colDiv.innerHTML = `
+                <div class="card h-100" style="background: rgba(255, 255, 255, 0.02); border: 2px solid ${tierColor}; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;"
+                     onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(0, 0, 0, 0.4), 0 0 20px ${tierColor}40';"
+                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+                     onclick="selectCompanyNFT(${nft.id})">
+                    <div class="card-body p-3">
+                        <!-- Tier Badge -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge" style="background: ${tierColor}; font-size: 0.75rem;">Q${nft.tier}</span>
+                            ${nft.is_equipped ? '<span class="badge bg-warning" style="font-size: 0.65rem;">Equipped</span>' : ''}
+                        </div>
+
+                        <!-- NFT Image -->
+                        ${nft.image_url ? `
+                            <a href="https://horizen-testnet.explorer.caldera.xyz/token/${nft.contract_address}?a=${nft.token_id}"
+                               target="_blank"
+                               onclick="event.stopPropagation()"
+                               title="View on Horizen Explorer"
+                               style="display: block; margin: 0 auto 0.75rem; width: 90px; transition: all 0.3s ease;">
+                                <img src="${nft.image_url}"
+                                     alt="${nft.name}"
+                                     style="width: 90px; height: 160px; object-fit: cover; border-radius: 8px;
+                                            border: 2px solid rgba(34, 197, 94, 0.3); background: #0a0e1a;
+                                            display: block; transition: all 0.3s ease;"
+                                     onerror="this.style.display='none'"
+                                     onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.6)'; this.style.boxShadow='0 0 15px rgba(34, 197, 94, 0.3)'; this.parentElement.style.transform='scale(1.05)'; this.parentElement.style.filter='brightness(1.2)';"
+                                     onmouseout="this.style.borderColor='rgba(34, 197, 94, 0.3)'; this.style.boxShadow='none'; this.parentElement.style.transform='scale(1)'; this.parentElement.style.filter='brightness(1)';">
+                            </a>
+                        ` : ''}
+
+                        <!-- NFT Name -->
+                        <h6 class="text-white mb-2" style="font-size: 0.95rem; font-weight: 600;">${nft.name}</h6>
+
+                        <!-- NFT Details -->
+                        <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.7);">
+                            <div class="mb-1">
+                                <i class="fas fa-tag me-1" style="width: 14px;"></i>
+                                <span style="text-transform: capitalize;">${nft.category.replace(/_/g, ' ')}</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-chart-line me-1" style="width: 14px; color: ${tierColor};"></i>
+                                <strong style="color: ${tierColor};">${nft.bonus_percentage > 0 ? '+' : ''}${nft.bonus_percentage}%</strong> Bonus
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="text-muted mb-0" style="font-size: 0.75rem; line-height: 1.3;">${nft.description}</p>
+
+                        <!-- Token ID -->
+                        <div class="mt-2 pt-2" style="border-top: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.7rem; color: rgba(255, 255, 255, 0.4);">
+                            Token #${nft.token_id}
+                        </div>
+
+                        <!-- Equip Button -->
+                        <button type="button" class="btn btn-success btn-sm w-100 mt-2"
+                                onclick="event.stopPropagation(); selectCompanyNFT(${nft.id});"
+                                style="font-weight: 600;">
+                            <i class="fas fa-plus-circle me-1"></i> Equip to Slot
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            gridDiv.appendChild(colDiv);
+        });
+    }
+
+    function equipCompanyNFT(slotNum, nftId) {
+        console.log('equipCompanyNFT called with slotNum:', slotNum, 'nftId:', nftId, 'companyId:', companyId);
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                          document.querySelector('input[name="csrf_token"]')?.value;
+
+        console.log('CSRF Token:', csrfToken ? 'Found' : 'NOT FOUND');
+
+        fetch('/api/nft/equip/company', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                company_id: companyId,
+                nft_id: nftId,
+                slot: slotNum
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess(data.message);
+                loadCompanyNFTSlots();
+                // Reload the page to show Android Worker section if applicable
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showError(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Failed to equip NFT');
+        });
+    }
+
+    function unequipCompanyNFT(slotNum) {
+        if (!confirm('Are you sure you want to unequip this NFT?')) {
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                          document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch('/api/nft/unequip/company', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                company_id: companyId,
+                slot: slotNum
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess(data.message);
+                loadCompanyNFTSlots();
+                // Reload the page to update Android Worker section if applicable
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showError(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Failed to unequip NFT');
+        });
+    }
+    {% endif %}
+
+    // Gold Exchange with Confirmation Modals
+    {% if gold_market %}
+    let pendingSellGoldData = null;
+    let pendingBuyGoldData = null;
+
+    // Sell Gold Form Handler
+    const sellGoldForm = document.getElementById('sellGoldForm');
+    if (sellGoldForm) {
+        sellGoldForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const goldAmount = document.getElementById('sellGoldAmount').value;
+
+            if (!goldAmount || goldAmount < 1) {
+                showError('Please enter a valid gold amount.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('gold_amount', goldAmount);
+            formData.append('csrf_token', '{{ csrf_token() }}');
+
+            fetch('{{ url_for("company.preview_sell_gold", company_id=company.id) }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                pendingSellGoldData = data;
+
+                let html = `<h6 class="text-white mb-3">Sell ${data.quantity} Gold</h6><div class="mb-3">`;
+
+                if (data.breakdown.length === 1) {
+                    const [qty, price] = data.breakdown[0];
+                    html += `<p style="color: rgba(255,255,255,0.8);">${qty} Gold at ${price.toFixed(2)} ${data.currency_name} = <strong>${(qty * price).toFixed(2)} ${data.currency_name}</strong></p>`;
+                } else {
+                    html += `<p class="text-warning mb-2"><i class="fas fa-info-circle"></i> Sale spans multiple price levels:</p>`;
+                    data.breakdown.forEach(item => {
+                        const [qty, price] = item;
+                        html += `<p style="color: rgba(255,255,255,0.8); margin-bottom: 4px;">• ${qty} Gold at ${price.toFixed(2)} ${data.currency_name} = ${(qty * price).toFixed(2)} ${data.currency_name}</p>`;
+                    });
+                }
+
+                html += `</div><div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 12px;"><h5 class="text-success">Total: ${data.total_proceeds.toFixed(2)} ${data.currency_name}</h5></div>`;
+                document.getElementById('sellGoldBreakdown').innerHTML = html;
+
+                const modal = new bootstrap.Modal(document.getElementById('sellGoldConfirmModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('An error occurred.');
+            });
+        });
+    }
+
+    // Buy Gold Form Handler
+    const buyGoldForm = document.getElementById('buyGoldForm');
+    if (buyGoldForm) {
+        buyGoldForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const goldAmount = document.getElementById('buyGoldAmount').value;
+
+            if (!goldAmount || goldAmount < 1) {
+                showError('Please enter a valid gold amount.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('gold_amount', goldAmount);
+            formData.append('csrf_token', '{{ csrf_token() }}');
+
+            fetch('{{ url_for("company.preview_buy_gold", company_id=company.id) }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                pendingBuyGoldData = data;
+
+                let html = `<h6 class="text-white mb-3">Buy ${data.quantity} Gold</h6><div class="mb-3">`;
+
+                if (data.breakdown.length === 1) {
+                    const [qty, price] = data.breakdown[0];
+                    html += `<p style="color: rgba(255,255,255,0.8);">${qty} Gold at ${price.toFixed(2)} ${data.currency_name} = <strong>${(qty * price).toFixed(2)} ${data.currency_name}</strong></p>`;
+                } else {
+                    html += `<p class="text-warning mb-2"><i class="fas fa-info-circle"></i> Purchase spans multiple price levels:</p>`;
+                    data.breakdown.forEach(item => {
+                        const [qty, price] = item;
+                        html += `<p style="color: rgba(255,255,255,0.8); margin-bottom: 4px;">• ${qty} Gold at ${price.toFixed(2)} ${data.currency_name} = ${(qty * price).toFixed(2)} ${data.currency_name}</p>`;
+                    });
+                }
+
+                html += `</div><div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 12px;"><h5 class="text-warning">Total Cost: ${data.total_cost.toFixed(2)} ${data.currency_name}</h5></div>`;
+                document.getElementById('buyGoldBreakdown').innerHTML = html;
+
+                const modal = new bootstrap.Modal(document.getElementById('buyGoldConfirmModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('An error occurred.');
+            });
+        });
+    }
+
+    // Confirm Sell Gold
+    document.getElementById('confirmSellGoldBtn')?.addEventListener('click', function() {
+        if (pendingSellGoldData) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("company.exchange_buy_currency", company_id=company.id) }}';
+            form.style.display = 'none';
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
+
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'hidden';
+            qtyInput.name = 'gold_amount';
+            qtyInput.value = pendingSellGoldData.quantity;
+            form.appendChild(qtyInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+
+    // Confirm Buy Gold
+    document.getElementById('confirmBuyGoldBtn')?.addEventListener('click', function() {
+        if (pendingBuyGoldData) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("company.exchange_sell_currency", company_id=company.id) }}';
+            form.style.display = 'none';
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
+
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'hidden';
+            qtyInput.name = 'gold_amount';
+            qtyInput.value = pendingBuyGoldData.quantity;
+            form.appendChild(qtyInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+    {% endif %}
+
+});
+</script>
+
+<!-- Sell Confirmation Modal -->
+<div class="modal fade" id="sellConfirmModal" tabindex="-1" aria-labelledby="sellConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-gray-200" id="sellConfirmModalLabel">
+                    <i class="fas fa-coins me-2"></i>Confirm Sale
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="sellBreakdown"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-warning" id="confirmSellBtn">Confirm Sale</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Alert Modal -->
+<div class="modal fade" id="errorAlertModal" tabindex="-1" aria-labelledby="errorAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937; border: 1px solid rgba(220, 38, 38, 0.3) !important;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger" id="errorAlertModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Error
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-white mb-0" id="errorAlertMessage"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Alert Modal -->
+<div class="modal fade" id="successAlertModal" tabindex="-1" aria-labelledby="successAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937; border: 1px solid rgba(34, 197, 94, 0.3) !important;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-success" id="successAlertModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Success
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-white mb-0" id="successAlertMessage"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Equip Company NFT Modal -->
+<div class="modal fade" id="equipCompanyNFTModal" tabindex="-1" aria-labelledby="equipCompanyNFTModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 2px solid rgba(168, 85, 247, 0.3); border-radius: 16px; overflow: hidden;">
+            <!-- Purple accent bar at top -->
+            <div style="height: 4px; background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 50%, #7c3aed 100%);"></div>
+            <div class="modal-header" style="border-bottom: 1px solid rgba(168, 85, 247, 0.2); padding: 1.25rem 1.5rem;">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-gem" style="font-size: 1.25rem; color: #a855f7;"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0" style="color: #ffffff; font-weight: 700;" id="equipCompanyNFTModalLabel">
+                            Equip NFT to Slot <span id="equipSlotNumber" style="color: #a855f7;"></span>
+                        </h5>
+                        <p class="mb-0" style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">Select an NFT to boost your production</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Loading State -->
+                <div id="companyNFTsLoading" class="text-center py-5">
+                    <div class="spinner-border" role="status" style="color: #a855f7; width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3" style="color: rgba(255,255,255,0.6);">Loading your company NFTs...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="companyNFTsEmpty" style="display: none;">
+                    <div style="text-align: center; padding: 3rem 2rem; background: rgba(168, 85, 247, 0.05); border: 2px dashed rgba(168, 85, 247, 0.2); border-radius: 16px;">
+                        <div style="width: 100px; height: 100px; margin: 0 auto 1.5rem; background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(168, 85, 247, 0.2);">
+                            <i class="fas fa-gem" style="font-size: 2.5rem; color: rgba(168, 85, 247, 0.4);"></i>
+                        </div>
+                        <h4 style="color: #ffffff; font-weight: 700; margin-bottom: 0.75rem;">No Company NFTs Available</h4>
+                        <p style="color: rgba(255,255,255,0.5); margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">You don't have any company NFTs in your inventory. Visit the NFT Inventory to acquire production boost NFTs.</p>
+                        <a href="{{ url_for('nft.inventory_page') }}" class="btn" style="background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%); color: #ffffff; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease;">
+                            <i class="fas fa-gem"></i>Go to NFT Inventory
+                        </a>
+                    </div>
+                </div>
+
+                <!-- NFT Grid -->
+                <div id="companyNFTsGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" style="display: none;"></div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(168, 85, 247, 0.15); padding: 1rem 1.5rem; background: rgba(0,0,0,0.2);">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 500; transition: all 0.2s ease;">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

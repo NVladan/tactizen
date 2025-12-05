@@ -1,0 +1,1007 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ alliance.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .alliance-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        color: #22c55e;
+        font-size: 1.75rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title-icon {
+        font-size: 1.5rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #22c55e;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .action-link:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1rem 1.25rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #22c55e;
+        line-height: 1.2;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.yellow { color: #fbbf24; }
+    .stat-value.purple { color: #a855f7; }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+
+    /* Grid Layout */
+    .grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+        .grid-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Member Cards */
+    .members-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .member-card {
+        background: rgba(26, 31, 46, 0.6);
+        border-radius: 12px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .member-card:hover {
+        border-color: rgba(59, 130, 246, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .member-card.leader {
+        border-color: rgba(234, 179, 8, 0.4);
+        background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(26, 31, 46, 0.6) 100%);
+    }
+
+    .member-card.leader::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    }
+
+    .member-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .member-flag {
+        width: 56px;
+        height: 37px;
+        border-radius: 6px;
+        object-fit: cover;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .member-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .member-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .member-name a {
+        color: #fff;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .member-name a:hover {
+        color: #22c55e;
+    }
+
+    .leader-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: #000;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .member-join-date {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .member-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .member-action-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 1px solid;
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .member-action-btn.transfer {
+        color: #fbbf24;
+        border-color: rgba(251, 191, 36, 0.3);
+    }
+
+    .member-action-btn.transfer:hover {
+        background: rgba(251, 191, 36, 0.1);
+        border-color: rgba(251, 191, 36, 0.5);
+    }
+
+    .member-action-btn.kick {
+        color: #ef4444;
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .member-action-btn.kick:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    /* Invitations */
+    .invitation-card {
+        background: rgba(59, 130, 246, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .invitation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .invitation-info {
+        flex: 1;
+    }
+
+    .invitation-country {
+        font-weight: 600;
+        color: #fff;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .invitation-meta {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .invitation-badges {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        align-items: flex-end;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-badge.pending {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+    }
+
+    .status-badge.approved {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .status-badge.rejected {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    /* Action Cards */
+    .action-card {
+        background: rgba(26, 31, 46, 0.6);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .action-card-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .action-card-title i {
+        width: 20px;
+        text-align: center;
+    }
+
+    .action-card .form-select,
+    .action-card .form-control {
+        background: #0f1419;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #fff;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .action-card .form-select:focus,
+    .action-card .form-control:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+        outline: none;
+    }
+
+    .action-card .btn {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-radius: 6px;
+    }
+
+    .action-card .hint {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .action-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 1rem 0;
+    }
+
+    /* Info List */
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .info-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.6rem 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+    }
+
+    .info-list li:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .info-list li i {
+        width: 18px;
+        text-align: center;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .info-list li i.text-success { color: #22c55e; }
+    .info-list li i.text-info { color: #3b82f6; }
+    .info-list li i.text-warning { color: #fbbf24; }
+    .info-list li i.text-danger { color: #ef4444; }
+    .info-list li i.text-secondary { color: #6b7280; }
+
+    /* Capacity Bar */
+    .capacity-bar {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .capacity-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .capacity-text {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+    }
+
+    .capacity-count {
+        color: #22c55e;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .capacity-track {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .capacity-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .capacity-fill.warning {
+        background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    }
+
+    .capacity-fill.full {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    /* Alert */
+    .info-alert {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: #fbbf24;
+        font-size: 0.85rem;
+    }
+
+    .info-alert i {
+        font-size: 1rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        padding: 2rem 1rem;
+        font-style: italic;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem 1.5rem;
+    }
+
+    .modal-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-warning-list {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .modal-warning-list li {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-warning-list li:last-child {
+        margin-bottom: 0;
+    }
+
+    .modal-danger-alert {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: #ef4444;
+        font-size: 0.9rem;
+        margin: 1rem 0;
+    }
+
+    .btn-close-white {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="alliance-detail-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-icon">&#129309;</span>
+            {{ alliance.name }} <small class="text-muted" style="font-size: 0.5em;">#{{ alliance.id }}</small>
+        </h1>
+        <div class="header-actions">
+            <a href="{{ url_for('government.alliances') }}" class="action-link">
+                <i class="fas fa-arrow-left"></i>
+                All Alliances
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value">{{ alliance.member_count }}/5</div>
+            <div class="stat-label">Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value yellow">
+                <i class="fas fa-crown" style="font-size: 1.25rem;"></i>
+            </div>
+            <div class="stat-label">{{ alliance.leader_country.name }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value blue">{{ alliance.created_at.strftime('%b %d') }}</div>
+            <div class="stat-label">Founded {{ alliance.created_at.strftime('%Y') }}</div>
+        </div>
+        {% if pending_invitations %}
+        <div class="stat-card">
+            <div class="stat-value purple">{{ pending_invitations|length }}</div>
+            <div class="stat-label">Pending Invites</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid-layout">
+        <!-- Main Content -->
+        <div>
+            <!-- Members Section -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-flag"></i>
+                    Member Countries
+                </h2>
+
+                <!-- Capacity Bar -->
+                <div class="capacity-bar">
+                    <div class="capacity-label">
+                        <span class="capacity-text">Alliance Capacity</span>
+                        <span class="capacity-count">{{ alliance.member_count }} / 5</span>
+                    </div>
+                    <div class="capacity-track">
+                        {% set fill_percent = (alliance.member_count / 5 * 100)|int %}
+                        <div class="capacity-fill {% if fill_percent >= 100 %}full{% elif fill_percent >= 80 %}warning{% endif %}"
+                             style="width: {{ fill_percent }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="members-grid">
+                    {% for member in members %}
+                    <div class="member-card {% if member.id == alliance.leader_country_id %}leader{% endif %}">
+                        <div class="member-header">
+                            <img src="{{ url_for('static', filename='images/country-flags/' + member.flag_code + '.png') }}"
+                                 alt="{{ member.name }}" class="member-flag"
+                                 onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                            <div class="member-info">
+                                <div class="member-name">
+                                    <a href="{{ url_for('main.country', slug=member.slug) }}">
+                                        {{ member.name }}
+                                    </a>
+                                </div>
+                                {% if member.id == alliance.leader_country_id %}
+                                <span class="leader-badge">
+                                    <i class="fas fa-crown"></i>
+                                    Alliance Leader
+                                </span>
+                                {% else %}
+                                <div class="member-join-date">
+                                    Member since {{ alliance.created_at.strftime('%b %Y') }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if is_leader and member.id != alliance.leader_country_id %}
+                        <div class="member-actions">
+                            <button type="button" class="member-action-btn transfer"
+                                    onclick="showTransferModal({{ member.id }}, '{{ member.name }}')">
+                                <i class="fas fa-crown"></i>
+                                Transfer Lead
+                            </button>
+                            <button type="button" class="member-action-btn kick"
+                                    onclick="showKickModal({{ member.id }}, '{{ member.name }}')">
+                                <i class="fas fa-user-minus"></i>
+                                Kick
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Pending Invitations (for members only) -->
+            {% if is_member and pending_invitations %}
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-envelope-open-text"></i>
+                    Pending Invitations
+                </h2>
+
+                {% for invitation in pending_invitations %}
+                <div class="invitation-card">
+                    <div class="invitation-header">
+                        <div class="invitation-info">
+                            <div class="invitation-country">{{ invitation.invited_country.name }}</div>
+                            <div class="invitation-meta">
+                                <i class="fas fa-paper-plane"></i> Invited by {{ invitation.inviting_country.name }}
+                                &nbsp;&bull;&nbsp;
+                                <i class="fas fa-clock"></i> Expires {{ invitation.expires_at.strftime('%b %d, %H:%M') }}
+                            </div>
+                        </div>
+                        <div class="invitation-badges">
+                            {% if invitation.inviter_accepted is none %}
+                            <span class="status-badge pending">
+                                <i class="fas fa-hourglass-half"></i> Inviter Voting
+                            </span>
+                            {% elif invitation.inviter_accepted %}
+                            <span class="status-badge approved">
+                                <i class="fas fa-check"></i> Inviter Approved
+                            </span>
+                            {% else %}
+                            <span class="status-badge rejected">
+                                <i class="fas fa-times"></i> Inviter Rejected
+                            </span>
+                            {% endif %}
+
+                            {% if invitation.invited_accepted is none %}
+                            <span class="status-badge pending">
+                                <i class="fas fa-hourglass-half"></i> Invitee Voting
+                            </span>
+                            {% elif invitation.invited_accepted %}
+                            <span class="status-badge approved">
+                                <i class="fas fa-check"></i> Invitee Approved
+                            </span>
+                            {% else %}
+                            <span class="status-badge rejected">
+                                <i class="fas fa-times"></i> Invitee Rejected
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Actions Section (for members only) -->
+            {% if is_member %}
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-tools"></i>
+                    Alliance Actions
+                </h2>
+
+                <!-- Invite Country -->
+                {% if (is_foreign_affairs_minister or is_president) and invitable_countries and not alliance.is_full %}
+                <div class="action-card">
+                    <div class="action-card-title">
+                        <i class="fas fa-user-plus text-success"></i>
+                        Invite Country
+                    </div>
+                    <form method="POST" action="{{ url_for('government.invite_to_alliance', alliance_id=alliance.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <select name="country_id" class="form-select" required>
+                            <option value="">Select a country...</option>
+                            {% for country in invitable_countries %}
+                            <option value="{{ country.id }}">{{ country.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Send Invitation
+                        </button>
+                        <div class="hint">Both congresses must approve (24h vote)</div>
+                    </form>
+                </div>
+                {% elif alliance.is_full %}
+                <div class="info-alert" style="margin-bottom: 1rem;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Alliance is at maximum capacity</span>
+                </div>
+                {% endif %}
+
+                <!-- Leave Alliance -->
+                {% if is_foreign_affairs_minister or is_president %}
+                <div class="action-card">
+                    <div class="action-card-title">
+                        <i class="fas fa-door-open text-warning"></i>
+                        Leave Alliance
+                    </div>
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#leaveAllianceModal">
+                        <i class="fas fa-sign-out-alt me-1"></i>
+                        Propose Leaving
+                    </button>
+                    <div class="hint">Requires congress approval + 24h delay</div>
+                </div>
+                {% endif %}
+
+                <!-- Leader-only Actions -->
+                {% if is_leader %}
+                <div class="action-divider"></div>
+
+                <!-- Rename Alliance -->
+                <div class="action-card">
+                    <div class="action-card-title">
+                        <i class="fas fa-edit text-info"></i>
+                        Rename Alliance
+                    </div>
+                    <form method="POST" action="{{ url_for('government.rename_alliance', alliance_id=alliance.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="text" name="name" class="form-control"
+                               placeholder="New alliance name" maxlength="100" required>
+                        <button type="submit" class="btn btn-outline-info">
+                            <i class="fas fa-save me-1"></i>
+                            Save Name
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Dissolve Alliance -->
+                <div class="action-card">
+                    <div class="action-card-title">
+                        <i class="fas fa-skull-crossbones text-danger"></i>
+                        Dissolve Alliance
+                    </div>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dissolveAllianceModal">
+                        <i class="fas fa-times me-1"></i>
+                        Propose Dissolution
+                    </button>
+                    <div class="hint">Requires unanimous approval from all members</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Alliance Info -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Alliance Benefits
+                </h2>
+                <ul class="info-list">
+                    <li>
+                        <i class="fas fa-shield-alt text-success"></i>
+                        <span>Members can fight alongside each other in wars</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-users text-info"></i>
+                        <span>Maximum of 5 countries per alliance</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-vote-yea text-warning"></i>
+                        <span>Invitations require dual congress approval</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-clock text-danger"></i>
+                        <span>24-hour delay when leaving an alliance</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-ban text-secondary"></i>
+                        <span>7-day cooldown before rejoining any alliance</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Transfer Leadership Modal -->
+<div class="modal fade" id="transferLeadershipModal" tabindex="-1" aria-labelledby="transferLeadershipModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-warning" id="transferLeadershipModalLabel">
+                    <i class="fas fa-crown"></i>
+                    Transfer Leadership
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Transfer alliance leadership to <strong id="transferTargetName" class="text-warning"></strong>?</p>
+                <ul class="modal-warning-list">
+                    <li>This action cannot be undone</li>
+                    <li>The new leader will have full control over the alliance</li>
+                    <li>You will become a regular member</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="transferLeadershipForm" method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="country_id" id="transferCountryId" value="">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-crown me-1"></i>
+                        Transfer Leadership
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kick Member Modal -->
+<div class="modal fade" id="kickMemberModal" tabindex="-1" aria-labelledby="kickMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="kickMemberModalLabel">
+                    <i class="fas fa-user-minus"></i>
+                    Propose Member Kick
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Propose kicking <strong id="kickTargetName" class="text-danger"></strong> from the alliance?</p>
+                <ul class="modal-warning-list">
+                    <li>This will require a congress vote from all member countries</li>
+                    <li>The kicked country cannot rejoin any alliance for 7 days</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="kickMemberForm" method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="country_id" id="kickCountryId" value="">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-user-minus me-1"></i>
+                        Propose Kick
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Alliance Modal -->
+<div class="modal fade" id="leaveAllianceModal" tabindex="-1" aria-labelledby="leaveAllianceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-warning" id="leaveAllianceModalLabel">
+                    <i class="fas fa-door-open"></i>
+                    Leave Alliance
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Propose leaving <strong class="text-warning">{{ alliance.name }}</strong>?</p>
+                <ul class="modal-warning-list">
+                    <li>This will require a congress vote to approve</li>
+                    <li>After approval, there is a 24-hour delay before leaving</li>
+                    <li>Your country cannot rejoin any alliance for 7 days after leaving</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('government.leave_alliance', alliance_id=alliance.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-sign-out-alt me-1"></i>
+                        Propose Leaving
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dissolve Alliance Modal -->
+<div class="modal fade" id="dissolveAllianceModal" tabindex="-1" aria-labelledby="dissolveAllianceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="dissolveAllianceModalLabel">
+                    <i class="fas fa-skull-crossbones"></i>
+                    Dissolve Alliance
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Propose dissolving <strong class="text-danger">{{ alliance.name }}</strong>?</p>
+                <div class="modal-danger-alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span><strong>ALL</strong> member congresses must vote to approve this action.</span>
+                </div>
+                <ul class="modal-warning-list">
+                    <li>This will permanently destroy the alliance</li>
+                    <li>All members will be removed from the alliance</li>
+                    <li>Former members can join other alliances after 7 days</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('government.dissolve_alliance', alliance_id=alliance.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i>
+                        Propose Dissolution
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Transfer Leadership Modal
+function showTransferModal(countryId, countryName) {
+    document.getElementById('transferTargetName').textContent = countryName;
+    document.getElementById('transferCountryId').value = countryId;
+    document.getElementById('transferLeadershipForm').action = "{{ url_for('government.transfer_alliance_leadership', alliance_id=alliance.id) }}";
+    new bootstrap.Modal(document.getElementById('transferLeadershipModal')).show();
+}
+
+// Kick Member Modal
+function showKickModal(countryId, countryName) {
+    document.getElementById('kickTargetName').textContent = countryName;
+    document.getElementById('kickCountryId').value = countryId;
+    document.getElementById('kickMemberForm').action = "{{ url_for('government.kick_from_alliance', alliance_id=alliance.id) }}";
+    new bootstrap.Modal(document.getElementById('kickMemberModal')).show();
+}
+</script>
+</div>
+{% endblock main_layout %}

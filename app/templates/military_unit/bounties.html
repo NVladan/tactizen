@@ -1,0 +1,491 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Bounty Contracts - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .bounties-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+    }
+
+    .page-header h2 {
+        color: #fbbf24;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .bounty-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .bounty-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .bounty-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(251, 191, 36, 0.4);
+        box-shadow: 0 0 20px rgba(251, 191, 36, 0.15);
+    }
+
+    .bounty-header {
+        background: rgba(251, 191, 36, 0.1);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(251, 191, 36, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .bounty-id {
+        color: #fbbf24;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .bounty-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .bounty-status.active {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .bounty-status.assigned {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+
+    .bounty-body {
+        padding: 1.25rem;
+    }
+
+    .bounty-country {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .country-flag {
+        width: 32px;
+        height: 21px;
+        border-radius: 3px;
+        object-fit: cover;
+    }
+
+    .country-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .bounty-battle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .bounty-battle i {
+        color: #fbbf24;
+        margin-right: 0.5rem;
+    }
+
+    .bounty-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .bounty-stat {
+        text-align: center;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+    }
+
+    .bounty-stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #22c55e;
+    }
+
+    .bounty-stat-value.gold { color: #fbbf24; }
+
+    .bounty-stat-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+    }
+
+    .bounty-footer {
+        padding: 1rem 1.25rem;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .bounty-expires {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .bounty-expires i {
+        margin-right: 0.35rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255, 255, 255, 0.6);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #fbbf24;
+        opacity: 0.5;
+    }
+
+    .empty-state h4 {
+        color: #fbbf24;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-divider {
+        margin: 3rem 0 2rem;
+        text-align: center;
+    }
+
+    .section-divider h3 {
+        color: #22c55e;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-divider p {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+
+    .completed-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .completed-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+    }
+
+    .completed-header {
+        background: rgba(34, 197, 94, 0.1);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .completed-id {
+        color: #22c55e;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .completed-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .fulfilled-unit {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .fulfilled-unit-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: rgba(34, 197, 94, 0.1);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+    }
+
+    .fulfilled-unit-info {
+        flex: 1;
+    }
+
+    .fulfilled-unit-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .fulfilled-unit-meta {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+    }
+
+    .fulfilled-unit-meta .rating {
+        color: #fbbf24;
+    }
+
+    .review-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .review-badge.pending {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+
+    .review-badge.reviewed {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .completed-footer {
+        padding: 1rem 1.25rem;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .completed-date {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .completed-date i {
+        margin-right: 0.35rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="bounties-container">
+    <div class="page-header">
+        <h2><i class="fas fa-coins me-2"></i>Bounty Contracts</h2>
+        <p class="mb-0">Mercenary contracts offered by Country Presidents and Ministers of Defence</p>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{{ url_for('military_unit.browse') }}" class="btn btn-outline-primary">
+            <i class="fas fa-shield-alt me-1"></i>Browse Units
+        </a>
+        {% if user_unit and is_commander %}
+        <a href="{{ url_for('military_unit.detail', unit_id=user_unit.id) }}" class="btn btn-success">
+            <i class="fas fa-users me-1"></i>My Unit
+        </a>
+        {% endif %}
+        {% if can_create_bounty %}
+        <a href="{{ url_for('military_unit.create_bounty') }}" class="btn btn-warning">
+            <i class="fas fa-plus me-1"></i>Create Bounty
+        </a>
+        {% endif %}
+    </div>
+
+    {% if bounties %}
+    <div class="bounty-grid">
+        {% for bounty in bounties %}
+        <div class="bounty-card" onclick="window.location='{{ url_for('military_unit.bounty_detail', bounty_id=bounty.id) }}'">
+            <div class="bounty-header">
+                <span class="bounty-id">Contract #{{ bounty.id }}</span>
+                {% set approved_unit = bounty.get_approved_unit() %}
+                {% if approved_unit %}
+                <span class="bounty-status assigned">
+                    <i class="fas fa-check-circle"></i>Assigned
+                </span>
+                {% else %}
+                <span class="bounty-status active">
+                    <i class="fas fa-circle"></i>Open
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="bounty-body">
+                <div class="bounty-country">
+                    {% if bounty.country and bounty.country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' + bounty.country.flag_code + '.png') }}" alt="{{ bounty.country.name }}" class="country-flag">
+                    {% endif %}
+                    <span class="country-name">{{ bounty.country.name if bounty.country else 'Unknown' }}</span>
+                </div>
+
+                <div class="bounty-battle">
+                    <i class="fas fa-swords"></i>
+                    Battle #{{ bounty.battle_id }} -
+                    {% if bounty.fight_for_attacker %}Attacker{% else %}Defender{% endif %} Side
+                </div>
+
+                <div class="bounty-stats">
+                    <div class="bounty-stat">
+                        <div class="bounty-stat-value">{{ "{:,.0f}".format(bounty.damage_required) }}</div>
+                        <div class="bounty-stat-label">Damage Required</div>
+                    </div>
+                    <div class="bounty-stat">
+                        <div class="bounty-stat-value gold">{{ "{:,.0f}".format(bounty.payment_amount) }}</div>
+                        <div class="bounty-stat-label">Payment</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bounty-footer">
+                <div class="bounty-expires">
+                    <i class="fas fa-clock"></i>
+                    Expires {{ bounty.expires_at.strftime('%b %d, %H:%M') }}
+                </div>
+                <span class="btn btn-sm btn-outline-warning">View Details</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-coins"></i>
+        <h4>No Active Bounties</h4>
+        <p>No bounty contracts are available at the moment.</p>
+        <p class="text-muted">Country Presidents and Ministers of Defence can create bounties for active battles.</p>
+    </div>
+    {% endif %}
+
+    {% if is_authority and completed_bounties %}
+    <!-- Completed Bounties Section (for President/Minister only) -->
+    <div class="section-divider">
+        <h3><i class="fas fa-check-circle me-2"></i>Completed Bounties</h3>
+        <p>Review bounties fulfilled by military units</p>
+    </div>
+
+    <div class="bounty-grid">
+        {% for bounty in completed_bounties %}
+        {% set completed_app = bounty.get_completed_application() %}
+        <div class="completed-card" onclick="window.location='{{ url_for('military_unit.bounty_detail', bounty_id=bounty.id) }}'">
+            <div class="completed-header">
+                <span class="completed-id">Contract #{{ bounty.id }}</span>
+                <span class="completed-status">
+                    <i class="fas fa-check-circle"></i>Completed
+                </span>
+            </div>
+
+            <div class="bounty-body">
+                {% if completed_app and completed_app.unit %}
+                <div class="fulfilled-unit">
+                    <div class="fulfilled-unit-avatar">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="fulfilled-unit-info">
+                        <div class="fulfilled-unit-name">{{ completed_app.unit.name }}</div>
+                        <div class="fulfilled-unit-meta">
+                            {{ "{:,.0f}".format(completed_app.damage_dealt) }} damage dealt
+                            {% if completed_app.review_rating %}
+                            &bull; <span class="rating">
+                                {% for i in range(completed_app.review_rating) %}<i class="fas fa-star"></i>{% endfor %}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if completed_app.review_rating %}
+                    <span class="review-badge reviewed">Reviewed</span>
+                    {% else %}
+                    <span class="review-badge pending">Needs Review</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="bounty-stats">
+                    <div class="bounty-stat">
+                        <div class="bounty-stat-value">{{ "{:,.0f}".format(bounty.damage_required) }}</div>
+                        <div class="bounty-stat-label">Damage Required</div>
+                    </div>
+                    <div class="bounty-stat">
+                        <div class="bounty-stat-value gold">{{ "{:,.0f}".format(bounty.payment_amount) }}</div>
+                        <div class="bounty-stat-label">Payment</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="completed-footer">
+                <div class="completed-date">
+                    <i class="fas fa-calendar-check"></i>
+                    {% if completed_app and completed_app.paid_at %}
+                    Completed {{ completed_app.paid_at.strftime('%b %d, %Y') }}
+                    {% else %}
+                    {{ bounty.created_at.strftime('%b %d, %Y') }}
+                    {% endif %}
+                </div>
+                <span class="btn btn-sm btn-outline-success">View Details</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

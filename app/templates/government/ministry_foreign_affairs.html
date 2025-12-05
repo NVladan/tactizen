@@ -1,0 +1,722 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Ministry of Foreign Affairs - {{ country.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .foreign-affairs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .page-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(59, 130, 246, 0.15);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3b82f6;
+        font-size: 1.25rem;
+    }
+
+    .page-title {
+        color: #3b82f6;
+        font-size: 1.5rem;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    .page-subtitle img {
+        height: 14px;
+        border-radius: 2px;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .action-btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #fff;
+    }
+
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .action-btn-secondary {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+    }
+
+    .action-btn-secondary:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-box {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-box.alliance { border-color: rgba(34, 197, 94, 0.3); }
+    .stat-box.embargo { border-color: rgba(220, 38, 38, 0.3); }
+    .stat-box.peace { border-color: rgba(59, 130, 246, 0.3); }
+    .stat-box.pending { border-color: rgba(251, 191, 36, 0.3); }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.alliance { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .stat-icon.embargo { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
+    .stat-icon.peace { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .stat-icon.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+
+    .stat-content { flex: 1; min-width: 0; }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .content-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Section Cards */
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #3b82f6;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .section-title i { font-size: 0.9rem; }
+
+    /* Alliance Card */
+    .alliance-card {
+        background: rgba(34, 197, 94, 0.05);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .alliance-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .alliance-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(34, 197, 94, 0.15);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .alliance-info {
+        flex: 1;
+    }
+
+    .alliance-name {
+        font-weight: 600;
+        color: #fff;
+        font-size: 1rem;
+    }
+
+    .alliance-detail {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .alliance-link {
+        color: #22c55e;
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+
+    .alliance-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Embargo Card */
+    .embargo-card {
+        background: rgba(220, 38, 38, 0.05);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .embargo-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .embargo-flag {
+        width: 40px;
+        height: 27px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+
+    .embargo-info {
+        flex: 1;
+    }
+
+    .embargo-country {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .embargo-date {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+    }
+
+    .embargo-badge {
+        background: rgba(220, 38, 38, 0.15);
+        color: #dc2626;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    /* Minister Card */
+    .minister-card {
+        background: rgba(59, 130, 246, 0.05);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .minister-avatar {
+        width: 48px;
+        height: 48px;
+        background: rgba(59, 130, 246, 0.15);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #3b82f6;
+    }
+
+    .minister-info {
+        flex: 1;
+    }
+
+    .minister-role {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .minister-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .minister-name a {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    .minister-name a:hover {
+        text-decoration: underline;
+    }
+
+    /* Pending Vote Card */
+    .vote-card {
+        background: rgba(251, 191, 36, 0.05);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .vote-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .vote-type {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.9rem;
+    }
+
+    .vote-badge {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .vote-detail {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .vote-progress {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .vote-for {
+        color: #22c55e;
+    }
+
+    .vote-against {
+        color: #ef4444;
+    }
+
+    .vote-btn {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 6px;
+        color: #fbbf24;
+        text-align: center;
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 0.75rem;
+        transition: all 0.2s;
+    }
+
+    .vote-btn:hover {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.9rem;
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="foreign-affairs-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-title-group">
+            <div class="page-icon">
+                <i class="fas fa-globe"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Ministry of Foreign Affairs</h1>
+                <div class="page-subtitle">
+                    <img src="{{ url_for('static', filename='images/country-flags/' + country.flag_code + '.png') }}"
+                         alt="{{ country.name }}"
+                         onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                    {{ country.name }}
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            {% if is_president or is_foreign_affairs_minister %}
+            <a href="{{ url_for('government.propose_law') }}" class="action-btn action-btn-primary">
+                <i class="fas fa-gavel"></i>
+                Propose Law
+            </a>
+            {% endif %}
+            <a href="{{ url_for('government.president', country_id=country.id) }}" class="action-btn action-btn-secondary">
+                <i class="fas fa-landmark"></i>
+                Government
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-box alliance">
+            <div class="stat-icon alliance">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{% if user_alliance %}1{% else %}0{% endif %}</div>
+                <div class="stat-label">Alliance</div>
+            </div>
+        </div>
+
+        <div class="stat-box embargo">
+            <div class="stat-icon embargo">
+                <i class="fas fa-ban"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ active_embargoes|length }}</div>
+                <div class="stat-label">Active Embargoes</div>
+            </div>
+        </div>
+
+        <div class="stat-box peace">
+            <div class="stat-icon peace">
+                <i class="fas fa-dove"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ peace_treaties|length }}</div>
+                <div class="stat-label">Peace Proposals</div>
+            </div>
+        </div>
+
+        <div class="stat-box pending">
+            <div class="stat-icon pending">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ pending_votes|length }}</div>
+                <div class="stat-label">Pending Votes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Main Content -->
+        <div>
+            <!-- Alliance Section -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-handshake"></i>
+                    Alliance
+                </h2>
+
+                {% if user_alliance %}
+                <div class="alliance-card">
+                    <div class="alliance-header">
+                        <div class="alliance-icon">&#129309;</div>
+                        <div class="alliance-info">
+                            <div class="alliance-name">{{ user_alliance.name }}</div>
+                            <div class="alliance-detail">{{ user_alliance.member_count }} member countries</div>
+                        </div>
+                        <a href="{{ url_for('government.view_alliance', alliance_id=user_alliance.id) }}" class="alliance-link">
+                            View Alliance <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-handshake"></i>
+                    <p>{{ country.name }} is not part of any alliance.</p>
+                    {% if is_president %}
+                    <a href="{{ url_for('government.alliances') }}" class="action-btn action-btn-primary" style="display: inline-flex; margin-top: 1rem;">
+                        <i class="fas fa-plus"></i>
+                        Create or Join Alliance
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Active Embargoes Section -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-ban"></i>
+                    Active Embargoes
+                </h2>
+
+                {% if active_embargoes %}
+                {% for embargo in active_embargoes %}
+                <div class="embargo-card">
+                    <div class="embargo-header">
+                        <img src="{{ url_for('static', filename='images/country-flags/' + embargo.target_country.flag_code + '.png') }}"
+                             alt="{{ embargo.target_country.name }}"
+                             class="embargo-flag"
+                             onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                        <div class="embargo-info">
+                            <div class="embargo-country">{{ embargo.target_country.name }}</div>
+                            <div class="embargo-date">Since {{ embargo.started_at.strftime('%b %d, %Y') }}</div>
+                        </div>
+                        <span class="embargo-badge">Active</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <p>No active trade embargoes.</p>
+                </div>
+                {% endif %}
+
+                <!-- Embargoes received (from other countries) -->
+                {% if received_embargoes %}
+                <h3 style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 1.5rem 0 0.75rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <i class="fas fa-exclamation-triangle" style="color: #fbbf24;"></i>
+                    Embargoes Against {{ country.name }}
+                </h3>
+                {% for embargo in received_embargoes %}
+                <div class="embargo-card" style="background: rgba(251, 191, 36, 0.05); border-color: rgba(251, 191, 36, 0.2);">
+                    <div class="embargo-header">
+                        <img src="{{ url_for('static', filename='images/country-flags/' + embargo.imposing_country.flag_code + '.png') }}"
+                             alt="{{ embargo.imposing_country.name }}"
+                             class="embargo-flag"
+                             onerror="this.src='{{ url_for('static', filename='images/country-flags/default.png') }}'">
+                        <div class="embargo-info">
+                            <div class="embargo-country">{{ embargo.imposing_country.name }}</div>
+                            <div class="embargo-date">Since {{ embargo.started_at.strftime('%b %d, %Y') }}</div>
+                        </div>
+                        <span class="embargo-badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">Imposed</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Peace Treaties Section -->
+            {% if peace_treaties %}
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-dove"></i>
+                    Peace Proposals
+                </h2>
+
+                {% for war in peace_treaties %}
+                <div class="vote-card">
+                    <div class="vote-header">
+                        <span class="vote-type">Peace with {{ war.attacker_country.name if war.attacker_country_id != country.id else war.defender_country.name }}</span>
+                        <span class="vote-badge">Voting</span>
+                    </div>
+                    <div class="vote-detail">War started {{ war.started_at.strftime('%b %d, %Y') }}</div>
+                    <a href="{{ url_for('battle.war_detail', war_id=war.id) }}" class="vote-btn">
+                        <i class="fas fa-vote-yea"></i> View & Vote
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Minister Card -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-user-tie"></i>
+                    Foreign Affairs Minister
+                </h2>
+
+                {% if foreign_affairs_minister %}
+                <div class="minister-card">
+                    <div class="minister-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="minister-info">
+                        <div class="minister-role">Minister</div>
+                        <div class="minister-name">
+                            <a href="{{ url_for('main.view_profile', user_id=foreign_affairs_minister.user.id) }}">
+                                {{ foreign_affairs_minister.user.username }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-user-slash"></i>
+                    <p>Position Vacant</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Pending Votes -->
+            {% if pending_votes %}
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-hourglass-half"></i>
+                    Pending Votes
+                </h2>
+
+                {% for law in pending_votes %}
+                <div class="vote-card">
+                    <div class="vote-header">
+                        <span class="vote-type">
+                            {% if law.law_type.name == 'EMBARGO' %}
+                            Trade Embargo
+                            {% elif law.law_type.name == 'REMOVE_EMBARGO' %}
+                            Lift Embargo
+                            {% elif 'ALLIANCE' in law.law_type.name %}
+                            Alliance Vote
+                            {% else %}
+                            {{ law.law_type.name|replace('_', ' ')|title }}
+                            {% endif %}
+                        </span>
+                        <span class="vote-badge">Voting</span>
+                    </div>
+                    <div class="vote-detail">
+                        {% if law.law_details.get('target_country_name') %}
+                        Target: {{ law.law_details.get('target_country_name') }}
+                        {% endif %}
+                    </div>
+                    <div class="vote-progress">
+                        <span class="vote-for"><i class="fas fa-check"></i> {{ law.votes_for }} For</span>
+                        <span class="vote-against"><i class="fas fa-times"></i> {{ law.votes_against }} Against</span>
+                    </div>
+                    <a href="{{ url_for('government.view_law', law_id=law.id) }}" class="vote-btn">
+                        <i class="fas fa-vote-yea"></i> View & Vote
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            {% if is_president or is_foreign_affairs_minister %}
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-bolt"></i>
+                    Quick Actions
+                </h2>
+
+                <a href="{{ url_for('government.propose_law') }}" class="action-btn action-btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.5rem;">
+                    <i class="fas fa-ban"></i>
+                    Propose Embargo
+                </a>
+
+                <a href="{{ url_for('government.alliances') }}" class="action-btn action-btn-secondary" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-handshake"></i>
+                    Manage Alliances
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock main_layout %}

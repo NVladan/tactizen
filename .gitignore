@@ -1,0 +1,128 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+.venv
+
+# Flask
+instance/
+.webassets-cache
+
+# Logs
+logs/*.log
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables - NEVER COMMIT THESE
+.env
+.env.local
+.env.production
+.flaskenv
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+_nul
+
+# Uploads
+uploads/
+!uploads/.gitkeep
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Migration temporary files
+migrations/versions/*.pyc
+
+# Node.js (Hardhat/Blockchain dev)
+node_modules/
+package-lock.json
+
+# Hardhat/Solidity artifacts (can be regenerated)
+artifacts/
+cache/
+
+# Temporary/development files
+*.tmp
+*.temp
+*.bak
+
+# Development scripts (one-off utilities)
+check_*.py
+fix_*.py
+clear_*.py
+test_*.py
+!test_error_handling.py
+!test_security_headers.py
+!test_session_security.py
+add_*.py
+!add_resources.py
+sync_*.py
+restore_*.py
+update_*.py
+apply_*.py
+complete_*.py
+reset_*.py
+burn_nft.js
+send_testzen.py
+set_test_wallet.py
+upload_*.py
+optimize_*.py
+migration_output.txt
+nft_config_update.txt
+
+# NFT data (can be regenerated)
+nft_ipfs_data/
+nft_image_cids.json
+
+# Temporary documentation (internal dev notes)
+todolistzenl3migration.md
+NFT_BLOCKCHAIN_INTEGRATION_COMPLETE.md
+
+# Contract deployment data (contains addresses)
+contracts.json
+rollup.json
+
+# Claude settings (local preferences)
+.claude/
+
+# Empty directories placeholders
+apptemplateserrors/
+appmainprofile_routes.py

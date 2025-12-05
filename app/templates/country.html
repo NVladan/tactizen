@@ -1,0 +1,2074 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ title }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .country-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        padding: 2.5rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 197, 94, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .country-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at top right, rgba(34, 197, 94, 0.05) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .country-flag {
+        width: 80px;
+        height: 53px;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3), 0 0 20px rgba(34, 197, 94, 0.2);
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .country-flag:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.4), 0 0 30px rgba(34, 197, 94, 0.3);
+    }
+
+    /* Country Selector */
+    .country-selector-wrapper {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 10;
+    }
+
+    .country-selector {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        color: #ffffff;
+        font-size: 0.9rem;
+        cursor: pointer;
+        min-width: 200px;
+        transition: all 0.3s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2322c55e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2.5rem;
+    }
+
+    .country-selector:hover {
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+    }
+
+    .country-selector:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+    }
+
+    .country-selector option {
+        background: #1a1f2e;
+        color: #ffffff;
+        padding: 0.5rem;
+    }
+
+    .country-selector-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        margin-bottom: 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .country-selector-label i {
+        color: #22c55e;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        height: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        margin-right: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .nav-pills .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.875rem 1.5rem;
+        font-weight: 500;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .nav-pills .nav-link:hover {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        border-color: rgba(34, 197, 94, 0.2);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.15);
+    }
+
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+        border-color: transparent;
+    }
+
+    .region-list-item {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        padding: 1.25rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .region-list-item:hover {
+        background: linear-gradient(135deg, #1f2634 0%, #14191f 100%);
+        transform: translateX(8px);
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .region-list-item a {
+        color: #ffffff;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 500;
+    }
+
+    .region-list-item i {
+        color: #22c55e;
+        transition: all 0.3s ease;
+    }
+
+    .region-list-item:hover i {
+        filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.5));
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #22c55e;
+        font-family: 'Roboto Mono', monospace;
+        text-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .world-stat {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(34, 197, 94, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .world-stat:hover {
+        background: rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-header {
+        background: rgba(34, 197, 94, 0.05);
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        color: #ffffff;
+        padding: 1.25rem 1.5rem;
+        font-weight: 600;
+    }
+
+    .card-header i {
+        color: #22c55e;
+        filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.3));
+    }
+
+    .btn-outline-primary {
+        color: #22c55e;
+        border-color: rgba(34, 197, 94, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background: #22c55e;
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        border-color: #22c55e;
+    }
+
+    /* Animation on load */
+    .stat-card {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Politics Tab Styles */
+    .election-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .election-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .election-badge {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .election-badge.nominations {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .election-badge.voting {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .election-badge.applications {
+        background: rgba(168, 85, 247, 0.2);
+        color: #a855f7;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .position-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        height: 100%;
+    }
+
+    .position-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .position-icon {
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        font-size: 1.75rem;
+        margin: 0 auto 1rem;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+    }
+
+    .congress-member {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .congress-member:hover {
+        background: linear-gradient(135deg, #1f2634 0%, #14191f 100%);
+        border-color: rgba(34, 197, 94, 0.3);
+        transform: translateX(5px);
+    }
+
+    .rank-badge {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+
+    .action-button {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .action-button:disabled {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .status-text {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        font-style: italic;
+    }
+
+    /* Law Card Styles */
+    .law-card {
+        background: linear-gradient(135deg, #1a2433 0%, #0f1419 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 16px;
+        padding: 1.25rem;
+        height: 100%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .law-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(59, 130, 246, 0.5);
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+    }
+
+    .law-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .law-icon {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #3b82f6;
+    }
+
+    .law-title-section {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .law-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0 0 0.25rem 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .law-proposer {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .law-proposer a {
+        color: #22c55e;
+        text-decoration: none;
+    }
+
+    .law-proposer a:hover {
+        text-decoration: underline;
+    }
+
+    .law-status {
+        flex-shrink: 0;
+    }
+
+    .law-status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .law-status-badge.voting {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+    }
+
+    .law-status-badge.passed {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        box-shadow: 0 2px 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .law-status-badge.rejected {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+    }
+
+    .law-status-badge.expired {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+        box-shadow: 0 2px 10px rgba(107, 114, 128, 0.3);
+    }
+
+    /* Law card variants for passed/rejected/expired */
+    .law-card.law-passed {
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .law-card.law-passed:hover {
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.15);
+    }
+
+    .law-card.law-rejected {
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .law-card.law-rejected:hover {
+        border-color: rgba(239, 68, 68, 0.5);
+        box-shadow: 0 8px 30px rgba(239, 68, 68, 0.15);
+    }
+
+    .law-card.law-expired {
+        border-color: rgba(107, 114, 128, 0.3);
+    }
+
+    .law-card.law-expired:hover {
+        border-color: rgba(107, 114, 128, 0.5);
+        box-shadow: 0 8px 30px rgba(107, 114, 128, 0.15);
+    }
+
+    .law-footer {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: right;
+    }
+
+    .law-voting {
+        margin-bottom: 1rem;
+    }
+
+    .vote-bar {
+        display: flex;
+        height: 32px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.3);
+        margin-bottom: 0.5rem;
+    }
+
+    .vote-for {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        transition: width 0.3s ease;
+    }
+
+    .vote-for span {
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .vote-against {
+        background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        transition: width 0.3s ease;
+    }
+
+    .vote-against span {
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .vote-labels {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .vote-label {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .vote-label.for {
+        color: #22c55e;
+    }
+
+    .vote-label.against {
+        color: #ef4444;
+    }
+
+    .law-details {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+    }
+
+    .detail-label {
+        color: rgba(255, 255, 255, 0.5);
+        margin-right: 0.5rem;
+    }
+
+    .detail-value {
+        font-weight: 600;
+    }
+
+    .law-action {
+        margin-top: auto;
+    }
+
+    .btn-law-vote {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+        color: #3b82f6;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-law-vote:hover {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .no-laws-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+    }
+
+    .no-laws-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+    .no-laws-icon i {
+        font-size: 2rem;
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* War Card Styles */
+    .war-card {
+        background: linear-gradient(135deg, #2d1f1f 0%, #1a0f0f 100%);
+        border: 2px solid rgba(239, 68, 68, 0.4);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2), inset 0 0 60px rgba(239, 68, 68, 0.05);
+        position: relative;
+    }
+
+    .war-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+        animation: warGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes warGlow {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+    }
+
+    .war-card-inner {
+        padding: 1.5rem;
+    }
+
+    .war-status {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .war-status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .war-status-badge.active {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .war-status-badge.peace {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+        color: #1a1a1a;
+        box-shadow: 0 0 20px rgba(234, 179, 8, 0.4);
+    }
+
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+        50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
+    }
+
+    .war-battle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.5rem 0;
+    }
+
+    .war-side {
+        flex: 1;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .war-side.attacker {
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .war-side.defender {
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .war-country-flag {
+        margin-bottom: 0.75rem;
+    }
+
+    .war-country-flag img {
+        width: 64px;
+        height: 42px;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .war-country-flag i {
+        font-size: 2.5rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .war-country-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .war-country-name a:hover {
+        color: #22c55e !important;
+    }
+
+    .war-vs {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 1rem;
+    }
+
+    .war-vs-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+    }
+
+    .war-vs-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .war-vs span {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #f97316;
+        text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+    }
+
+    .war-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 0.5rem;
+    }
+
+    .war-dates {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .peace-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, #1a2e1a 0%, #0f190f 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+    }
+
+    .peace-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+    .peace-icon i {
+        font-size: 2.5rem;
+        color: #22c55e;
+    }
+
+    @media (max-width: 768px) {
+        .war-battle {
+            flex-direction: column;
+        }
+
+        .war-vs {
+            flex-direction: row;
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .war-footer {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .war-dates {
+            align-items: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="country-content-container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+{# --- Country Header --- #}
+<div class="country-header">
+    <!-- Country Selector -->
+    <div class="country-selector-wrapper">
+        <div class="country-selector-label">
+            <i class="fas fa-exchange-alt"></i>
+            <span>View Country</span>
+        </div>
+        <select class="country-selector" id="countrySelector" onchange="switchCountry(this.value)">
+            {% for c in all_countries %}
+            <option value="{{ c.slug }}" {% if c.id == country.id %}selected{% endif %}>
+                {{ c.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="d-flex align-items-center position-relative">
+        {% if country.flag_code %}
+        <img src="{{ url_for('static', filename='images/country-flags/' + country.flag_code + '.png') }}"
+             alt="{{ country.name }} Flag" class="country-flag me-4">
+        {% endif %}
+        <div>
+            <h1 class="mb-3 text-white" style="text-shadow: 0 0 20px rgba(34, 197, 94, 0.3); font-size: 2.5rem; font-weight: 700;">{{ country.name }} <small class="text-muted" style="font-size: 0.5em;">#{{ country.id }}</small></h1>
+            <div class="d-flex gap-3 flex-wrap">
+                <span class="world-stat">
+                    <i class="fas fa-globe me-2"></i>World Rank: #{{ country.world_rank }}
+                </span>
+                <span class="world-stat">
+                    <i class="fas fa-users me-2"></i>Population: {{ '{:,}'.format(country.population|default(0)|int) }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# --- Country Stats --- #}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ country.reserved_gold|default(0)|round(2) }}</div>
+                    <div class="stat-label">Reserved Gold</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ country.currency_code }}</div>
+                    <div class="stat-label">Currency</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ country.gdp|default(0)|round(2) }}</div>
+                    <div class="stat-label">GDP</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ country.military_power|default(0)|round(2) }}</div>
+                    <div class="stat-label">Military Power</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# --- Citizen Stats --- #}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
+                    <i class="fas fa-circle" style="color: #22c55e; font-size: 0.6rem;"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ online_now_count }}</div>
+                    <div class="stat-label">Online Now</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ new_citizens_today }}</div>
+                    <div class="stat-label">New Today</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ active_citizens_count }}</div>
+                    <div class="stat-label">Citizens</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ avg_level }}</div>
+                    <div class="stat-label">Avg Level</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# --- Country Navigation --- #}
+<ul class="nav nav-pills nav-fill mb-4">
+    <li class="nav-item">
+        <a class="nav-link active" href="#overview" data-bs-toggle="tab">
+            <i class="fas fa-info-circle me-2"></i>Overview
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#economy" data-bs-toggle="tab">
+            <i class="fas fa-chart-pie me-2"></i>Economy
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#military" data-bs-toggle="tab">
+            <i class="fas fa-shield-alt me-2"></i>Military
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#politics" data-bs-toggle="tab">
+            <i class="fas fa-landmark me-2"></i>Politics
+        </a>
+    </li>
+</ul>
+
+{# --- Tab Content --- #}
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="overview">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2 text-primary"></i>Regions ({{ current_regions | length }})</h5>
+                <button class="btn btn-sm btn-outline-primary" disabled>
+                    <i class="fas fa-map me-2"></i>View on Map
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for region in current_regions %}
+                    <div class="region-list-item">
+                        <a href="{{ url_for('main.region', slug=region.slug) }}">
+                            <div>
+                                <i class="fas fa-location-dot me-2"></i>
+                                {{ region.name }}
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-map-signs mb-2 d-block" style="font-size: 2rem;"></i>
+                        This country currently holds no regions.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Economy Tab --- #}
+    <div class="tab-pane fade" id="economy">
+        {# Treasury Section #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-university me-2"></i>Country Treasury</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-value">{{ (country.treasury_gold|default(0) - country.reserved_gold|default(0))|round(2) }}</div>
+                                    <div class="stat-label">Available Gold</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-value">{{ (country.treasury_currency|default(0) - country.reserved_currency|default(0))|round(2) }}</div>
+                                    <div class="stat-label">Available {{ country.currency_code }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Tax Rates Section #}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-percentage me-2"></i>Tax Rates</h5>
+                {% if current_user.is_authenticated and minister_finance and current_user.id == minister_finance.user_id %}
+                <a href="{{ url_for('government.propose_law') }}" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-edit me-1"></i>Propose Tax Change
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #1a2e1a 0%, #0f190f 100%);">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon" style="background: rgba(34, 197, 94, 0.15);">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-value">{{ country.vat_tax_rate|default(5)|round(2) }}%</div>
+                                    <div class="stat-label">VAT (Sales Tax)</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>Applied when companies sell goods to market
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #2e1a1a 0%, #190f0f 100%);">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                                    <i class="fas fa-plane-arrival"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-value" style="color: #ef4444;">{{ country.import_tax_rate|default(10)|round(2) }}%</div>
+                                    <div class="stat-label">Import Tax</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>Applied to foreign companies (bypassed with export license)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #1a1a2e 0%, #0f0f19 100%);">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-value" style="color: #3b82f6;">{{ country.work_tax_rate|default(10)|round(2) }}%</div>
+                                    <div class="stat-label">Work Tax</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>Applied to worker wages from employment
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Tax Information Section #}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>How Taxes Work</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="stat-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-2">VAT (Sales Tax)</h6>
+                                <p class="text-muted small mb-0">
+                                    When companies sell products to the country market, {{ country.vat_tax_rate|default(5)|round(2) }}% of the sale proceeds go to the treasury. This applies to all goods regardless of origin.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="stat-icon" style="width: 40px; height: 40px; font-size: 1.25rem; background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                                <i class="fas fa-plane-arrival"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-2">Import Tax</h6>
+                                <p class="text-muted small mb-0">
+                                    Foreign companies selling to this market pay an additional {{ country.import_tax_rate|default(10)|round(2) }}% import tax. Companies can purchase an export license (20 Gold) to bypass this tax.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="stat-icon" style="width: 40px; height: 40px; font-size: 1.25rem; background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-2">Work Tax</h6>
+                                <p class="text-muted small mb-0">
+                                    Workers pay {{ country.work_tax_rate|default(10)|round(2) }}% tax on wages earned from employment. The tax is automatically deducted from wages and goes to the treasury.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-lightbulb text-success"></i>
+                        <strong class="text-white">Tax Revenue</strong>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2">
+                        All tax revenue flows directly to the country treasury and can be used by the government for country development, military expenses, and public services. Tax rates can be changed through laws proposed by the Minister of Finance and approved by Congress.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Military Tab --- #}
+    <div class="tab-pane fade" id="military">
+        {# Active Wars #}
+        <div class="mb-4">
+            <h4 class="text-white mb-3"><i class="fas fa-bomb me-2 text-danger"></i>Active Wars</h4>
+
+            {% if active_wars %}
+                <div class="row g-3">
+                    {% for war in active_wars %}
+                    <div class="col-12">
+                        <div class="war-card">
+                            <div class="war-card-inner">
+                                {# Status Badge #}
+                                <div class="war-status">
+                                    {% if war.status.name == 'ACTIVE' %}
+                                        <span class="war-status-badge active">
+                                            <i class="fas fa-fire me-1"></i>WAR
+                                        </span>
+                                    {% elif war.status.name == 'PEACE_PROPOSED' %}
+                                        <span class="war-status-badge peace">
+                                            <i class="fas fa-dove me-1"></i>PEACE PROPOSED
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                {# Battle Display #}
+                                <div class="war-battle">
+                                    {# Attacker Side #}
+                                    <div class="war-side attacker">
+                                        <div class="war-country-flag">
+                                            {% if war.attacker_country.flag_code %}
+                                                <img src="{{ url_for('static', filename='images/country-flags/' + war.attacker_country.flag_code + '.png') }}" alt="{{ war.attacker_country.name }}">
+                                            {% else %}
+                                                <i class="fas fa-flag"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="war-country-name">
+                                            <a href="{{ url_for('main.country', slug=war.attacker_country.slug) }}" class="text-white text-decoration-none">
+                                                {{ war.attacker_country.name }}
+                                            </a>
+                                        </div>
+                                        <div class="war-role">
+                                            <span class="badge bg-danger">Attacker</span>
+                                        </div>
+                                    </div>
+
+                                    {# VS Divider #}
+                                    <div class="war-vs">
+                                        <div class="war-vs-icon">
+                                            <i class="fas fa-bolt"></i>
+                                        </div>
+                                        <span>VS</span>
+                                    </div>
+
+                                    {# Defender Side #}
+                                    <div class="war-side defender">
+                                        <div class="war-country-flag">
+                                            {% if war.defender_country.flag_code %}
+                                                <img src="{{ url_for('static', filename='images/country-flags/' + war.defender_country.flag_code + '.png') }}" alt="{{ war.defender_country.name }}">
+                                            {% else %}
+                                                <i class="fas fa-flag"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="war-country-name">
+                                            <a href="{{ url_for('main.country', slug=war.defender_country.slug) }}" class="text-white text-decoration-none">
+                                                {{ war.defender_country.name }}
+                                            </a>
+                                        </div>
+                                        <div class="war-role">
+                                            <span class="badge bg-info">Defender</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {# War Info Footer #}
+                                <div class="war-footer">
+                                    <div class="war-dates">
+                                        <span><i class="fas fa-calendar-alt me-1"></i>Started: {{ war.started_at.strftime('%b %d, %Y') }}</span>
+                                        <span><i class="fas fa-hourglass-half me-1"></i>Ends: {{ war.scheduled_end_at.strftime('%b %d, %Y') }}</span>
+                                    </div>
+                                    <a href="{{ url_for('government.view_war', war_id=war.id) }}" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-crosshairs me-1"></i>View War
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="peace-state">
+                    <div class="peace-icon">
+                        <i class="fas fa-dove"></i>
+                    </div>
+                    <h5 class="text-white mb-2">{{ country.name }} is at Peace</h5>
+                    <p class="text-muted mb-0">No active military conflicts</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {# Military Stats placeholder #}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Military Statistics</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted text-center py-4">More military data coming soon...</p>
+            </div>
+        </div>
+    </div>
+
+    {# --- Politics Tab --- #}
+    <div class="tab-pane fade" id="politics">
+        {# Party President Notice #}
+        {% if current_user.is_authenticated and current_user.party and current_user.party.president_id == current_user.id %}
+        <div class="alert alert-info mb-4">
+            <i class="fas fa-crown me-2"></i>
+            <strong>Party President:</strong> You can approve/reject congressional candidates from your party in the detailed election pages.
+        </div>
+        {% endif %}
+
+        {# Current Government Officials #}
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="position-card">
+                    <div class="position-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <h4 class="text-center text-white mb-3">Country President</h4>
+                    {% if current_president %}
+                        <div class="text-center">
+                            <a href="{{ url_for('main.view_profile', username=current_president.user.username) }}"
+                               class="text-success text-decoration-none fs-5 fw-bold">
+                                {{ current_president.user.username }}
+                            </a>
+                            <p class="text-muted mt-2 mb-0">
+                                <i class="fas fa-calendar me-1"></i>
+                                Term: {{ current_president.term_start.strftime('%b %d') }} - {{ current_president.term_end.strftime('%b %d, %Y') }}
+                            </p>
+                            {% if current_president.user.party %}
+                            <p class="text-muted mt-1">
+                                <i class="fas fa-flag me-1"></i>
+                                <a href="{{ url_for('party.detail', party_id=current_president.user.party.id) }}"
+                                   class="text-success text-decoration-none">
+                                    {{ current_president.user.party.name }}
+                                </a>
+                            </p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">
+                            <i class="fas fa-user-slash d-block mb-2 fs-1"></i>
+                            No current president
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="position-card">
+                    <div class="position-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h4 class="text-center text-white mb-3">Congress ({{ total_congress_count }})</h4>
+                    {% if current_congress %}
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            {% for member in current_congress %}
+                            <div class="congress-member d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rank-badge">{{ member.final_rank }}</div>
+                                    <div>
+                                        <a href="{{ url_for('main.view_profile', username=member.user.username) }}"
+                                           class="text-white text-decoration-none fw-bold">
+                                            {{ member.user.username }}
+                                        </a>
+                                        {% if member.party %}
+                                        <div class="text-muted small">
+                                            <a href="{{ url_for('party.detail', party_id=member.party.id) }}"
+                                               class="text-success text-decoration-none">
+                                                {{ member.party.name }}
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <span class="text-muted small">{{ member.votes_received }} votes</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if total_congress_count > 10 %}
+                        <p class="text-center text-muted mt-3 mb-0 small">
+                            Showing top 10 of {{ total_congress_count }} members
+                        </p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-center text-muted">
+                            <i class="fas fa-user-slash d-block mb-2 fs-1"></i>
+                            No active congress
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Government Cabinet #}
+        <div class="mb-4">
+            <h4 class="text-white mb-3"><i class="fas fa-briefcase me-2"></i>Government Cabinet</h4>
+            <div class="row g-3">
+                {# Minister of Foreign Affairs #}
+                <div class="col-md-4">
+                    <div class="position-card">
+                        <div class="position-icon" style="background: rgba(59, 130, 246, 0.1);">
+                            <i class="fas fa-globe" style="color: #3b82f6;"></i>
+                        </div>
+                        <h5 class="text-center text-white mb-3">Minister of Foreign Affairs</h5>
+                        {% if minister_foreign_affairs %}
+                            <div class="text-center">
+                                {% if minister_foreign_affairs.user.avatar %}
+                                    <img src="{{ url_for('static', filename='avatars/' + minister_foreign_affairs.user.avatar) }}"
+                                         alt="Avatar"
+                                         class="rounded-circle mb-2"
+                                         style="width: 64px; height: 64px; object-fit: cover; border: 2px solid #3b82f6;">
+                                {% else %}
+                                    <i class="fas fa-user-circle text-muted mb-2" style="font-size: 64px;"></i>
+                                {% endif %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('main.view_profile', username=minister_foreign_affairs.user.username) }}"
+                                       class="text-success text-decoration-none fs-6 fw-bold d-block">
+                                        {{ minister_foreign_affairs.user.username }}
+                                    </a>
+                                    <p class="text-muted small mb-1">Level {{ minister_foreign_affairs.user.level }}</p>
+                                    {% if minister_foreign_affairs.user.party %}
+                                    <a href="{{ url_for('party.detail', party_id=minister_foreign_affairs.user.party.id) }}"
+                                       class="text-success text-decoration-none small">
+                                        <i class="fas fa-flag me-1"></i>{{ minister_foreign_affairs.user.party.name }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% if current_user.is_authenticated and current_user.id == minister_foreign_affairs.user_id %}
+                                    <button class="btn btn-sm btn-outline-danger mt-2" onclick="resignMinister('{{ minister_foreign_affairs.id }}')">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Resign
+                                    </button>
+                                {% endif %}
+                                {% if current_user.is_authenticated and current_president and current_user.id == current_president.user_id %}
+                                    <button class="btn btn-sm btn-outline-warning mt-2" onclick="showAssignMinister('foreign_affairs')">
+                                        <i class="fas fa-user-edit me-1"></i>Change
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-center">
+                                <i class="fas fa-user-slash d-block mb-2 fs-1 text-muted"></i>
+                                <p class="text-muted small">Position vacant</p>
+                                {% if current_user.is_authenticated and current_president and current_user.id == current_president.user_id %}
+                                    <button class="btn btn-sm btn-success mt-2" onclick="showAssignMinister('foreign_affairs')">
+                                        <i class="fas fa-user-plus me-1"></i>Assign Minister
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Minister of Defence #}
+                <div class="col-md-4">
+                    <div class="position-card">
+                        <div class="position-icon" style="background: rgba(239, 68, 68, 0.1);">
+                            <i class="fas fa-shield-alt" style="color: #ef4444;"></i>
+                        </div>
+                        <h5 class="text-center text-white mb-3">Minister of Defence</h5>
+                        {% if minister_defence %}
+                            <div class="text-center">
+                                {% if minister_defence.user.avatar %}
+                                    <img src="{{ url_for('static', filename='avatars/' + minister_defence.user.avatar) }}"
+                                         alt="Avatar"
+                                         class="rounded-circle mb-2"
+                                         style="width: 64px; height: 64px; object-fit: cover; border: 2px solid #ef4444;">
+                                {% else %}
+                                    <i class="fas fa-user-circle text-muted mb-2" style="font-size: 64px;"></i>
+                                {% endif %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('main.view_profile', username=minister_defence.user.username) }}"
+                                       class="text-success text-decoration-none fs-6 fw-bold d-block">
+                                        {{ minister_defence.user.username }}
+                                    </a>
+                                    <p class="text-muted small mb-1">Level {{ minister_defence.user.level }}</p>
+                                    {% if minister_defence.user.party %}
+                                    <a href="{{ url_for('party.detail', party_id=minister_defence.user.party.id) }}"
+                                       class="text-success text-decoration-none small">
+                                        <i class="fas fa-flag me-1"></i>{{ minister_defence.user.party.name }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% if current_user.is_authenticated and current_user.id == minister_defence.user_id %}
+                                    <button class="btn btn-sm btn-outline-danger mt-2" onclick="resignMinister('{{ minister_defence.id }}')">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Resign
+                                    </button>
+                                {% endif %}
+                                {% if current_user.is_authenticated and current_president and current_user.id == current_president.user_id %}
+                                    <button class="btn btn-sm btn-outline-warning mt-2" onclick="showAssignMinister('defence')">
+                                        <i class="fas fa-user-edit me-1"></i>Change
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-center">
+                                <i class="fas fa-user-slash d-block mb-2 fs-1 text-muted"></i>
+                                <p class="text-muted small">Position vacant</p>
+                                {% if current_user.is_authenticated and current_president and current_user.id == current_president.user_id %}
+                                    <button class="btn btn-sm btn-success mt-2" onclick="showAssignMinister('defence')">
+                                        <i class="fas fa-user-plus me-1"></i>Assign Minister
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Minister of Finance #}
+                <div class="col-md-4">
+                    <div class="position-card">
+                        <div class="position-icon" style="background: rgba(234, 179, 8, 0.1);">
+                            <i class="fas fa-coins" style="color: #eab308;"></i>
+                        </div>
+                        <h5 class="text-center text-white mb-3">Minister of Finance</h5>
+                        {% if minister_finance %}
+                            <div class="text-center">
+                                {% if minister_finance.user.avatar %}
+                                    <img src="{{ url_for('static', filename='avatars/' + minister_finance.user.avatar) }}"
+                                         alt="Avatar"
+                                         class="rounded-circle mb-2"
+                                         style="width: 64px; height: 64px; object-fit: cover; border: 2px solid #eab308;">
+                                {% else %}
+                                    <i class="fas fa-user-circle text-muted mb-2" style="font-size: 64px;"></i>
+                                {% endif %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('main.view_profile', username=minister_finance.user.username) }}"
+                                       class="text-success text-decoration-none fs-6 fw-bold d-block">
+                                        {{ minister_finance.user.username }}
+                                    </a>
+                                    <p class="text-muted small mb-1">Level {{ minister_finance.user.level }}</p>
+                                    {% if minister_finance.user.party %}
+                                    <a href="{{ url_for('party.detail', party_id=minister_finance.user.party.id) }}"
+                                       class="text-success text-decoration-none small">
+                                        <i class="fas fa-flag me-1"></i>{{ minister_finance.user.party.name }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% if current_user.is_authenticated and current_user.id == minister_finance.user_id %}
+                                    <button class="btn btn-sm btn-outline-danger mt-2" onclick="resignMinister('{{ minister_finance.id }}')">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Resign
+                                    </button>
+                                {% endif %}
+                                {% if current_user.is_authenticated and current_president and current_user.id == current_president.user_id %}
+                                    <button class="btn btn-sm btn-outline-warning mt-2" onclick="showAssignMinister('finance')">
+                                        <i class="fas fa-user-edit me-1"></i>Change
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-center">
+                                <i class="fas fa-user-slash d-block mb-2 fs-1 text-muted"></i>
+                                <p class="text-muted small">Position vacant</p>
+                                {% if current_user.is_authenticated and current_president and current_user.id == current_president.user_id %}
+                                    <button class="btn btn-sm btn-success mt-2" onclick="showAssignMinister('finance')">
+                                        <i class="fas fa-user-plus me-1"></i>Assign Minister
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Active Elections #}
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-white mb-0"><i class="fas fa-vote-yea me-2"></i>Active Elections</h4>
+            <a href="{{ url_for('government.elections') }}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-list me-1"></i>View All Elections
+            </a>
+        </div>
+
+        {% if active_elections %}
+            {# Separate elections by type #}
+            {% set presidential_election = active_elections | selectattr('election_type.name', 'equalto', 'PRESIDENTIAL') | first %}
+            {% set congressional_election = active_elections | selectattr('election_type.name', 'equalto', 'CONGRESSIONAL') | first %}
+
+            <div class="row g-3">
+                {# Presidential Election Column #}
+                <div class="col-md-6">
+                    {% if presidential_election %}
+                        {% set election = presidential_election %}
+                    <div class="election-card">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="text-white mb-2">
+                                    <i class="fas fa-{{ 'crown' if election.election_type.name == 'PRESIDENTIAL' else 'users' }} me-2"></i>
+                                    {{ election.election_type.value.title() }} Election
+                                    <a href="{{ url_for('government.election_detail', election_id=election.id) }}"
+                                       class="text-success text-decoration-none ms-2"
+                                       style="font-size: 0.9rem; font-weight: normal;">
+                                        <i class="fas fa-external-link-alt me-1"></i>View Details
+                                    </a>
+                                </h5>
+                                {% if election.status.name == 'NOMINATIONS' %}
+                                    {% if election.election_type.name == 'PRESIDENTIAL' %}
+                                        <span class="election-badge nominations">
+                                            <i class="fas fa-user-plus me-1"></i>Nominations Open
+                                        </span>
+                                    {% else %}
+                                        <span class="election-badge applications">
+                                            <i class="fas fa-file-alt me-1"></i>Applications Open
+                                        </span>
+                                    {% endif %}
+                                {% elif election.status.name == 'APPLICATIONS' %}
+                                    <span class="election-badge applications">
+                                        <i class="fas fa-file-alt me-1"></i>Applications Open
+                                    </span>
+                                {% elif election.status.name == 'VOTING' %}
+                                    <span class="election-badge voting">
+                                        <i class="fas fa-check-to-slot me-1"></i>Voting Open
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="text-end text-muted small">
+                                {% if election.status.name in ['NOMINATIONS', 'APPLICATIONS'] %}
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Until {{ election.nominations_end.strftime('%b %d, %H:%M') }}
+                                {% elif election.status.name == 'VOTING' %}
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Until {{ election.voting_end.strftime('%b %d, %H:%M') }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {% if election.election_type.name == 'PRESIDENTIAL' %}
+                                    Party presidents can nominate one candidate from their party.
+                                {% else %}
+                                    Party members can apply to run. Applications must be approved by party president.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        {% if current_user.is_authenticated and current_user.citizenship_id == country.id %}
+                            {% set user_candidacy = user_candidacies.get(election.id) %}
+
+                            {% if user_candidacy %}
+                                {# User is already a candidate #}
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    You are a candidate in this election
+                                    {% if user_candidacy.status.name == 'PENDING' %}
+                                        <span class="badge bg-warning ms-2">Pending Approval</span>
+                                    {% elif user_candidacy.status.name == 'APPROVED' %}
+                                        <span class="badge bg-success ms-2">Approved</span>
+                                    {% endif %}
+                                </div>
+                            {% elif election.status.name == 'VOTING' %}
+                                {# Voting period #}
+                                <a href="{{ url_for('government.election_detail', election_id=election.id) }}"
+                                   class="action-button w-100 text-center d-block text-decoration-none">
+                                    <i class="fas fa-vote-yea me-2"></i>View Candidates & Vote
+                                </a>
+                            {% elif election.election_type.name == 'CONGRESSIONAL' and current_user.party and current_user.party.president_id == current_user.id and election.status.name in ['NOMINATIONS', 'APPLICATIONS'] %}
+                                {# Party president during congressional application period #}
+                                <a href="{{ url_for('government.election_detail', election_id=election.id) }}"
+                                   class="action-button w-100 text-center d-block text-decoration-none">
+                                    <i class="fas fa-clipboard-check me-2"></i>Review Applications
+                                </a>
+                            {% elif election.election_type.name == 'PRESIDENTIAL' %}
+                                {# Presidential nominations (party president only) #}
+                                {% if can_nominate_president and election.status.name == 'NOMINATIONS' %}
+                                    <a href="{{ url_for('government.election_detail', election_id=election.id) }}"
+                                       class="action-button w-100 text-center d-block text-decoration-none">
+                                        <i class="fas fa-user-plus me-2"></i>Nominate Candidate
+                                    </a>
+                                {% else %}
+                                    <p class="status-text mb-0">
+                                        {% if not current_user.party %}
+                                            <i class="fas fa-info-circle me-1"></i>Join a party to participate
+                                        {% elif current_user.party.president_id != current_user.id %}
+                                            <i class="fas fa-info-circle me-1"></i>Only party presidents can nominate
+                                        {% elif election.status.name != 'NOMINATIONS' %}
+                                            <i class="fas fa-clock me-1"></i>Nomination period closed
+                                        {% endif %}
+                                    </p>
+                                {% endif %}
+                            {% else %}
+                                {# Congressional applications (any party member) #}
+                                {% if can_apply_congress and election.status.name in ['NOMINATIONS', 'APPLICATIONS'] %}
+                                    <form action="{{ url_for('government.apply', election_id=election.id) }}" method="POST">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="action-button w-100">
+                                            <i class="fas fa-file-signature me-2"></i>Apply to Run for Congress
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <p class="status-text mb-0">
+                                        {% if not current_user.party %}
+                                            <i class="fas fa-info-circle me-1"></i>Join a party to run for congress
+                                        {% elif current_user.party.country_id != country.id %}
+                                            <i class="fas fa-info-circle me-1"></i>Your party must be in {{ country.name }}
+                                        {% elif election.status.name not in ['NOMINATIONS', 'APPLICATIONS'] %}
+                                            <i class="fas fa-clock me-1"></i>Application period closed
+                                        {% endif %}
+                                    </p>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <p class="status-text mb-0">
+                                <i class="fas fa-sign-in-alt me-1"></i>
+                                {% if not current_user.is_authenticated %}
+                                    Login to participate in elections
+                                {% else %}
+                                    You must be a citizen of {{ country.name }} to participate
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                        <div class="election-card">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-crown mb-2 d-block" style="font-size: 2rem; opacity: 0.5;"></i>
+                                <p class="mb-0">No active presidential election</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Congressional Election Column #}
+                <div class="col-md-6">
+                    {% if congressional_election %}
+                        {% set election = congressional_election %}
+                    <div class="election-card">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="text-white mb-2">
+                                    <i class="fas fa-users me-2"></i>
+                                    {{ election.election_type.value.title() }} Election
+                                    <a href="{{ url_for('government.election_detail', election_id=election.id) }}"
+                                       class="text-success text-decoration-none ms-2"
+                                       style="font-size: 0.9rem; font-weight: normal;">
+                                        <i class="fas fa-external-link-alt me-1"></i>View Details
+                                    </a>
+                                </h5>
+                                {% if election.status.name == 'NOMINATIONS' %}
+                                    <span class="election-badge applications">
+                                        <i class="fas fa-file-alt me-1"></i>Applications Open
+                                    </span>
+                                {% elif election.status.name == 'APPLICATIONS' %}
+                                    <span class="election-badge applications">
+                                        <i class="fas fa-file-alt me-1"></i>Applications Open
+                                    </span>
+                                {% elif election.status.name == 'VOTING' %}
+                                    <span class="election-badge voting">
+                                        <i class="fas fa-check-to-slot me-1"></i>Voting Open
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="text-end text-muted small">
+                                {% if election.status.name in ['NOMINATIONS', 'APPLICATIONS'] %}
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Until {{ election.nominations_end.strftime('%b %d, %H:%M') }}
+                                {% elif election.status.name == 'VOTING' %}
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Until {{ election.voting_end.strftime('%b %d, %H:%M') }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Party members can apply to run. Applications must be approved by party president.
+                            </p>
+                        </div>
+
+                        {% if current_user.is_authenticated and current_user.citizenship_id == country.id %}
+                            {% set user_candidacy = user_candidacies.get(election.id) %}
+
+                            {% if user_candidacy %}
+                                {# User is already a candidate #}
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    You are a candidate in this election
+                                    {% if user_candidacy.status.name == 'PENDING' %}
+                                        <span class="badge bg-warning ms-2">Pending Approval</span>
+                                    {% elif user_candidacy.status.name == 'APPROVED' %}
+                                        <span class="badge bg-success ms-2">Approved</span>
+                                    {% endif %}
+                                </div>
+                            {% elif election.status.name == 'VOTING' %}
+                                {# Voting period #}
+                                <a href="{{ url_for('government.election_detail', election_id=election.id) }}"
+                                   class="action-button w-100 text-center d-block text-decoration-none">
+                                    <i class="fas fa-vote-yea me-2"></i>View Candidates & Vote
+                                </a>
+                            {% elif current_user.party and current_user.party.president_id == current_user.id and election.status.name in ['NOMINATIONS', 'APPLICATIONS'] %}
+                                {# Party president during congressional application period #}
+                                <a href="{{ url_for('government.election_detail', election_id=election.id) }}"
+                                   class="action-button w-100 text-center d-block text-decoration-none">
+                                    <i class="fas fa-clipboard-check me-2"></i>Review Applications
+                                </a>
+                            {% else %}
+                                {# Congressional applications (any party member) #}
+                                {% if can_apply_congress and election.status.name in ['NOMINATIONS', 'APPLICATIONS'] %}
+                                    <form action="{{ url_for('government.apply', election_id=election.id) }}" method="POST">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="action-button w-100">
+                                            <i class="fas fa-file-signature me-2"></i>Apply to Run for Congress
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <p class="status-text mb-0">
+                                        {% if not current_user.party %}
+                                            <i class="fas fa-info-circle me-1"></i>Join a party to run for congress
+                                        {% elif current_user.party.country_id != country.id %}
+                                            <i class="fas fa-info-circle me-1"></i>Your party must be in {{ country.name }}
+                                        {% elif election.status.name not in ['NOMINATIONS', 'APPLICATIONS'] %}
+                                            <i class="fas fa-clock me-1"></i>Application period closed
+                                        {% endif %}
+                                    </p>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <p class="status-text mb-0">
+                                <i class="fas fa-sign-in-alt me-1"></i>
+                                {% if not current_user.is_authenticated %}
+                                    Login to participate in elections
+                                {% else %}
+                                    You must be a citizen of {{ country.name }} to participate
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                        <div class="election-card">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-users mb-2 d-block" style="font-size: 2rem; opacity: 0.5;"></i>
+                                <p class="mb-0">No active congressional election</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-inbox mb-3 d-block" style="font-size: 3rem; opacity: 0.5;"></i>
+                        <p class="mb-0">No active elections at this time</p>
+                        <small>Check back during election periods (1st-26th for both Presidential and Congressional)</small>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Minister Assignment Modal #}
+<div class="modal fade" id="assignMinisterModal" tabindex="-1" aria-labelledby="assignMinisterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(34, 197, 94, 0.2);">
+                <h5 class="modal-title text-white" id="assignMinisterModalLabel">Assign Minister</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('government.assign_minister') }}" id="assignMinisterForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body">
+                    <input type="hidden" name="country_id" value="{{ country.id }}">
+                    <input type="hidden" name="ministry_type" id="ministry_type_input">
+                    <input type="hidden" name="user_id" id="selected_user_id">
+
+                    <div class="mb-3">
+                        <label class="form-label text-white">Search for Citizen</label>
+                        <input type="text" class="form-control" id="citizen_search"
+                               placeholder="Type username to search..." autocomplete="off"
+                               style="background: #0f1419; border: 1px solid rgba(34, 197, 94, 0.3); color: #fff;">
+                        <div id="search_results" class="mt-2" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+
+                    <div id="selected_citizen" class="alert alert-success" style="display: none;">
+                        <strong>Selected:</strong> <span id="selected_username"></span>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="confirm_assign_btn" disabled>Assign Minister</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let searchTimeout;
+let currentMinistryType;
+
+function showAssignMinister(ministryType) {
+    currentMinistryType = ministryType;
+    document.getElementById('ministry_type_input').value = ministryType;
+    document.getElementById('citizen_search').value = '';
+    document.getElementById('search_results').innerHTML = '';
+    document.getElementById('selected_citizen').style.display = 'none';
+    document.getElementById('selected_user_id').value = '';
+    document.getElementById('confirm_assign_btn').disabled = true;
+
+    const modal = new bootstrap.Modal(document.getElementById('assignMinisterModal'));
+    modal.show();
+}
+
+// Citizen search with debounce
+document.getElementById('citizen_search')?.addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+
+    if (query.length < 2) {
+        document.getElementById('search_results').innerHTML = '';
+        return;
+    }
+
+    searchTimeout = setTimeout(() => {
+        fetch(`{{ url_for('government.search_citizens_for_minister', country_id=country.id) }}?q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('search_results');
+
+                if (data.error) {
+                    resultsDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                    return;
+                }
+
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = '<p class="text-muted small">No citizens found</p>';
+                    return;
+                }
+
+                let html = '<div class="list-group">';
+                data.forEach(citizen => {
+                    html += `
+                        <a href="#" class="list-group-item list-group-item-action"
+                           style="background: #0f1419; border: 1px solid rgba(34, 197, 94, 0.2); color: #fff;"
+                           onclick="selectCitizen(${citizen.id}, '${citizen.username}'); return false;">
+                            <div class="d-flex align-items-center gap-2">
+                                ${citizen.avatar ?
+                                    `<img src="/static/avatars/${citizen.avatar}" class="rounded-circle" style="width: 32px; height: 32px;">` :
+                                    '<i class="fas fa-user-circle" style="font-size: 32px;"></i>'
+                                }
+                                <div>
+                                    <strong>${citizen.username}</strong>
+                                    <small class="text-muted d-block">Level ${citizen.level} ${citizen.party ? '• ' + citizen.party : ''}</small>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                });
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Search error:', err);
+                document.getElementById('search_results').innerHTML =
+                    '<div class="alert alert-danger">Search failed. Please try again.</div>';
+            });
+    }, 300);
+});
+
+function selectCitizen(userId, username) {
+    document.getElementById('selected_user_id').value = userId;
+    document.getElementById('selected_username').textContent = username;
+    document.getElementById('selected_citizen').style.display = 'block';
+    document.getElementById('confirm_assign_btn').disabled = false;
+    document.getElementById('search_results').innerHTML = '';
+    document.getElementById('citizen_search').value = username;
+}
+
+function resignMinister(ministerId) {
+    if (!confirm('Are you sure you want to resign from your minister position?')) {
+        return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/government/minister/resign/${ministerId}`;
+
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrf_token';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Switch country view
+function switchCountry(slug) {
+    if (slug) {
+        window.location.href = '/country/' + slug;
+    }
+}
+</script>
+</div>
+{% endblock main_layout %}

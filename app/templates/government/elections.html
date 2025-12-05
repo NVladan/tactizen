@@ -1,0 +1,582 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Elections - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .elections-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        color: #22c55e;
+        font-size: 1.75rem;
+        margin: 0;
+    }
+
+    .country-badge {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        color: #22c55e;
+        font-weight: 500;
+    }
+
+    .grid-2col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+        .grid-2col {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-icon {
+        font-size: 1.25rem;
+    }
+
+    /* Election Cards */
+    .election-card {
+        background: rgba(26, 31, 46, 0.8);
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+
+    .election-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .election-card.presidential {
+        border-left: 4px solid #ef4444;
+    }
+
+    .election-card.congressional {
+        border-left: 4px solid #3b82f6;
+    }
+
+    .election-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .election-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .election-type-badge.presidential {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .election-type-badge.congressional {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .election-status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .election-status-badge.nominations,
+    .election-status-badge.applications {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+    }
+
+    .election-status-badge.voting {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .election-countdown {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .countdown-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .countdown-time {
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 600;
+        font-family: monospace;
+    }
+
+    .election-dates {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .date-item {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .date-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .date-value {
+        color: #fff;
+        font-size: 0.85rem;
+    }
+
+    .btn-view {
+        display: block;
+        width: 100%;
+        padding: 0.75rem;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .btn-view:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: #fff;
+    }
+
+    /* President Card */
+    .president-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .president-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #22c55e;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .president-info {
+        flex: 1;
+    }
+
+    .president-name {
+        color: #22c55e;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .president-name a {
+        color: #22c55e;
+        text-decoration: none;
+    }
+
+    .president-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+    }
+
+    /* Congress Grid */
+    .congress-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.75rem 1rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 8px;
+    }
+
+    .congress-count {
+        color: #3b82f6;
+        font-weight: 600;
+    }
+
+    .congress-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .congress-link:hover {
+        text-decoration: underline;
+    }
+
+    .congress-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .congress-member {
+        background: rgba(26, 31, 46, 0.6);
+        border-radius: 8px;
+        border: 1px solid rgba(59, 130, 246, 0.15);
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .member-rank {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .member-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .member-name {
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .member-name a {
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .member-name a:hover {
+        color: #22c55e;
+    }
+
+    .member-party {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        padding: 2rem 1rem;
+        font-style: italic;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #22c55e;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .action-link:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="elections-container">
+    <div class="page-header">
+        <h1 class="page-title">Elections</h1>
+        <div class="country-badge">{{ current_user.citizenship.name }}</div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section" style="padding: 1rem 1.5rem;">
+        <div class="quick-actions">
+            <a href="{{ url_for('government.president', country_id=current_user.citizenship_id) }}" class="action-link">
+                Government Overview
+            </a>
+            <a href="{{ url_for('government.congress', country_id=current_user.citizenship_id) }}" class="action-link">
+                View Full Congress
+            </a>
+        </div>
+    </div>
+
+    <div class="grid-2col">
+        <!-- Left Column: Elections -->
+        <div>
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">&#128499;</span>
+                    Active Elections
+                </h2>
+
+                {% if elections %}
+                    {% for election in elections %}
+                    <div class="election-card {{ election.election_type.value }}">
+                        <div class="election-header">
+                            <span class="election-type-badge {{ election.election_type.value }}">
+                                {% if election.election_type.value == 'presidential' %}
+                                    &#128081; Presidential
+                                {% else %}
+                                    &#127963; Congressional
+                                {% endif %}
+                            </span>
+                            <span class="election-status-badge {{ election.status.value }}">
+                                {{ election.status.value | replace('_', ' ') | title }}
+                            </span>
+                        </div>
+
+                        <div class="election-countdown" data-end-time="{{ election.voting_end.isoformat() }}Z">
+                            {% if election.status.value == 'nominations' or election.status.value == 'applications' %}
+                            <div class="countdown-label">{{ 'Nominations' if election.election_type.value == 'presidential' else 'Applications' }} end in</div>
+                            <div class="countdown-time" data-target="{{ election.nominations_end.isoformat() }}Z">--:--:--</div>
+                            {% elif election.status.value == 'voting' %}
+                            <div class="countdown-label">Voting ends in</div>
+                            <div class="countdown-time" data-target="{{ election.voting_end.isoformat() }}Z">--:--:--</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="election-dates">
+                            <div class="date-item">
+                                <div class="date-label">{{ 'Nominations' if election.election_type.value == 'presidential' else 'Applications' }}</div>
+                                <div class="date-value">{{ election.nominations_start.strftime('%b %d') }} - {{ election.nominations_end.strftime('%b %d') }}</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-label">Voting Period</div>
+                                <div class="date-value">{{ election.voting_start.strftime('%b %d') }} - {{ election.voting_end.strftime('%b %d') }}</div>
+                            </div>
+                        </div>
+
+                        <a href="{{ url_for('government.election_detail', election_id=election.id) }}" class="btn-view">
+                            {% if election.status.value == 'voting' %}
+                                Vote Now
+                            {% elif election.status.value == 'nominations' or election.status.value == 'applications' %}
+                                View Candidates
+                            {% else %}
+                                View Details
+                            {% endif %}
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        No active elections at this time.<br>
+                        <span style="font-size: 0.85rem;">Elections are held on the 5th (Presidential) and 25th (Congressional) of each month.</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Current Government -->
+        <div>
+            <!-- Current President -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">&#128081;</span>
+                    President
+                </h2>
+
+                {% if current_president %}
+                <div class="president-card">
+                    <div class="president-avatar">
+                        {{ current_president.user.username[0].upper() }}
+                    </div>
+                    <div class="president-info">
+                        <div class="president-name">
+                            <a href="{{ url_for('main.view_profile', username=current_president.user.username) }}">
+                                {{ current_president.user.username }}
+                            </a>
+                        </div>
+                        <div class="president-meta">
+                            Term ends: {{ current_president.term_end.strftime('%b %d, %Y') }}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">No current president</div>
+                {% endif %}
+            </div>
+
+            <!-- Current Congress -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">&#127963;</span>
+                    Congress
+                </h2>
+
+                <div class="congress-stats">
+                    <span class="congress-count">{{ current_congress|length }} / 20 seats filled</span>
+                    <a href="{{ url_for('government.congress', country_id=current_user.citizenship_id) }}" class="congress-link">
+                        View all &rarr;
+                    </a>
+                </div>
+
+                {% if current_congress %}
+                <div class="congress-grid">
+                    {% for member in current_congress[:10] %}
+                    <div class="congress-member">
+                        <div class="member-rank">{{ member.final_rank }}</div>
+                        <div class="member-info">
+                            <div class="member-name">
+                                <a href="{{ url_for('main.view_profile', username=member.user.username) }}">
+                                    {{ member.user.username }}
+                                </a>
+                            </div>
+                            <div class="member-party">{{ member.party.name }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if current_congress|length > 10 %}
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="{{ url_for('government.congress', country_id=current_user.citizenship_id) }}" class="congress-link">
+                        +{{ current_congress|length - 10 }} more members
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="empty-state">No current congress members</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Countdown timer functionality
+function updateCountdowns() {
+    document.querySelectorAll('.countdown-time[data-target]').forEach(function(el) {
+        const target = new Date(el.dataset.target);
+        const now = new Date();
+        const diff = target - now;
+
+        if (diff <= 0) {
+            el.textContent = 'Ended';
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        if (days > 0) {
+            el.textContent = days + 'd ' + hours.toString().padStart(2, '0') + ':' +
+                           minutes.toString().padStart(2, '0') + ':' +
+                           seconds.toString().padStart(2, '0');
+        } else {
+            el.textContent = hours.toString().padStart(2, '0') + ':' +
+                           minutes.toString().padStart(2, '0') + ':' +
+                           seconds.toString().padStart(2, '0');
+        }
+    });
+}
+
+// Update every second
+updateCountdowns();
+setInterval(updateCountdowns, 1000);
+</script>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}

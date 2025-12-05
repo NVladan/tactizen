@@ -1,0 +1,59 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Report Comment{% endblock %}
+
+{% block app_content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(239, 68, 68, 0.3);">
+                <div class="card-header" style="background: rgba(239, 68, 68, 0.1); border-bottom: 1px solid rgba(239, 68, 68, 0.3);">
+                    <h4 class="mb-0 text-danger"><i class="fas fa-flag me-2"></i>Report Comment</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Comment Preview -->
+                    <div class="mb-4 p-3 rounded" style="background: rgba(0,0,0,0.3);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="text-success fw-bold">{{ comment.user.username }}</span>
+                            <small class="text-muted">{{ comment.created_at.strftime('%b %d, %Y %H:%M') }}</small>
+                        </div>
+                        <p class="text-white mb-2" style="white-space: pre-wrap;">{{ comment.content }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-newspaper me-1"></i>
+                            On article: {{ comment.article.title[:50] }}{% if comment.article.title|length > 50 %}...{% endif %}
+                        </small>
+                    </div>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        {{ form.comment_id }}
+
+                        <div class="mb-3">
+                            <label class="form-label text-white">Why are you reporting this comment? *</label>
+                            {{ form.reason(class="form-select bg-dark text-white border-secondary") }}
+                            {% for error in form.reason.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-white">Additional Details</label>
+                            {{ form.description(class="form-control bg-dark text-white border-secondary", rows="3", placeholder="Provide any additional context...") }}
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> False reports may result in action against your account.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            {{ form.submit(class="btn btn-danger") }}
+                            <a href="{{ url_for('main.view_article', newspaper_id=comment.article.newspaper_id, article_id=comment.article_id) }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

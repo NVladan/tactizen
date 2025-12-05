@@ -1,0 +1,335 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Achievements{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+.achievements-header {
+    background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.achievements-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 215, 0, 0.1) 0%, rgba(218, 165, 32, 0.1) 100%);
+    pointer-events: none;
+}
+
+.achievement-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.achievement-category {
+    margin-bottom: 2rem;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.category-icon {
+    font-size: 1.5rem;
+}
+
+.category-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    text-transform: capitalize;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.achievement-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.achievement-card.locked {
+    opacity: 0.6;
+}
+
+.achievement-card.unlocked {
+    border-color: rgba(255, 215, 0, 0.4);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(218, 165, 32, 0.05) 100%);
+}
+
+.achievement-card.unlocked::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 40px 40px 0;
+    border-color: transparent #ffd700 transparent transparent;
+}
+
+.achievement-card.unlocked::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: #1a1f2e;
+    font-size: 0.75rem;
+}
+
+.achievement-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.achievement-icon {
+    font-size: 2.5rem;
+    color: #ffd700;
+    min-width: 50px;
+    text-align: center;
+}
+
+.achievement-card.locked .achievement-icon {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.achievement-info {
+    flex: 1;
+}
+
+.achievement-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.25rem;
+}
+
+.achievement-description {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.achievement-rewards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.achievement-reward {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(255, 215, 0, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: #ffd700;
+    font-weight: 600;
+}
+
+.achievement-reward.nft-reward {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.achievement-progress {
+    margin-top: 1rem;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.progress-bar-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.achievement-card.unlocked .progress-bar-fill {
+    background: linear-gradient(90deg, #ffd700 0%, #daa520 100%);
+}
+
+.unlocked-date {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.category-icon-map {
+    display: none;
+}
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="achievements-content-container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+    <div class="achievements-header">
+        <h1 class="mb-0" style="position: relative; z-index: 1;">
+            <i class="fas fa-trophy"></i> Achievements
+        </h1>
+
+        <div class="achievement-stats">
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.unlocked }}</div>
+                <div class="stat-label">Unlocked</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.locked }}</div>
+                <div class="stat-label">Locked</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.completion_percentage }}%</div>
+                <div class="stat-label">Completion</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.total_gold_earned }}</div>
+                <div class="stat-label">Gold Earned</div>
+            </div>
+        </div>
+    </div>
+
+    {% set category_icons = {
+        'work': 'fa-briefcase',
+        'training': 'fa-dumbbell',
+        'study': 'fa-book',
+        'combat': 'fa-shield',
+        'social': 'fa-users',
+        'exploration': 'fa-globe',
+        'economic': 'fa-coins'
+    } %}
+
+    {% for category, achievements in achievements_by_category.items() %}
+    <div class="achievement-category">
+        <div class="category-header">
+            <i class="fas {{ category_icons.get(category, 'fa-trophy') }} category-icon"></i>
+            <h2 class="category-title">{{ category }}</h2>
+            <span class="badge bg-secondary">
+                {{ achievements|selectattr('unlocked')|list|length }}/{{ achievements|length }}
+            </span>
+        </div>
+
+        <div class="achievements-grid">
+            {% for item in achievements %}
+            <div class="achievement-card {% if item.unlocked %}unlocked{% else %}locked{% endif %}">
+                <div class="achievement-header">
+                    <div class="achievement-icon">
+                        <i class="fas {{ item.achievement.icon }}"></i>
+                    </div>
+                    <div class="achievement-info">
+                        <div class="achievement-name">{{ item.achievement.name }}</div>
+                        <div class="achievement-description">{{ item.achievement.description }}</div>
+                        <div class="achievement-rewards">
+                            <div class="achievement-reward">
+                                <i class="fas fa-coins"></i>
+                                {{ item.achievement.gold_reward }} Gold
+                            </div>
+                            {% if item.achievement.free_nft_reward and item.achievement.free_nft_reward > 0 %}
+                            <div class="achievement-reward nft-reward">
+                                <i class="fas fa-gift"></i>
+                                {{ item.achievement.free_nft_reward }} Free NFT{% if item.achievement.free_nft_reward > 1 %}s{% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if not item.unlocked %}
+                <div class="achievement-progress">
+                    <div class="progress-label">
+                        <span>Progress</span>
+                        <span>{{ item.current_value }} / {{ item.requirement }}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: {{ item.progress_percentage }}%"></div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="unlocked-date">
+                    <i class="fas fa-check-circle"></i>
+                    Unlocked on {{ item.unlocked_at.strftime('%B %d, %Y') }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock main_layout %}

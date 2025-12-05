@@ -1,0 +1,2877 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}NFT Inventory - {{ super() }}{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="nft-inventory-container" style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+    <div class="row">
+        <!-- Page Header -->
+        <div class="col-12 mb-4">
+            <div class="nft-page-header">
+                <div class="nft-page-header-left">
+                    <div class="nft-page-icon">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <div class="nft-page-title-section">
+                        <h2 class="nft-page-title">NFT Inventory</h2>
+                        <p class="nft-page-subtitle">Manage your GamePlay NFTs to gain bonuses in combat, production, and more.</p>
+                    </div>
+                </div>
+                <div class="nft-page-actions">
+                    <button class="nft-action-btn refresh" onclick="refreshInventory()" title="Refresh inventory data">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <button id="freeNFTBtn" class="nft-action-btn free" onclick="openFreeNFTModal()" title="Claim free NFTs earned through tasks">
+                        <i class="fas fa-gift"></i>
+                        <span>Free NFTs</span>
+                        <span id="freeMintCount" class="nft-count-badge">0</span>
+                    </button>
+                    <button class="nft-action-btn purchase" data-bs-toggle="modal" data-bs-target="#purchaseNFTModal">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Purchase NFT</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NFT Collection -->
+        <div class="col-12 mb-4">
+            <div class="nft-collection-card">
+                <div class="nft-collection-header">
+                    <div class="nft-collection-title">
+                        <i class="fas fa-layer-group"></i>
+                        <span>My NFT Collection</span>
+                    </div>
+                </div>
+                <div class="nft-collection-body">
+                    <!-- Custom Tabs -->
+                    <div class="nft-tabs" role="tablist">
+                        <button class="nft-tab active" id="player-nfts-tab" data-bs-toggle="tab" data-bs-target="#player-nfts" type="button" role="tab" aria-controls="player-nfts" aria-selected="true">
+                            <i class="fas fa-user"></i>
+                            <span>Player NFTs</span>
+                        </button>
+                        <button class="nft-tab" id="company-nfts-tab" data-bs-toggle="tab" data-bs-target="#company-nfts" type="button" role="tab" aria-controls="company-nfts" aria-selected="false">
+                            <i class="fas fa-building"></i>
+                            <span>Company NFTs</span>
+                        </button>
+                    </div>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="player-nfts" role="tabpanel" aria-labelledby="player-nfts-tab">
+                            <div id="player-nfts-list" class="nft-grid">
+                                <div class="nft-loading">
+                                    <div class="nft-loading-spinner"></div>
+                                    <p>Loading your NFTs...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="company-nfts" role="tabpanel" aria-labelledby="company-nfts-tab">
+                            <div id="company-nfts-list" class="nft-grid">
+                                <div class="nft-loading">
+                                    <div class="nft-loading-spinner"></div>
+                                    <p>Loading your NFTs...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="upgrade-section-card">
+                <div class="upgrade-section-header">
+                    <div class="upgrade-header-left">
+                        <div class="upgrade-icon">
+                            <i class="fas fa-fire-alt"></i>
+                        </div>
+                        <div class="upgrade-title-section">
+                            <h4 class="upgrade-title">Upgrade NFTs</h4>
+                            <p class="upgrade-subtitle">Combine 3 identical NFTs to forge a higher tier</p>
+                        </div>
+                    </div>
+                    <div class="upgrade-ratio-badge">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>3:1 Burn Ratio</span>
+                    </div>
+                </div>
+
+                <div class="upgrade-section-body">
+                    <div class="upgrade-info-banner">
+                        <div class="info-banner-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="info-banner-content">
+                            <strong>How it works:</strong> Select <span class="highlight">3 NFTs of the same type, category, and tier</span> from your collection above to upgrade them into <span class="highlight">1 NFT of the next tier</span>.
+                        </div>
+                    </div>
+
+                    <div id="upgrade-section">
+                        <!-- Selected NFTs Display -->
+                        <div class="upgrade-forge-area">
+                            <div class="forge-input-section">
+                                <div class="forge-label">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Sacrifice</span>
+                                </div>
+                                <div class="forge-slots">
+                                    <div class="upgrade-slot" id="upgrade-slot-0">
+                                        <div class="slot-empty">
+                                            <div class="slot-icon">
+                                                <i class="fas fa-plus"></i>
+                                            </div>
+                                            <span class="slot-text">Select NFT</span>
+                                            <span class="slot-hint">Click Upgrade on any NFT above</span>
+                                        </div>
+                                    </div>
+                                    <div class="forge-connector">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <div class="upgrade-slot" id="upgrade-slot-1">
+                                        <div class="slot-empty">
+                                            <div class="slot-icon">
+                                                <i class="fas fa-plus"></i>
+                                            </div>
+                                            <span class="slot-text">Select NFT</span>
+                                            <span class="slot-hint">Click Upgrade on any NFT above</span>
+                                        </div>
+                                    </div>
+                                    <div class="forge-connector">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <div class="upgrade-slot" id="upgrade-slot-2">
+                                        <div class="slot-empty">
+                                            <div class="slot-icon">
+                                                <i class="fas fa-plus"></i>
+                                            </div>
+                                            <span class="slot-text">Select NFT</span>
+                                            <span class="slot-hint">Click Upgrade on any NFT above</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="forge-arrow-section">
+                                <div class="forge-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                                <span class="forge-arrow-label">Forge</span>
+                            </div>
+
+                            <div class="forge-result-section">
+                                <div class="forge-label result">
+                                    <i class="fas fa-gem"></i>
+                                    <span>Result</span>
+                                </div>
+                                <div class="upgrade-result" id="upgrade-result">
+                                    <div class="result-empty">
+                                        <div class="result-icon">
+                                            <i class="fas fa-question"></i>
+                                        </div>
+                                        <span class="result-text">Next Tier NFT</span>
+                                        <span class="result-hint">Select 3 matching NFTs</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Area -->
+                        <div class="upgrade-action-area">
+                            <div class="upgrade-status">
+                                <div class="status-progress">
+                                    <div class="status-progress-bar">
+                                        <div class="status-progress-fill" id="upgrade-progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span class="status-text"><span id="upgrade-count">0</span> / 3 Selected</span>
+                                </div>
+                                <span id="upgrade-validation-msg" class="validation-msg"></span>
+                            </div>
+                            <button id="upgrade-btn" class="upgrade-forge-btn" disabled>
+                                <div class="btn-icon">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="btn-content">
+                                    <span class="btn-title">Burn & Upgrade</span>
+                                    <span class="btn-subtitle">Destroy 3 NFTs to create 1</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase NFT Modal -->
+<div class="modal fade" id="purchaseNFTModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content nft-modal">
+            <div class="nft-modal-accent"></div>
+            <div class="modal-header nft-modal-header">
+                <div class="nft-modal-header-content">
+                    <div class="nft-modal-icon purchase">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div>
+                        <h5 class="nft-modal-title">Purchase NFT</h5>
+                        <p class="nft-modal-subtitle">Get a random Mystery NFT Pack</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body nft-modal-body">
+                <form id="purchaseNFTForm">
+                    <!-- Mystery Pack Info -->
+                    <div class="nft-info-card mystery">
+                        <div class="nft-info-card-icon">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div class="nft-info-card-content">
+                            <h6>Mystery NFT Pack</h6>
+                            <p>You will receive a <strong>completely random Q1 NFT</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- NFT Types Grid -->
+                    <div class="nft-types-section">
+                        <div class="nft-type-column">
+                            <div class="nft-type-header player">
+                                <i class="fas fa-user"></i>
+                                <span>Player NFTs</span>
+                            </div>
+                            <ul class="nft-type-list">
+                                <li>Combat Boost</li>
+                                <li>Energy Regen</li>
+                                <li>Wellness Regen</li>
+                                <li>Military Tutor</li>
+                                <li>Travel Discount</li>
+                                <li>Storage Increase</li>
+                            </ul>
+                        </div>
+                        <div class="nft-type-column">
+                            <div class="nft-type-header company">
+                                <i class="fas fa-building"></i>
+                                <span>Company NFTs</span>
+                            </div>
+                            <ul class="nft-type-list">
+                                <li>Production Boost</li>
+                                <li>Material Efficiency</li>
+                                <li>Upgrade Discount</li>
+                                <li>Speed Boost</li>
+                                <li>Android Worker</li>
+                                <li>Tax Breaks</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Upgrade Note -->
+                    <div class="nft-info-card note">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Higher tiers (Q2-Q5) can only be obtained by upgrading 3 NFTs of the same tier.</span>
+                    </div>
+
+                    <!-- Price Display -->
+                    <div class="nft-price-card">
+                        <div class="nft-price-label">Price</div>
+                        <div class="nft-price-value">
+                            <i class="fas fa-coins"></i>
+                            <span>1 ZEN</span>
+                        </div>
+                        <div class="nft-price-balance">
+                            Your balance: <strong id="zen-balance">Loading...</strong>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="purchase-type" value="">
+                    <input type="hidden" id="purchase-tier" value="1">
+                    <input type="hidden" id="purchase-category" value="">
+                </form>
+            </div>
+            <div class="modal-footer nft-modal-footer">
+                <button type="button" class="nft-modal-btn cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="nft-modal-btn confirm purchase" id="confirm-purchase-btn">
+                    <i class="fas fa-shopping-cart"></i>
+                    Purchase NFT
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Free NFT Modal -->
+<div class="modal fade" id="freeNFTModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content nft-modal">
+            <div class="nft-modal-accent free"></div>
+            <div class="modal-header nft-modal-header">
+                <div class="nft-modal-header-content">
+                    <div class="nft-modal-icon free">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div>
+                        <h5 class="nft-modal-title">Claim Free NFT</h5>
+                        <p class="nft-modal-subtitle">Redeem your earned rewards</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body nft-modal-body">
+                <!-- Free Mints Counter -->
+                <div class="nft-free-counter">
+                    <div class="nft-free-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="nft-free-count">
+                        <span id="freeMintsAvailable">0</span>
+                    </div>
+                    <div class="nft-free-label">Free NFT Mint(s) Available</div>
+                    <div class="nft-free-source">Earned through tasks and achievements</div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="nft-info-card mystery">
+                    <div class="nft-info-card-icon">
+                        <i class="fas fa-sparkles"></i>
+                    </div>
+                    <div class="nft-info-card-content">
+                        <h6>Free Mystery NFT</h6>
+                        <p>Same as purchasing - you'll receive a <strong>completely random Q1 NFT</strong>, but FREE!</p>
+                    </div>
+                </div>
+
+                <!-- No Free Mints Warning -->
+                <div class="nft-info-card warning" id="noFreeMints" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>No free mints available!</strong>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem;">Complete tasks and achievements to earn free NFT mints.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer nft-modal-footer">
+                <button type="button" class="nft-modal-btn cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="nft-modal-btn confirm free" id="confirm-free-mint-btn" disabled>
+                    <i class="fas fa-gift"></i>
+                    Claim Free NFT
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div class="modal fade" id="alertModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content nft-modal">
+            <div class="nft-modal-accent" id="alert-modal-accent"></div>
+            <div class="modal-header nft-modal-header" id="alert-modal-header">
+                <div class="nft-modal-header-content">
+                    <div class="nft-modal-icon" id="alert-modal-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div>
+                        <h5 class="nft-modal-title" id="alert-modal-title">Notice</h5>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body nft-modal-body">
+                <div class="nft-alert-message" id="alert-modal-body">
+                    Message will appear here
+                </div>
+            </div>
+            <div class="modal-footer nft-modal-footer">
+                <button type="button" class="nft-modal-btn confirm" id="alert-modal-ok-btn" data-bs-dismiss="modal">
+                    <i class="fas fa-check"></i>
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content nft-modal">
+            <div class="nft-modal-accent warning"></div>
+            <div class="modal-header nft-modal-header">
+                <div class="nft-modal-header-content">
+                    <div class="nft-modal-icon warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <h5 class="nft-modal-title">Confirm Action</h5>
+                        <p class="nft-modal-subtitle">This action requires confirmation</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body nft-modal-body">
+                <div class="nft-confirm-message" id="confirm-modal-body">
+                    Are you sure?
+                </div>
+            </div>
+            <div class="modal-footer nft-modal-footer">
+                <button type="button" class="nft-modal-btn cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="nft-modal-btn confirm warning" id="confirm-modal-btn">
+                    <i class="fas fa-check"></i>
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ==================== Page Header Styles ==================== */
+.nft-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.03) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 16px;
+}
+
+.nft-page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nft-page-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: #ffffff;
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+}
+
+.nft-page-title {
+    color: #ffffff;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.nft-page-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0 0;
+}
+
+.nft-page-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.nft-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nft-action-btn.refresh {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nft-action-btn.refresh:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.nft-action-btn.free {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+    color: #000000;
+}
+
+.nft-action-btn.free:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #eab308 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
+}
+
+.nft-action-btn.purchase {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    color: #ffffff;
+}
+
+.nft-action-btn.purchase:hover {
+    background: linear-gradient(135deg, #9333ea 0%, #6d28d9 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+}
+
+.nft-count-badge {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* ==================== Collection Card Styles ==================== */
+.nft-collection-card {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(168, 85, 247, 0.02) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.nft-collection-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+    background: rgba(168, 85, 247, 0.05);
+}
+
+.nft-collection-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.nft-collection-title i {
+    color: #a855f7;
+}
+
+.nft-collection-body {
+    padding: 1.5rem;
+}
+
+/* Custom Tabs */
+.nft-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+.nft-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.nft-tab:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(168, 85, 247, 0.1);
+}
+
+.nft-tab.active {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(168, 85, 247, 0.3);
+    pointer-events: auto;
+}
+
+/* Loading State */
+.nft-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.nft-loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(168, 85, 247, 0.2);
+    border-top-color: #a855f7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ==================== Modal Styles ==================== */
+.nft-modal {
+    background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+    border: 2px solid rgba(168, 85, 247, 0.3);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.nft-modal-accent {
+    height: 4px;
+    background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 50%, #7c3aed 100%);
+}
+
+.nft-modal-accent.free {
+    background: linear-gradient(90deg, #eab308 0%, #fbbf24 50%, #f59e0b 100%);
+}
+
+.nft-modal-accent.warning {
+    background: linear-gradient(90deg, #f59e0b 0%, #eab308 50%, #d97706 100%);
+}
+
+.nft-modal-accent.success {
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+}
+
+.nft-modal-accent.error {
+    background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #b91c1c 100%);
+}
+
+.nft-modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+    background: transparent;
+}
+
+.nft-modal-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nft-modal-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #a855f7;
+}
+
+.nft-modal-icon.purchase {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+    color: #a855f7;
+}
+
+.nft-modal-icon.free {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(234, 179, 8, 0.1) 100%);
+    color: #eab308;
+}
+
+.nft-modal-icon.warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+    color: #f59e0b;
+}
+
+.nft-modal-icon.success {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+    color: #22c55e;
+}
+
+.nft-modal-icon.error {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%);
+    color: #dc2626;
+}
+
+.nft-modal-title {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.nft-modal-subtitle {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    margin: 0.25rem 0 0 0;
+}
+
+.nft-modal-body {
+    padding: 1.5rem;
+}
+
+.nft-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(168, 85, 247, 0.15);
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.nft-modal-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nft-modal-btn.cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nft-modal-btn.cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.nft-modal-btn.confirm {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    color: #ffffff;
+}
+
+.nft-modal-btn.confirm:hover {
+    background: linear-gradient(135deg, #9333ea 0%, #6d28d9 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+}
+
+.nft-modal-btn.confirm.purchase {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+}
+
+.nft-modal-btn.confirm.free {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+    color: #000000;
+}
+
+.nft-modal-btn.confirm.free:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #eab308 100%);
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+}
+
+.nft-modal-btn.confirm.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #000000;
+}
+
+.nft-modal-btn.confirm.warning:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Info Cards */
+.nft-info-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(168, 85, 247, 0.1);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.nft-info-card.mystery {
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.2);
+}
+
+.nft-info-card.note {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+}
+
+.nft-info-card.note i {
+    color: #3b82f6;
+}
+
+.nft-info-card.warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.nft-info-card-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(168, 85, 247, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #a855f7;
+    flex-shrink: 0;
+}
+
+.nft-info-card-content h6 {
+    color: #ffffff;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.nft-info-card-content p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* NFT Types Section */
+.nft-types-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.nft-type-column {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.nft-type-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.nft-type-header.player {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.nft-type-header.company {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.nft-type-list {
+    list-style: none;
+    padding: 0.75rem 1rem;
+    margin: 0;
+}
+
+.nft-type-list li {
+    padding: 0.35rem 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+}
+
+.nft-type-list li::before {
+    content: "•";
+    margin-right: 0.5rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Price Card */
+.nft-price-card {
+    text-align: center;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 12px;
+}
+
+.nft-price-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.5rem;
+}
+
+.nft-price-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #22c55e;
+    margin-bottom: 0.5rem;
+}
+
+.nft-price-balance {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Free Mints Counter */
+.nft-free-counter {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(234, 179, 8, 0.05) 100%);
+    border: 2px dashed rgba(234, 179, 8, 0.3);
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+}
+
+.nft-free-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(234, 179, 8, 0.1) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #eab308;
+}
+
+.nft-free-count {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #eab308;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.nft-free-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+.nft-free-source {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Alert Message */
+.nft-alert-message,
+.nft-confirm-message {
+    text-align: center;
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.nft-card {
+    background: #1a1f2e;
+    border: 2px solid rgba(34, 197, 94, 0.2);
+    border-radius: 12px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 182px;
+    flex-shrink: 0;
+}
+
+.nft-card:hover {
+    border-color: rgba(34, 197, 94, 0.5);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.25);
+}
+
+.nft-card.equipped {
+    border-color: rgba(255, 193, 7, 0.5);
+    background: rgba(255, 193, 7, 0.05);
+}
+
+.nft-card.listed {
+    border-color: rgba(13, 202, 240, 0.5);
+    background: rgba(13, 202, 240, 0.05);
+}
+
+.nft-card.selected {
+    border-color: rgba(220, 38, 38, 0.5);
+    background: rgba(220, 38, 38, 0.05);
+}
+
+.nft-image-link {
+    display: block;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.nft-image-link:hover {
+    transform: scale(1.03);
+    filter: brightness(1.1);
+}
+
+.nft-card .nft-image {
+    width: 150px;
+    height: 240px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid rgba(34, 197, 94, 0.3);
+    background: #0a0e1a;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+.nft-card .nft-image:hover {
+    border-color: rgba(34, 197, 94, 0.6);
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+}
+
+.nft-tier-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.tier-1 { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); }
+.tier-2 { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+.tier-3 { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+.tier-4 { background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); }
+.tier-5 { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+.bonus-summary .badge {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.nft-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.nft-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-height: 520px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.nft-card-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.nft-card-content {
+    width: 100%;
+    margin-top: 0.75rem;
+}
+
+.nft-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.nft-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nft-card-badges {
+    min-height: 24px;
+    margin-bottom: 0.5rem;
+}
+
+.nft-card-badges .badge {
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+}
+
+.nft-card-action {
+    margin-top: auto;
+}
+
+.nft-image-placeholder {
+    width: 150px;
+    height: 240px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 2px dashed rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(34, 197, 94, 0.4);
+    font-size: 2rem;
+}
+
+.selected-nfts-container {
+    border: 2px dashed rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 100px;
+}
+
+/* ==================== Upgrade Section Styles ==================== */
+.upgrade-section-card {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.upgrade-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: rgba(245, 158, 11, 0.08);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.upgrade-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.upgrade-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.upgrade-title {
+    color: #ffffff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.upgrade-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0 0;
+}
+
+.upgrade-ratio-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 10px;
+    color: #f59e0b;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.upgrade-section-body {
+    padding: 1.5rem;
+}
+
+.upgrade-info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.info-banner-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(245, 158, 11, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f59e0b;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.info-banner-content {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.info-banner-content .highlight {
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+/* Forge Area */
+.upgrade-forge-area {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    flex-wrap: wrap;
+}
+
+.forge-input-section,
+.forge-result-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.forge-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(220, 38, 38, 0.15);
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    border-radius: 8px;
+    color: #ef4444;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.forge-label.result {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.25);
+    color: #22c55e;
+}
+
+.forge-slots {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.upgrade-slot {
+    width: 160px;
+    height: 260px;
+    border: 2px dashed rgba(220, 38, 38, 0.4);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(220, 38, 38, 0.02) 100%);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.upgrade-slot:hover {
+    border-color: rgba(220, 38, 38, 0.6);
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.upgrade-slot.filled {
+    border-style: solid;
+    border-color: rgba(220, 38, 38, 0.7);
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(220, 38, 38, 0.05) 100%);
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.2);
+}
+
+.upgrade-slot .slot-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.upgrade-slot .slot-empty .slot-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(220, 38, 38, 0.15);
+    border: 2px dashed rgba(220, 38, 38, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(220, 38, 38, 0.5);
+    font-size: 1.5rem;
+}
+
+.upgrade-slot .slot-empty .slot-text {
+    color: rgba(220, 38, 38, 0.7);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.upgrade-slot .slot-empty .slot-hint {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    max-width: 120px;
+}
+
+.upgrade-slot .slot-filled {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem;
+}
+
+.upgrade-slot .slot-filled img {
+    width: 110px;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid rgba(220, 38, 38, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.upgrade-slot .slot-filled .nft-info {
+    text-align: center;
+    margin-top: 0.75rem;
+}
+
+.upgrade-slot .slot-filled .nft-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.upgrade-slot .slot-filled .nft-tier {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 0.25rem;
+}
+
+.upgrade-slot .remove-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    border: none;
+    color: #fff;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+}
+
+.upgrade-slot:hover .remove-btn {
+    opacity: 1;
+}
+
+.upgrade-slot .remove-btn:hover {
+    transform: scale(1.1);
+}
+
+.forge-connector {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.25);
+    margin: 0 0.25rem;
+}
+
+/* Forge Arrow */
+.forge-arrow-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0 1rem;
+}
+
+.forge-arrow {
+    display: flex;
+    gap: 0.25rem;
+    font-size: 1.75rem;
+    color: #f59e0b;
+    animation: pulse-arrow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-arrow {
+    0%, 100% { opacity: 0.6; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(4px); }
+}
+
+.forge-arrow-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* Upgrade Result */
+.upgrade-result {
+    width: 180px;
+    height: 280px;
+    border: 2px solid rgba(34, 197, 94, 0.4);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.02) 100%);
+    transition: all 0.3s ease;
+}
+
+.upgrade-result.ready {
+    border-color: rgba(34, 197, 94, 0.8);
+    border-style: solid;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.08) 100%);
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.3), inset 0 0 30px rgba(34, 197, 94, 0.1);
+    animation: glow-ready 2s ease-in-out infinite;
+}
+
+@keyframes glow-ready {
+    0%, 100% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.3), inset 0 0 30px rgba(34, 197, 94, 0.1); }
+    50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.5), inset 0 0 40px rgba(34, 197, 94, 0.15); }
+}
+
+.upgrade-result .result-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.upgrade-result .result-empty .result-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(34, 197, 94, 0.15);
+    border: 2px dashed rgba(34, 197, 94, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(34, 197, 94, 0.5);
+    font-size: 1.75rem;
+}
+
+.upgrade-result .result-empty .result-text {
+    color: rgba(34, 197, 94, 0.7);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.upgrade-result .result-empty .result-hint {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+}
+
+.upgrade-result .result-preview {
+    text-align: center;
+    padding: 1rem;
+}
+
+.upgrade-result .result-preview .tier-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.upgrade-result .result-preview .result-name {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+}
+
+/* Action Area */
+.upgrade-action-area {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    margin-top: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.upgrade-status {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.status-progress {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-progress-bar {
+    width: 120px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.status-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.status-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.validation-msg {
+    font-size: 0.85rem;
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.validation-msg.valid {
+    color: #22c55e;
+}
+
+.upgrade-forge-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem 1.75rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    border-radius: 12px;
+    color: #000000;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.35);
+}
+
+.upgrade-forge-btn:not(:disabled):hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(245, 158, 11, 0.5);
+}
+
+.upgrade-forge-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.upgrade-forge-btn .btn-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.upgrade-forge-btn .btn-content {
+    text-align: left;
+}
+
+.upgrade-forge-btn .btn-title {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.upgrade-forge-btn .btn-subtitle {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+@media (max-width: 992px) {
+    .upgrade-forge-area {
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+
+    .upgrade-slot {
+        width: 140px;
+        height: 220px;
+    }
+
+    .upgrade-slot .slot-filled img {
+        width: 90px;
+        height: 140px;
+    }
+
+    .upgrade-result {
+        width: 150px;
+        height: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .upgrade-forge-area {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .forge-slots {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .upgrade-slot {
+        width: 120px;
+        height: 190px;
+    }
+
+    .upgrade-slot .slot-filled img {
+        width: 75px;
+        height: 115px;
+    }
+
+    .upgrade-result {
+        width: 140px;
+        height: 210px;
+    }
+
+    .forge-arrow-section {
+        transform: rotate(90deg);
+        padding: 1rem 0;
+    }
+
+    .upgrade-action-area {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .upgrade-forge-btn {
+        justify-content: center;
+    }
+}
+</style>
+
+<!-- Web3.js for MetaMask integration -->
+<script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+
+<script>
+// CSRF token for AJAX requests
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+// Global blockchain configuration
+const NFT_METADATA_URIS = {{ NFT_METADATA_URIS | safe }};
+
+// State
+let playerNFTs = [];
+let companyNFTs = [];
+let selectedForUpgrade = [];
+let freeMintCount = 0;
+
+// Load free mints count
+async function loadFreeMintCount() {
+    try {
+        const response = await fetch('/api/nft/free-mints');
+        const data = await response.json();
+        if (data.success) {
+            freeMintCount = data.free_mints;
+            document.getElementById('freeMintCount').textContent = freeMintCount;
+            document.getElementById('freeMintsAvailable').textContent = freeMintCount;
+
+            const btn = document.getElementById('confirm-free-mint-btn');
+            const noFreeMints = document.getElementById('noFreeMints');
+
+            if (freeMintCount > 0) {
+                btn.disabled = false;
+                noFreeMints.style.display = 'none';
+            } else {
+                btn.disabled = true;
+                noFreeMints.style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading free mint count:', error);
+    }
+}
+
+// Open free NFT modal
+function openFreeNFTModal() {
+    loadFreeMintCount();
+    const modal = new bootstrap.Modal(document.getElementById('freeNFTModal'));
+    modal.show();
+}
+
+// Claim free NFT (server-side mint - no gas cost for user!)
+async function claimFreeNFT() {
+    if (freeMintCount <= 0) {
+        showAlert('You have no free NFT mints available!', 'error');
+        return;
+    }
+
+    // Disable button to prevent double-clicks
+    const btn = document.getElementById('confirm-free-mint-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Minting...';
+
+    try {
+        showAlert('Minting your free NFT... This may take a few seconds.', 'info');
+
+        // Server-side mint - no MetaMask needed!
+        const response = await fetch('/api/nft/claim-free', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({})
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('freeNFTModal')).hide();
+            showAlert(`Free ${data.nft.nft_type} NFT claimed successfully! You have ${data.remaining_free_mints} free mints remaining.`, 'success');
+            loadNFTInventory();
+            loadFreeMintCount();
+        } else {
+            showAlert('Error claiming free NFT: ' + data.error, 'error');
+        }
+
+    } catch (error) {
+        console.error('Error claiming free NFT:', error);
+        showAlert('Error claiming free NFT: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-gift"></i> Claim Free NFT';
+        loadFreeMintCount(); // Refresh count
+    }
+}
+
+// Refresh inventory function
+async function refreshInventory() {
+    const refreshBtn = document.querySelector('button[onclick="refreshInventory()"]');
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
+    }
+
+    // Clear selected NFTs since data will change
+    selectedForUpgrade = [];
+    updateUpgradeSection();
+
+    await loadNFTInventory();
+
+    if (refreshBtn) {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+    }
+
+    showAlert('Inventory refreshed!', 'success');
+}
+
+// Auto-refresh when page gains focus (user switches back to tab)
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        // Page is now visible - refresh data silently
+        loadNFTInventory();
+    }
+});
+
+// Helper function to show alert modal
+async function showAlert(message, type = 'info') {
+    const modalEl = document.getElementById('alertModal');
+    const titleEl = document.getElementById('alert-modal-title');
+    const bodyEl = document.getElementById('alert-modal-body');
+    const accentEl = document.getElementById('alert-modal-accent');
+    const iconEl = document.getElementById('alert-modal-icon');
+    const okBtn = document.getElementById('alert-modal-ok-btn');
+
+    // Set icon and color based on type
+    let icon = 'fa-info-circle';
+    let title = 'Notice';
+    let accentClass = '';
+    let iconClass = '';
+    let btnClass = 'confirm';
+
+    if (type === 'success') {
+        icon = 'fa-check-circle';
+        title = 'Success';
+        accentClass = 'success';
+        iconClass = 'success';
+        btnClass = 'confirm';
+    } else if (type === 'error') {
+        icon = 'fa-exclamation-circle';
+        title = 'Error';
+        accentClass = 'error';
+        iconClass = 'error';
+        btnClass = 'confirm';
+    } else if (type === 'warning') {
+        icon = 'fa-exclamation-triangle';
+        title = 'Warning';
+        accentClass = 'warning';
+        iconClass = 'warning';
+        btnClass = 'confirm warning';
+    }
+
+    // Update modal elements
+    accentEl.className = 'nft-modal-accent ' + accentClass;
+    iconEl.className = 'nft-modal-icon ' + iconClass;
+    iconEl.innerHTML = `<i class="fas ${icon}"></i>`;
+    titleEl.textContent = title;
+    bodyEl.textContent = message;
+    okBtn.className = 'nft-modal-btn ' + btnClass;
+
+    // Hide and dispose of existing modal instance if any
+    const existingModal = bootstrap.Modal.getInstance(modalEl);
+    if (existingModal) {
+        existingModal.hide();
+        existingModal.dispose();
+    }
+
+    // Force hide the modal element itself
+    modalEl.classList.remove('show');
+    modalEl.style.display = 'none';
+    modalEl.removeAttribute('aria-modal');
+    modalEl.setAttribute('aria-hidden', 'true');
+
+    // Clean up any stray backdrops using helper
+    cleanupModalBackdrops();
+
+    // Small delay to ensure DOM is clean before showing new modal
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Show modal with fresh instance
+    const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+    modal.show();
+
+    // Clean up backdrops when modal is hidden
+    modalEl.addEventListener('hidden.bs.modal', function() {
+        // Full cleanup of modal artifacts
+        cleanupModalBackdrops();
+        // Dispose modal instance to fully clean up
+        const instance = bootstrap.Modal.getInstance(modalEl);
+        if (instance) {
+            instance.dispose();
+        }
+        // Extra cleanup after short delays to catch any delayed DOM changes
+        setTimeout(() => cleanupModalBackdrops(), 100);
+        setTimeout(() => cleanupModalBackdrops(), 300);
+        setTimeout(() => cleanupModalBackdrops(), 500);
+        // Reload inventory on success
+        if (type === 'success') {
+            loadNFTInventory();
+        }
+    }, { once: true });
+
+    // Also add click handler on OK button for extra cleanup
+    okBtn.addEventListener('click', function() {
+        setTimeout(() => {
+            cleanupModalBackdrops();
+            const instance = bootstrap.Modal.getInstance(modalEl);
+            if (instance) {
+                instance.dispose();
+            }
+        }, 150);
+        // Additional cleanup calls
+        setTimeout(() => cleanupModalBackdrops(), 300);
+        setTimeout(() => cleanupModalBackdrops(), 500);
+    }, { once: true });
+}
+
+// Helper function to fully clean up modal backdrops and body styles
+function cleanupModalBackdrops() {
+    // Remove all backdrop elements
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+    // Remove modal-open class and reset body styles
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+    document.body.style.removeProperty('pointer-events');
+    document.body.style.removeProperty('position');
+    document.body.style.removeProperty('top');
+    document.body.style.removeProperty('width');
+
+    // Force re-enable scrolling and pointer events on body
+    document.body.style.pointerEvents = 'auto';
+    document.body.style.overflow = '';
+    document.body.style.overflowY = 'auto';
+    document.body.style.overflowX = 'hidden';
+
+    // Reset any modal that might be stuck in 'show' state without being visible
+    document.querySelectorAll('.modal').forEach(modal => {
+        if (!modal.classList.contains('show') || modal.style.display === 'none') {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+            modal.removeAttribute('aria-modal');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+    });
+
+    // Also ensure the main content is clickable and scrollable
+    const mainContent = document.querySelector('main') || document.querySelector('.container-fluid');
+    if (mainContent) {
+        mainContent.style.pointerEvents = 'auto';
+    }
+
+    // Force scroll to be enabled on html element as well
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overflowY = 'auto';
+}
+
+// Helper function to show confirm modal
+function showConfirm(message, callback) {
+    const modalEl = document.getElementById('confirmModal');
+    const bodyEl = document.getElementById('confirm-modal-body');
+    const confirmBtn = document.getElementById('confirm-modal-btn');
+    const cancelBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+
+    bodyEl.textContent = message;
+
+    // Clean up any existing modal instances
+    const existingModal = bootstrap.Modal.getInstance(modalEl);
+    if (existingModal) {
+        existingModal.hide();
+        existingModal.dispose();
+    }
+    cleanupModalBackdrops();
+
+    // Remove any existing event listeners by cloning
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    newConfirmBtn.className = 'nft-modal-btn confirm warning';
+    newConfirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm';
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+    // Add new event listener for confirm
+    newConfirmBtn.addEventListener('click', function() {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) {
+            modal.hide();
+            modal.dispose();
+        }
+        cleanupModalBackdrops();
+        setTimeout(() => {
+            cleanupModalBackdrops();
+            callback();
+        }, 150);
+    });
+
+    // Show modal
+    const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+    modal.show();
+
+    // Clean up when modal is hidden (including cancel button)
+    modalEl.addEventListener('hidden.bs.modal', function() {
+        cleanupModalBackdrops();
+        const instance = bootstrap.Modal.getInstance(modalEl);
+        if (instance) {
+            instance.dispose();
+        }
+        setTimeout(() => {
+            cleanupModalBackdrops();
+        }, 100);
+    }, { once: true });
+}
+
+// Load ZEN balance from blockchain
+async function loadZenBalance() {
+    const balanceEl = document.getElementById('zen-balance');
+    try {
+        // Check if MetaMask is available
+        if (typeof window.ethereum === 'undefined') {
+            balanceEl.textContent = 'MetaMask not installed';
+            return;
+        }
+
+        // Get connected wallet address
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length === 0) {
+            balanceEl.textContent = 'Wallet not connected';
+            return;
+        }
+
+        const address = accounts[0];
+        balanceEl.textContent = 'Loading...';
+
+        // Fetch ZEN balance from backend
+        const response = await fetch(`/api/wallet/zen-balance?address=${address}`);
+
+        if (!response.ok) {
+            console.error('ZEN balance API error:', response.status, response.statusText);
+            balanceEl.textContent = 'Could not load';
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Format balance to 2 decimal places
+            const balance = parseFloat(data.balance).toFixed(2);
+            balanceEl.textContent = `${balance} ZEN`;
+        } else {
+            console.error('ZEN balance error:', data.error);
+            balanceEl.textContent = 'Could not load';
+        }
+    } catch (error) {
+        console.error('Error loading ZEN balance:', error);
+        balanceEl.textContent = 'Could not load';
+    }
+}
+
+// Load NFT inventory on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadNFTInventory();
+    loadFreeMintCount();
+
+    // Purchase button
+    document.getElementById('confirm-purchase-btn').addEventListener('click', purchaseNFT);
+
+    // Upgrade button
+    document.getElementById('upgrade-btn').addEventListener('click', upgradeNFTs);
+
+    // Free NFT claim button
+    document.getElementById('confirm-free-mint-btn').addEventListener('click', claimFreeNFT);
+
+    // Load ZEN balance when purchase modal is shown
+    const purchaseModal = document.getElementById('purchaseNFTModal');
+    purchaseModal.addEventListener('show.bs.modal', function() {
+        loadZenBalance();
+    });
+
+    // Initialize custom tab switching (for Player NFTs / Company NFTs tabs)
+    initializeNFTTabs();
+
+    // Global handler for ALL modal hidden events - ensures scroll is always restored
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('hidden.bs.modal', function() {
+            // Aggressive cleanup after any modal closes
+            setTimeout(() => {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                document.body.style.pointerEvents = '';
+                document.documentElement.style.overflow = '';
+                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            }, 100);
+        });
+    });
+
+    // Also handle click on alert OK button specifically
+    document.getElementById('alert-modal-ok-btn').addEventListener('click', function() {
+        setTimeout(() => {
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.documentElement.style.overflow = '';
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+        }, 200);
+    });
+});
+
+// Custom tab switching function
+function initializeNFTTabs() {
+    const tabs = document.querySelectorAll('.nft-tab');
+    const tabPanes = document.querySelectorAll('.tab-content .tab-pane');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const targetId = this.getAttribute('data-bs-target');
+            const targetPane = document.querySelector(targetId);
+
+            if (!targetPane) return;
+
+            // Remove active from all tabs
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
+
+            // Remove active/show from all panes
+            tabPanes.forEach(pane => {
+                pane.classList.remove('active', 'show');
+            });
+
+            // Activate clicked tab
+            this.classList.add('active');
+            this.setAttribute('aria-selected', 'true');
+
+            // Show target pane
+            targetPane.classList.add('active', 'show');
+        });
+    });
+}
+
+async function loadNFTInventory() {
+    console.log('[DEBUG] loadNFTInventory() called');
+    try {
+        console.log('[DEBUG] Fetching /api/nft/inventory');
+        const response = await fetch('/api/nft/inventory');
+        console.log('[DEBUG] Response status:', response.status);
+        const data = await response.json();
+        console.log('[DEBUG] Response data:', data);
+
+        if (data.success) {
+            playerNFTs = data.nfts.filter(n => n.nft_type === 'player');
+            companyNFTs = data.nfts.filter(n => n.nft_type === 'company');
+            console.log('[DEBUG] Player NFTs:', playerNFTs.length, 'Company NFTs:', companyNFTs.length);
+
+            renderNFTList('player-nfts-list', playerNFTs);
+            renderNFTList('company-nfts-list', companyNFTs);
+        } else {
+            console.error('[DEBUG] API returned success=false');
+        }
+    } catch (error) {
+        console.error('[DEBUG] Error loading NFTs:', error);
+    }
+}
+
+function renderNFTList(containerId, nfts) {
+    console.log('[DEBUG] renderNFTList called for:', containerId, 'with', nfts.length, 'NFTs');
+    const container = document.getElementById(containerId);
+    console.log('[DEBUG] Container element:', container);
+
+    if (!container) {
+        console.error('[DEBUG] Container not found:', containerId);
+        return;
+    }
+
+    if (nfts.length === 0) {
+        console.log('[DEBUG] No NFTs to display in', containerId);
+        container.innerHTML = '<p class="text-muted text-center py-4">No NFTs found. Purchase your first NFT!</p>';
+        return;
+    }
+
+    console.log('[DEBUG] Rendering', nfts.length, 'NFTs:', nfts);
+    nfts.forEach(nft => console.log('[DEBUG] NFT image_url:', nft.image_url));
+    const html = nfts.map(nft => {
+        const isUnavailable = nft.is_equipped || nft.is_listed;
+        return `
+        <div class="nft-card ${nft.is_equipped ? 'equipped' : ''} ${nft.is_listed ? 'listed' : ''}" data-nft-id="${nft.id}">
+            <div class="nft-card-inner">
+                ${nft.image_url ? `
+                    <a href="https://horizen-testnet.explorer.caldera.xyz/token/${nft.contract_address}?a=${nft.token_id}"
+                       target="_blank"
+                       onclick="event.stopPropagation()"
+                       title="View on Horizen Explorer"
+                       class="nft-image-link">
+                        <img src="${nft.image_url}" alt="${nft.name}" class="nft-image" onerror="this.style.display='none'">
+                    </a>
+                ` : '<div class="nft-image-placeholder"><i class="fas fa-image"></i></div>'}
+                <div class="nft-card-content">
+                    <div class="nft-card-header">
+                        <span class="nft-tier-badge tier-${nft.tier}">Q${nft.tier}</span>
+                        <span class="badge bg-success">+${nft.bonus_value}%</span>
+                    </div>
+                    <h6 class="nft-card-title">${nft.name.split(' - ')[0]}</h6>
+                    <div class="nft-card-badges">
+                        ${nft.is_equipped ? '<span class="badge bg-warning">Equipped</span>' : ''}
+                        ${nft.is_listed ? '<span class="badge bg-info">Listed</span>' : ''}
+                    </div>
+                    <div class="nft-card-action">
+                        ${isUnavailable ? `
+                            <button class="btn btn-sm btn-secondary w-100" disabled title="${nft.is_listed ? 'Cancel marketplace listing first' : 'Unequip first'}">
+                                <i class="fas fa-fire"></i> Upgrade
+                            </button>
+                        ` : `
+                            <button class="btn btn-sm btn-warning w-100" onclick="event.stopPropagation(); selectForUpgrade(${nft.id})">
+                                <i class="fas fa-fire"></i> Upgrade
+                            </button>
+                        `}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `}).join('');
+    console.log('[DEBUG] Generated HTML length:', html.length);
+    container.innerHTML = html;
+    console.log('[DEBUG] Container innerHTML set successfully');
+}
+
+
+async function purchaseNFT() {
+    // Close the purchase modal immediately to prevent backdrop stacking
+    const purchaseModalEl = document.getElementById('purchaseNFTModal');
+    const purchaseModal = bootstrap.Modal.getInstance(purchaseModalEl);
+    if (purchaseModal) {
+        purchaseModal.hide();
+        purchaseModal.dispose();
+    }
+    // Clean up all backdrops
+    cleanupModalBackdrops();
+
+    // Small delay to ensure modal is fully closed
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Track current step for better error messages
+    let currentStep = 1;
+
+    // Randomly select NFT type (player or company)
+    const types = ['player', 'company'];
+    const type = types[Math.floor(Math.random() * types.length)];
+
+    const tier = parseInt(document.getElementById('purchase-tier').value);
+
+    // Select random category based on NFT type
+    const playerCategories = ['combat_boost', 'energy_regen', 'wellness_regen', 'military_tutor', 'travel_discount', 'storage_increase'];
+    const companyCategories = ['production_boost', 'material_efficiency', 'upgrade_discount', 'speed_boost', 'android_worker', 'tax_breaks'];
+
+    // Bonus values by type, category, and tier (from nft_config.py)
+    const BONUS_VALUES = {
+        player: {
+            combat_boost: {1: 5, 2: 15, 3: 25, 4: 40, 5: 60},
+            energy_regen: {1: 2, 2: 5, 3: 10, 4: 20, 5: 35},
+            wellness_regen: {1: 2, 2: 5, 3: 10, 4: 20, 5: 35},
+            military_tutor: {1: 20, 2: 40, 3: 60, 4: 80, 5: 100},
+            travel_discount: {1: 20, 2: 40, 3: 60, 4: 80, 5: 100},
+            storage_increase: {1: 1000, 2: 2000, 3: 3000, 4: 4000, 5: 5000}
+        },
+        company: {
+            production_boost: {1: 10, 2: 20, 3: 35, 4: 55, 5: 80},
+            material_efficiency: {1: 5, 2: 15, 3: 25, 4: 40, 5: 60},
+            upgrade_discount: {1: 5, 2: 15, 3: 25, 4: 40, 5: 50},
+            speed_boost: {1: 10, 2: 20, 3: 30, 4: 45, 5: 65},
+            android_worker: {1: 1, 2: 2, 3: 3, 4: 4, 5: 5},
+            tax_breaks: {1: 20, 2: 40, 3: 60, 4: 80, 5: 100}
+        }
+    };
+
+    let category;
+    if (type === 'player') {
+        category = playerCategories[Math.floor(Math.random() * playerCategories.length)];
+    } else {
+        category = companyCategories[Math.floor(Math.random() * companyCategories.length)];
+    }
+
+    try {
+        // Check if MetaMask is available
+        if (typeof window.ethereum === 'undefined') {
+            showAlert('Please install MetaMask to purchase NFTs!', 'error');
+            return;
+        }
+
+        // Check if wallet is connected
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length === 0) {
+            showAlert('Please connect your wallet first!', 'error');
+            window.location.href = '/api/wallet/connect-page';
+            return;
+        }
+
+        const userWallet = accounts[0];
+        const ZEN_TOKEN_ADDRESS = '{{ ZEN_TOKEN_ADDRESS if ZEN_TOKEN_ADDRESS else "" }}';
+        const NFT_CONTRACT_ADDRESS = '{{ NFT_CONTRACT_ADDRESS if NFT_CONTRACT_ADDRESS else "" }}';
+        // NFT_METADATA_URIS is now a global constant
+        const PRICE_ZEN = 1; // All NFTs cost 1 ZEN
+        const CHAIN_ID = '{{ HORIZEN_L3_CHAIN_ID if HORIZEN_L3_CHAIN_ID else "0x28751c" }}'; // Horizen L3 Testnet chain ID (2651420 in hex)
+
+        // Validate blockchain configuration
+        if (!ZEN_TOKEN_ADDRESS || !NFT_CONTRACT_ADDRESS) {
+            showAlert('Blockchain configuration incomplete. Please contact administrator.', 'error');
+            console.error('Missing addresses:', {ZEN_TOKEN_ADDRESS, NFT_CONTRACT_ADDRESS});
+            return;
+        }
+
+        // Check network
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chainId !== CHAIN_ID) {
+            showAlert('Please switch to Horizen L3 Testnet!', 'error');
+            return;
+        }
+
+        const web3 = new Web3(window.ethereum);
+        const amountWei = web3.utils.toWei(PRICE_ZEN.toString(), 'ether');
+
+        // Step 1: Approve ZEN spending to NFT contract
+        showAlert('Step 1/2: Approving ZEN spending...', 'info');
+
+        const approveABI = [{
+            "inputs": [
+                {"name": "spender", "type": "address"},
+                {"name": "amount", "type": "uint256"}
+            ],
+            "name": "approve",
+            "outputs": [{"name": "", "type": "bool"}],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }];
+
+        const zenContract = new web3.eth.Contract(approveABI, ZEN_TOKEN_ADDRESS);
+
+        // Get current gas price
+        const gasPrice = await web3.eth.getGasPrice();
+
+        const approveTx = await zenContract.methods.approve(NFT_CONTRACT_ADDRESS, amountWei).send({
+            from: userWallet,
+            gas: 100000,  // Reasonable gas limit for ERC20 approve
+            maxPriorityFeePerGas: web3.utils.toWei('0.001', 'gwei'),  // Low priority fee for L2
+            maxFeePerGas: gasPrice  // Use current network gas price
+        });
+
+        currentStep = 2;
+        showAlert('Step 2/2: Minting NFT with payment...', 'info');
+
+        // Step 2: Call mintNFT() on the contract
+        // The contract will verify payment and mint atomically
+        const mintNFTABI = [{
+            "inputs": [
+                {"name": "nftType", "type": "string"},
+                {"name": "category", "type": "string"},
+                {"name": "tier", "type": "uint8"},
+                {"name": "bonusValue", "type": "uint16"},
+                {"name": "tokenURI", "type": "string"}
+            ],
+            "name": "mintNFT",
+            "outputs": [{"name": "", "type": "uint256"}],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }];
+
+        const nftContract = new web3.eth.Contract(mintNFTABI, NFT_CONTRACT_ADDRESS);
+
+        // Get the real metadata URI from IPFS
+        const metadataURI = NFT_METADATA_URIS[type]?.[category]?.[tier] || `ipfs://placeholder/${type}_${category}_q${tier}.json`;
+
+        // Get the correct bonus value based on type, category, and tier
+        const bonusValue = BONUS_VALUES[type]?.[category]?.[tier] || 0;
+        console.log(`Minting ${type} ${category} Q${tier} with bonus: ${bonusValue}%`);
+
+        // Call mintNFT with randomly selected type and category
+        const mintTx = await nftContract.methods.mintNFT(
+            type,
+            category,
+            tier,
+            bonusValue, // Correct bonus value from BONUS_VALUES lookup
+            metadataURI
+        ).send({
+            from: userWallet,
+            gas: 500000,  // Reasonable gas limit for NFT mint with payment
+            maxPriorityFeePerGas: web3.utils.toWei('0.001', 'gwei'),  // Low priority fee for L2
+            maxFeePerGas: gasPrice  // Use current network gas price
+        });
+
+        const txHash = mintTx.transactionHash;
+
+        showAlert('NFT minted! Verifying on backend...', 'info');
+
+        // Send transaction hash to backend for verification and database storage
+        const response = await fetch('/api/nft/purchase', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                type,
+                tier,
+                category,
+                tx_hash: txHash
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Wait a moment before showing final success to ensure previous alert is cleared
+            await new Promise(resolve => setTimeout(resolve, 300));
+            cleanupModalBackdrops();
+            showAlert('NFT purchased successfully! You received: ' + data.nft.name, 'success');
+            loadNFTInventory();
+        } else {
+            if (data.action === 'connect_wallet') {
+                showAlert('Please connect your wallet first!', 'error');
+                window.location.href = '/api/wallet/connect-page';
+            } else {
+                showAlert('Error: ' + data.error, 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error purchasing NFT:', error);
+
+        // Parse error message for user-friendly display
+        const errorMsg = error.message || error.toString() || '';
+
+        if (error.code === 4001 || errorMsg.includes('User denied') || errorMsg.includes('user rejected')) {
+            if (currentStep === 1) {
+                showAlert('Transaction cancelled. You rejected the approval in MetaMask. No ZEN was spent.', 'warning');
+            } else {
+                showAlert('Transaction cancelled. You rejected the minting in MetaMask. No ZEN was spent - you can try again.', 'warning');
+            }
+        } else if (errorMsg.includes('insufficient funds') || errorMsg.includes('Insufficient')) {
+            showAlert('Insufficient balance. Please ensure you have enough ZEN and ETH for gas fees.', 'error');
+        } else if (errorMsg.includes('ZEN payment failed') || errorMsg.includes('transfer amount exceeds balance')) {
+            showAlert('ZEN payment failed. Please check your ZEN balance and try again.', 'error');
+        } else if (errorMsg.includes('network') || errorMsg.includes('Network')) {
+            showAlert('Network error. Please check your connection and try again.', 'error');
+        } else if (errorMsg.includes('nonce') || errorMsg.includes('Nonce')) {
+            showAlert('Transaction error. Please refresh the page and try again.', 'error');
+        } else {
+            // Generic error - extract just the meaningful part
+            let cleanError = errorMsg;
+            // Remove JSON parts like { "location": "confirmation", "cause": null }
+            cleanError = cleanError.replace(/\{[^}]*\}/g, '').trim();
+            // Remove "MetaMask Tx Signature:" prefix if present
+            cleanError = cleanError.replace(/MetaMask Tx Signature:\s*/gi, '').trim();
+            // Truncate if too long
+            if (cleanError.length > 100) {
+                cleanError = cleanError.substring(0, 100) + '...';
+            }
+            showAlert(cleanError || 'An error occurred. Please try again.', 'error');
+        }
+    } finally {
+        // Always clean up any stray backdrops at the end
+        setTimeout(() => {
+            cleanupModalBackdrops();
+        }, 500);
+    }
+}
+
+function selectForUpgrade(nftId) {
+    const nft = [...playerNFTs, ...companyNFTs].find(n => n.id === nftId);
+
+    if (!nft) return;
+
+    // Prevent selecting equipped or listed NFTs
+    if (nft.is_equipped) {
+        showAlert('Cannot select equipped NFT. Please unequip it first.', 'warning');
+        return;
+    }
+    if (nft.is_listed) {
+        showAlert('Cannot select NFT listed on marketplace. Please cancel the listing first.', 'warning');
+        return;
+    }
+
+    if (selectedForUpgrade.includes(nftId)) {
+        selectedForUpgrade = selectedForUpgrade.filter(id => id !== nftId);
+    } else {
+        if (selectedForUpgrade.length >= 3) {
+            showAlert('You can only select 3 NFTs for upgrade!', 'warning');
+            return;
+        }
+        selectedForUpgrade.push(nftId);
+    }
+
+    updateUpgradeSection();
+}
+
+function updateUpgradeSection() {
+    const countEl = document.getElementById('upgrade-count');
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    const validationMsg = document.getElementById('upgrade-validation-msg');
+    const resultEl = document.getElementById('upgrade-result');
+    const progressFill = document.getElementById('upgrade-progress-fill');
+
+    countEl.textContent = selectedForUpgrade.length;
+
+    // Update progress bar
+    const progressPercent = (selectedForUpgrade.length / 3) * 100;
+    if (progressFill) {
+        progressFill.style.width = progressPercent + '%';
+    }
+
+    // Get selected NFTs
+    const selectedNFTs = selectedForUpgrade.map(id =>
+        [...playerNFTs, ...companyNFTs].find(n => n.id === id)
+    ).filter(n => n); // Filter out undefined
+
+    // Update the 3 slots
+    for (let i = 0; i < 3; i++) {
+        const slot = document.getElementById(`upgrade-slot-${i}`);
+        if (selectedNFTs[i]) {
+            const nft = selectedNFTs[i];
+            slot.classList.add('filled');
+            slot.innerHTML = `
+                <div class="slot-filled">
+                    ${nft.image_url ? `<img src="${nft.image_url}" alt="${nft.name}" onerror="this.style.display='none'">` : '<div style="width:110px;height:170px;background:rgba(220,38,38,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-image" style="color:rgba(255,255,255,0.3);font-size:2rem;"></i></div>'}
+                    <div class="nft-info">
+                        <div class="nft-name">${nft.name.split(' - ')[0]}</div>
+                        <div class="nft-tier">Q${nft.tier}</div>
+                    </div>
+                </div>
+                <button class="remove-btn" onclick="selectForUpgrade(${nft.id})" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+        } else {
+            slot.classList.remove('filled');
+            slot.innerHTML = `
+                <div class="slot-empty">
+                    <div class="slot-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <span class="slot-text">Select NFT</span>
+                    <span class="slot-hint">Click Upgrade on any NFT above</span>
+                </div>
+            `;
+        }
+    }
+
+    // Validate selection and show message
+    let isValid = false;
+    let validationMessage = '';
+
+    if (selectedNFTs.length === 3) {
+        const tiers = selectedNFTs.map(n => n.tier);
+        const types = selectedNFTs.map(n => n.nft_type);
+        const categories = selectedNFTs.map(n => n.category);
+
+        if (new Set(tiers).size !== 1) {
+            validationMessage = 'All NFTs must be the same tier!';
+        } else if (new Set(types).size !== 1) {
+            validationMessage = 'All NFTs must be the same type!';
+        } else if (new Set(categories).size !== 1) {
+            validationMessage = 'All NFTs must be the same category!';
+        } else if (tiers[0] >= 5) {
+            validationMessage = 'Q5 NFTs cannot be upgraded!';
+        } else {
+            isValid = true;
+            validationMessage = '✓ Ready to upgrade!';
+        }
+    }
+
+    // Update validation message
+    validationMsg.textContent = validationMessage;
+    validationMsg.classList.toggle('valid', isValid);
+
+    // Update result preview
+    if (isValid) {
+        const newTier = selectedNFTs[0].tier + 1;
+        const categoryName = selectedNFTs[0].name.split(' - ')[0];
+        resultEl.classList.add('ready');
+        resultEl.innerHTML = `
+            <div class="result-preview">
+                <div class="tier-badge tier-${newTier}">Q${newTier}</div>
+                <div class="result-name">${categoryName}</div>
+                <div style="margin-top:0.75rem;color:#22c55e;font-size:0.8rem;"><i class="fas fa-arrow-up"></i> Upgraded!</div>
+            </div>
+        `;
+    } else {
+        resultEl.classList.remove('ready');
+        resultEl.innerHTML = `
+            <div class="result-empty">
+                <div class="result-icon">
+                    <i class="fas fa-question"></i>
+                </div>
+                <span class="result-text">Next Tier NFT</span>
+                <span class="result-hint">Select 3 matching NFTs</span>
+            </div>
+        `;
+    }
+
+    // Enable/disable button
+    upgradeBtn.disabled = !isValid;
+
+    // Mark selected NFTs in the list
+    document.querySelectorAll('.nft-card').forEach(card => {
+        const nftId = parseInt(card.dataset.nftId);
+        if (selectedForUpgrade.includes(nftId)) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    });
+}
+
+async function upgradeNFTs() {
+    if (selectedForUpgrade.length !== 3) {
+        showAlert('Select exactly 3 NFTs to upgrade!', 'warning');
+        return;
+    }
+
+    // Get the 3 selected NFTs
+    const selectedNFTs = selectedForUpgrade.map(id =>
+        [...playerNFTs, ...companyNFTs].find(n => n.id === id)
+    );
+
+    // Check none are listed on marketplace
+    const listedNFT = selectedNFTs.find(n => n.is_listed);
+    if (listedNFT) {
+        showAlert('Cannot upgrade NFTs listed on marketplace! Please cancel the listing first.', 'error');
+        return;
+    }
+
+    // Check none are equipped
+    const equippedNFT = selectedNFTs.find(n => n.is_equipped);
+    if (equippedNFT) {
+        showAlert('Cannot upgrade equipped NFTs! Please unequip them first.', 'error');
+        return;
+    }
+
+    // Check all are same tier
+    const tiers = selectedNFTs.map(n => n.tier);
+    if (new Set(tiers).size !== 1) {
+        showAlert('All 3 NFTs must be the same tier!', 'warning');
+        return;
+    }
+
+    // Check all are same type
+    const types = selectedNFTs.map(n => n.nft_type);
+    if (new Set(types).size !== 1) {
+        showAlert('All 3 NFTs must be the same type (player or company)!', 'warning');
+        return;
+    }
+
+    // Check all are same category
+    const categories = selectedNFTs.map(n => n.category);
+    if (new Set(categories).size !== 1) {
+        showAlert('All 3 NFTs must be the same category!', 'warning');
+        return;
+    }
+
+    const currentTier = tiers[0];
+    const newTier = currentTier + 1;
+    const categoryName = selectedNFTs[0].name.split(' - ')[0]; // e.g., "Comfort Cushion"
+
+    if (currentTier >= 5) {
+        showAlert('Q5 NFTs cannot be upgraded further!', 'warning');
+        return;
+    }
+
+    // Use confirm modal
+    showConfirm(`Burn 3 ${categoryName} Q${currentTier} NFTs to create 1 ${categoryName} Q${newTier} NFT? This cannot be undone!`, async function() {
+        try {
+            // Check MetaMask
+            if (typeof window.ethereum === 'undefined') {
+                showAlert('Please install MetaMask to upgrade NFTs.', 'error');
+                return;
+            }
+
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length === 0) {
+                showAlert('Please connect your wallet first.', 'error');
+                return;
+            }
+
+            const userWallet = accounts[0];
+            const web3 = new Web3(window.ethereum);
+            const NFT_CONTRACT_ADDRESS = '{{ NFT_CONTRACT_ADDRESS if NFT_CONTRACT_ADDRESS else "" }}';
+
+            // Validate blockchain configuration
+            if (!NFT_CONTRACT_ADDRESS) {
+                showAlert('NFT contract address not configured. Please contact administrator.', 'error');
+                console.error('Missing NFT_CONTRACT_ADDRESS');
+                return;
+            }
+
+            // Get token IDs for the 3 selected NFTs
+            const burnTokenIds = selectedNFTs.map(n => n.token_id);
+
+            // Get details from first NFT (all 3 must match)
+            const firstNFT = selectedNFTs[0];
+            const nftType = firstNFT.nft_type;
+            const category = firstNFT.category;
+
+            showAlert('Verifying NFT ownership on blockchain...', 'info');
+
+            // Verify ownership of all NFTs before attempting upgrade
+            const ownerOfABI = [{
+                "inputs": [{"name": "tokenId", "type": "uint256"}],
+                "name": "ownerOf",
+                "outputs": [{"name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            }];
+
+            const ownerCheckContract = new web3.eth.Contract(ownerOfABI, NFT_CONTRACT_ADDRESS);
+
+            for (const tokenId of burnTokenIds) {
+                try {
+                    const owner = await ownerCheckContract.methods.ownerOf(tokenId).call();
+                    console.log(`Token ${tokenId} owner: ${owner}, your wallet: ${userWallet}`);
+
+                    if (owner.toLowerCase() !== userWallet.toLowerCase()) {
+                        showAlert(`You don't own NFT #${tokenId} on the blockchain. Current owner: ${owner.substring(0, 10)}... Please refresh your inventory and try again. The NFT might still be in marketplace escrow.`, 'error');
+                        return;
+                    }
+                } catch (ownerError) {
+                    console.error(`Error checking ownership of token ${tokenId}:`, ownerError);
+                    showAlert(`NFT #${tokenId} doesn't exist or cannot be verified. It may have already been burned. Please refresh your inventory.`, 'error');
+                    return;
+                }
+            }
+
+            showAlert('Confirm in MetaMask to burn 3 NFTs and mint upgrade...', 'info');
+
+            // Contract ABI for upgradeNFT (V2: preserves type and category)
+            const upgradeNFTABI = [{
+                "inputs": [
+                    {"name": "burnTokenIds", "type": "uint256[]"},
+                    {"name": "newBonusValue", "type": "uint16"},
+                    {"name": "newTokenURI", "type": "string"}
+                ],
+                "name": "upgradeNFT",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }];
+
+            const nftContract = new web3.eth.Contract(upgradeNFTABI, NFT_CONTRACT_ADDRESS);
+
+            // Get current gas price
+            const gasPrice = await web3.eth.getGasPrice();
+
+            // Get the real metadata URI for the upgraded NFT from IPFS
+            const metadataURI = NFT_METADATA_URIS[nftType]?.[category]?.[newTier] || `ipfs://placeholder/${nftType}_${category}_q${newTier}.json`;
+            console.log(`Upgrade metadata URI: ${metadataURI}`);
+
+            // Call upgradeNFT on blockchain
+            // Contract will verify all 3 NFTs are same type/category and preserve them
+            const upgradeTx = await nftContract.methods.upgradeNFT(
+                burnTokenIds,
+                0,  // Bonus value calculated by backend based on tier/category
+                metadataURI
+            ).send({
+                from: userWallet,
+                gas: 600000,  // Higher gas limit for burning + minting
+                maxPriorityFeePerGas: web3.utils.toWei('0.001', 'gwei'),
+                maxFeePerGas: gasPrice
+            });
+
+            const txHash = upgradeTx.transactionHash;
+
+            showAlert('Upgrade complete! Verifying...', 'success');
+
+            // Send transaction hash to backend for verification
+            const response = await fetch('/api/nft/upgrade', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    nft_ids: selectedForUpgrade,
+                    tx_hash: txHash
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showAlert(`Success! Created ${data.nft.name} Q${data.nft.tier}!`, 'success');
+                selectedForUpgrade = [];
+                updateUpgradeSection();
+                // Inventory will auto-reload from success modal
+            } else {
+                showAlert('Error: ' + data.error, 'error');
+            }
+
+        } catch (error) {
+            console.error('Error upgrading NFTs:', error);
+
+            // Parse error message for user-friendly display
+            const errorMsg = error.message || error.toString() || '';
+
+            if (error.code === 4001 || errorMsg.includes('User denied') || errorMsg.includes('user rejected')) {
+                showAlert('Upgrade cancelled. Your NFTs are safe - nothing was burned.', 'warning');
+            } else if (errorMsg.includes('insufficient funds') || errorMsg.includes('Insufficient')) {
+                showAlert('Insufficient ETH for gas fees. Please add some ETH to your wallet.', 'error');
+            } else if (errorMsg.includes('not owner') || errorMsg.includes('Not owner')) {
+                showAlert('You no longer own one or more of these NFTs. Please refresh your inventory.', 'error');
+            } else if (errorMsg.includes('network') || errorMsg.includes('Network')) {
+                showAlert('Network error. Please check your connection and try again.', 'error');
+            } else {
+                // Generic error - clean up the message
+                let cleanError = errorMsg;
+                cleanError = cleanError.replace(/\{[^}]*\}/g, '').trim();
+                cleanError = cleanError.replace(/MetaMask Tx Signature:\s*/gi, '').trim();
+                if (cleanError.length > 100) {
+                    cleanError = cleanError.substring(0, 100) + '...';
+                }
+                showAlert(cleanError || 'Error upgrading NFTs. Please try again.', 'error');
+            }
+        } finally {
+            // Always clean up any stray backdrops at the end
+            setTimeout(() => {
+                cleanupModalBackdrops();
+            }, 500);
+        }
+    });
+}
+</script>
+</div>
+{% endblock main_layout %}

@@ -1,0 +1,51 @@
+{# app/templates/bootstrap_wtf.html - Renders fields with Bootstrap 5 classes #}
+{% macro render_field(field, extra_classes="") %}
+  <div class="mb-3 {% if field.errors %}has-validation{% endif %}">
+    {{ field.label(class="form-label") }}
+    {% set field_classes = "form-control" %}
+    {% if field.type == 'SelectField' %}
+        {% set field_classes = "form-select" %}
+    {% elif field.type == 'FileField' %}
+         {# Use form-control-sm for file fields to prevent them being overly large #}
+         {% set field_classes = "form-control form-control-sm" %}
+    {% endif %}
+    {% if field.errors %}
+        {% set field_classes = field_classes + " is-invalid" %}
+    {% endif %}
+    {% if extra_classes %}
+        {% set field_classes = field_classes + " " + extra_classes %}
+    {% endif %}
+
+    {{ field(class=field_classes, **kwargs) }}
+
+    {% if field.errors %}
+      <div class="invalid-feedback">
+        {% for error in field.errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+     {% if field.description %}
+       <div class="form-text text-muted">{{ field.description }}</div>
+     {% endif %}
+  </div>
+{% endmacro %}
+
+
+{% macro quick_form(form, action='.', method='post', enctype=None, button_map={}, submit_text='Submit', extra_class="") %}
+<form {% if action %}action="{{ action }}"{% endif %} method="{{ method }}" role="form"
+  {% if enctype %}enctype="{{ enctype }}"{% endif %} novalidate class="{{ extra_class }}">
+  {{ form.hidden_tag() }} {# Includes CSRF token #}
+  {% for field in form if field.widget.input_type != 'hidden' and field.type != 'SubmitField' %}
+     {{ render_field(field) }}
+  {% endfor %}
+
+  {# Render Submit buttons #}
+   {% for field in form if field.type == 'SubmitField' %}
+      {% set field_class = button_map.get(field.id, 'btn btn-primary') %} {# Default button style #}
+      {{ field(class=field_class + ' mt-3') }} {# Add margin-top #}
+  {% else %}
+      {# Default submit button if none defined in the form #}
+      {# <button type="submit" class="btn btn-primary mt-3">{{ submit_text }}</button> #}
+      {# Usually better to define SubmitField in the Python form class #}
+   {% endfor %}
+</form>
+{% endmacro %}

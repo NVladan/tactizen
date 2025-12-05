@@ -1,0 +1,266 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-shield-alt"></i> Security Logs</h2>
+            <p class="text-muted">Monitor and investigate security events across the platform</p>
+            <hr>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-database"></i> Total Logs</h5>
+                            <h2>{{ total_logs }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-exclamation-triangle"></i> Unresolved</h5>
+                            <h2>{{ unresolved_logs }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-exclamation-circle"></i> Critical Events</h5>
+                            <h2>{{ critical_events|length }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-filter"></i> Filters</h5>
+                    <form method="GET" action="{{ url_for('admin.security_logs') }}" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="event_type" class="form-label">Event Type</label>
+                            <select name="event_type" id="event_type" class="form-select">
+                                <option value="">All Events</option>
+                                {% for event_type in event_types %}
+                                    <option value="{{ event_type.value }}" {% if filters.event_type == event_type.value %}selected{% endif %}>
+                                        {{ event_type.value|upper|replace('_', ' ') }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="severity" class="form-label">Severity</label>
+                            <select name="severity" id="severity" class="form-select">
+                                <option value="">All Severities</option>
+                                {% for severity in severity_levels %}
+                                    <option value="{{ severity.value }}" {% if filters.severity == severity.value %}selected{% endif %}>
+                                        {{ severity.value|upper }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="user_id" class="form-label">User ID</label>
+                            <input type="number" name="user_id" id="user_id" class="form-control" value="{{ filters.user_id or '' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="ip_address" class="form-label">IP Address</label>
+                            <input type="text" name="ip_address" id="ip_address" class="form-control" value="{{ filters.ip_address or '' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="show_resolved" class="form-label">Status</label>
+                            <select name="show_resolved" id="show_resolved" class="form-select">
+                                <option value="all" {% if filters.show_resolved == 'all' %}selected{% endif %}>All</option>
+                                <option value="unresolved" {% if filters.show_resolved == 'unresolved' %}selected{% endif %}>Unresolved</option>
+                                <option value="resolved" {% if filters.show_resolved == 'resolved' %}selected{% endif %}>Resolved</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ filters.start_date or '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ filters.end_date or '' }}">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search"></i> Apply Filters
+                            </button>
+                            <a href="{{ url_for('admin.security_logs') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Critical Events Alert -->
+            {% if critical_events %}
+            <div class="card border-danger mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Recent Critical Events (Unresolved)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Event</th>
+                                    <th>Message</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in critical_events %}
+                                <tr>
+                                    <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td><span class="badge bg-danger">{{ log.event_type.value|upper|replace('_', ' ') }}</span></td>
+                                    <td>{{ log.message[:100] }}{% if log.message|length > 100 %}...{% endif %}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.security_log_detail', log_id=log.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Security Logs Table -->
+            {% if logs %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Time</th>
+                                    <th>Severity</th>
+                                    <th>Event Type</th>
+                                    <th>User</th>
+                                    <th>IP Address</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.id }}</td>
+                                    <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        <span class="badge
+                                            {% if log.severity.value == 'critical' %}bg-danger
+                                            {% elif log.severity.value == 'error' %}bg-danger
+                                            {% elif log.severity.value == 'warning' %}bg-warning
+                                            {% elif log.severity.value == 'info' %}bg-info
+                                            {% else %}bg-secondary
+                                            {% endif %}">
+                                            {{ log.severity.value|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge
+                                            {% if 'success' in log.event_type.value %}bg-success
+                                            {% elif 'failed' in log.event_type.value or 'invalid' in log.event_type.value %}bg-danger
+                                            {% elif 'unauthorized' in log.event_type.value %}bg-warning
+                                            {% else %}bg-primary
+                                            {% endif %}">
+                                            {{ log.event_type.value|upper|replace('_', ' ') }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if log.user %}
+                                            <a href="{{ url_for('admin.user_activity', user_id=log.user_id) }}">
+                                                {{ log.user.username or log.user.wallet_address[:10] + '...' }}
+                                            </a>
+                                        {% elif log.wallet_address %}
+                                            <code>{{ log.wallet_address[:10] }}...</code>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><code>{{ log.ip_address or 'N/A' }}</code></td>
+                                    <td>
+                                        {{ log.message[:80] }}{% if log.message|length > 80 %}...{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.resolved %}
+                                            <span class="badge bg-success"><i class="fas fa-check"></i> Resolved</span>
+                                        {% else %}
+                                            <span class="badge bg-warning"><i class="fas fa-clock"></i> Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.security_log_detail', log_id=log.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if pagination.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.security_logs', page=pagination.prev_num,
+                            event_type=filters.event_type, severity=filters.severity, user_id=filters.user_id,
+                            ip_address=filters.ip_address, start_date=filters.start_date, end_date=filters.end_date,
+                            show_resolved=filters.show_resolved) if pagination.has_prev else '#' }}">Previous</a>
+                    </li>
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.security_logs', page=page_num,
+                                    event_type=filters.event_type, severity=filters.severity, user_id=filters.user_id,
+                                    ip_address=filters.ip_address, start_date=filters.start_date, end_date=filters.end_date,
+                                    show_resolved=filters.show_resolved) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.security_logs', page=pagination.next_num,
+                            event_type=filters.event_type, severity=filters.severity, user_id=filters.user_id,
+                            ip_address=filters.ip_address, start_date=filters.start_date, end_date=filters.end_date,
+                            show_resolved=filters.show_resolved) if pagination.has_next else '#' }}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                No security logs found matching the selected filters.
+            </div>
+            {% endif %}
+
+            <!-- Navigation -->
+            <div class="mt-4">
+                <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

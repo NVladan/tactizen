@@ -1,0 +1,409 @@
+{# Reusable Dashboard Wrapper - includes user info panel and content container #}
+{# This file is meant to be included at the start of page content #}
+
+{# User Info Panel - Full Width Container #}
+<!-- User Info Panel - Full Width Container -->
+{% if current_user.is_authenticated %}
+<div class="user-info-wrapper">
+<div class="user-info-section">
+    {# User Name & Avatar Section #}
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+        {# Username above avatar #}
+        <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="text-decoration-none">
+            <h3 class="user-name m-0" style="text-align: center;">{{ current_user.username if current_user.username else current_user.wallet_address[:6] + '...' }}</h3>
+        </a>
+
+        {# Avatar with glow effect #}
+        {% if current_user.avatar %}
+            <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="avatar-link">
+                <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.id|string + '.png') }}?v={{ range(1, 10000)|random }}"
+                     alt="Profile" class="user-avatar"> {# Cache buster #}
+            </a>
+        {% else %}
+            <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="avatar-link">
+                <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                     alt="Profile" class="user-avatar">
+            </a>
+        {% endif %}
+    </div>
+
+    {# Stats Container #}
+    <div class="user-stats">
+        {# User Identity Section - Level & Icons on the right side #}
+        <div class="user-identity-section">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <span class="user-level">
+                        <i class="fas fa-star"></i>Level {{ current_user.level|default(1) }}
+                    </span>
+                    {# Message and Alert Icons - directly below Level badge #}
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <div class="message-dropdown-container" style="position: relative;">
+                            <div class="message-alert-icon" id="messages-dropdown-trigger" title="Messages" style="display: inline-flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(34, 197, 94, 0.3); border: 1px solid rgba(34, 197, 94, 0.5); border-radius: 10px; cursor: pointer;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512" fill="#22c55e">
+                                    <path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/>
+                                </svg>
+                                {% if current_user.unread_message_count > 0 %}
+                                <span class="icon-badge">{{ current_user.unread_message_count }}</span>
+                                {% endif %}
+                            </div>
+                            {# Messages Dropdown Menu #}
+                            <div class="messages-dropdown-menu" id="messages-dropdown">
+                            <div class="messages-dropdown-header">
+                                <h6 class="m-0">Recent Messages</h6>
+                                <a href="{{ url_for('main.messages') }}" class="view-all-link">View All</a>
+                            </div>
+                            <div class="messages-dropdown-body">
+                                {% set recent_messages = current_user.get_recent_messages(5) %}
+                                {% if recent_messages %}
+                                    {% for conversation in recent_messages %}
+                                    <a href="{{ url_for('main.message_thread', user_id=conversation.partner.id) }}" class="message-dropdown-item">
+                                        <div class="message-item-avatar">
+                                            {% if conversation.partner.avatar %}
+                                            <img src="{{ url_for('static', filename='uploads/avatars/' + conversation.partner.id|string + '.png') }}?v={{ range(1, 10000)|random }}" alt="{{ conversation.partner.username }}">
+                                            {% else %}
+                                            <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="{{ conversation.partner.username }}">
+                                            {% endif %}
+                                        </div>
+                                        <div class="message-item-content">
+                                            <div class="message-item-header">
+                                                <span class="message-item-sender">{{ conversation.partner.username }}</span>
+                                                <span class="message-item-time">{{ conversation.message.created_at.strftime('%b %d') }}</span>
+                                            </div>
+                                            <div class="message-item-preview">
+                                                {{ conversation.message.content[:50] }}{% if conversation.message.content|length > 50 %}...{% endif %}
+                                            </div>
+                                        </div>
+                                        {% if not conversation.message.is_read and conversation.message.recipient_id == current_user.id %}
+                                        <span class="message-unread-dot"></span>
+                                        {% endif %}
+                                    </a>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-messages">
+                                        <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                                        <p>No messages yet</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            </div>
+                        </div>
+                        <div class="alert-dropdown-container" style="position: relative;">
+                            <div class="message-alert-icon" id="alerts-dropdown-trigger" title="Alerts" style="display: inline-flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(34, 197, 94, 0.3); border: 1px solid rgba(34, 197, 94, 0.5); border-radius: 10px; cursor: pointer;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 448 512" fill="#22c55e">
+                                    <path d="M224 0c-17.7 0-32 14.3-32 32V49.9C119.5 61.4 64 124.2 64 200v33.4c0 45.4-15.5 89.5-43.8 124.9L5.3 377c-5.8 7.2-6.9 17.1-2.9 25.4S14.8 416 24 416H424c9.2 0 17.6-5.3 21.6-13.6s2.9-18.2-2.9-25.4l-14.9-18.6C399.5 322.9 384 278.8 384 233.4V200c0-75.8-55.5-138.6-128-150.1V32c0-17.7-14.3-32-32-32zm0 96h8c57.4 0 104 46.6 104 104v33.4c0 47.9 13.9 94.6 39.7 134.6H72.3C98.1 328 112 281.3 112 233.4V200c0-57.4 46.6-104 104-104h8zm64 352H224 160c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7s18.7-28.3 18.7-45.3z"/>
+                                </svg>
+                                {% if current_user.unread_alert_count > 0 %}
+                                <span class="icon-badge">{{ current_user.unread_alert_count }}</span>
+                                {% endif %}
+                            </div>
+                            {# Alerts Dropdown Menu #}
+                            <div class="alerts-dropdown-menu" id="alerts-dropdown">
+                            <div class="alerts-dropdown-header">
+                                <h6 class="m-0">Recent Alerts</h6>
+                                <a href="{{ url_for('main.messages') }}?tab=alerts" class="view-all-link">View All</a>
+                            </div>
+                            <div class="alerts-dropdown-body">
+                                {% set recent_alerts = current_user.get_recent_alerts(5) %}
+                                {% if recent_alerts %}
+                                    {% for alert in recent_alerts %}
+                                    <div class="alert-dropdown-item {% if not alert.is_read %}alert-unread{% endif %}" id="alert-item-{{ alert.id }}">
+                                        <div class="alert-item-icon">
+                                            {% if alert.alert_type.value == 'level_up' %}
+                                            <i class="fas fa-star"></i>
+                                            {% elif alert.alert_type.value == 'election_win' %}
+                                            <i class="fas fa-trophy"></i>
+                                            {% elif alert.alert_type.value == 'house_expired' %}
+                                            <i class="fas fa-home"></i>
+                                            {% elif alert.alert_type.value == 'admin_announcement' %}
+                                            <i class="fas fa-bullhorn"></i>
+                                            {% else %}
+                                            <i class="fas fa-bell"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="alert-item-content">
+                                            <div class="alert-item-header">
+                                                <span class="alert-item-title">{{ alert.title }}</span>
+                                                <span class="alert-item-time">{{ alert.created_at.strftime('%b %d') }}</span>
+                                            </div>
+                                            <div class="alert-item-message">
+                                                {{ alert.content[:60] }}{% if alert.content|length > 60 %}...{% endif %}
+                                            </div>
+                                            {% if alert.link_url %}
+                                            <a href="{{ alert.link_url }}" class="alert-item-link">{{ alert.link_text or 'View' }}</a>
+                                            {% endif %}
+                                        </div>
+                                        {% if not alert.is_read %}
+                                        <button type="button" class="alert-dismiss-btn" onclick="markAlertRead({{ alert.id }})" title="Mark as read">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-alerts">
+                                        <i class="fas fa-bell-slash" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                                        <p>No alerts yet</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# XP Progress #}
+        <div class="stat-group">
+             <div class="d-flex justify-content-between align-items-center mb-2">
+                 <span class="text-white fw-semibold" style="font-size: 0.9rem;"><i class="fas fa-chart-line me-2 text-success"></i>XP Progress</span>
+                 <span class="text-success fw-bold" style="font-size: 0.9rem;">{{ current_user.xp_progress_in_current_level|default(0)|int }}/{{ current_user.xp_increment_for_current_level|default(1)|int }}</span>
+             </div>
+             <div class="progress">
+                 {% set xp_perc = (current_user.xp_progress_in_current_level / current_user.xp_increment_for_current_level * 100)|default(0) %}
+                 <div class="progress-bar progress-bar-xp" role="progressbar" style="width: {{ xp_perc }}%"></div>
+             </div>
+         </div>
+
+        {# Wellness Progress #}
+        <div class="stat-group">
+             <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-white fw-semibold" style="font-size: 0.9rem;"><i class="fas fa-heart me-2 text-warning"></i>Wellness</span>
+                <span class="text-warning fw-bold" style="font-size: 0.9rem;">{{ current_user.wellness|default(0)|round(1) }}/{{ current_user.max_wellness|default(100)|round(0)|int }}</span>
+             </div>
+             <div class="progress">
+                  {% set max_wellness = current_user.max_wellness|default(100) %}
+                  {% set well_perc = (current_user.wellness|default(0) / max_wellness * 100)|round(1) if max_wellness > 0 else 0 %}
+                  {% set well_color_class = 'progress-bar-wellness' %}
+                 <div class="progress-bar {{ well_color_class }}" role="progressbar" style="width: {{ well_perc }}%"></div>
+             </div>
+         </div>
+
+        {# Energy Progress #}
+        <div class="stat-group">
+             <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-white fw-semibold" style="font-size: 0.9rem;"><i class="fas fa-bolt me-2 text-info"></i>Energy</span>
+                <span class="text-info fw-bold" style="font-size: 0.9rem;">{{ current_user.energy|default(0)|round(1) }}/{{ current_user.max_energy|default(100)|round(0)|int }}</span>
+             </div>
+             <div class="progress">
+                  {% set max_energy = current_user.max_energy|default(100) %}
+                  {% set energy_perc = (current_user.energy|default(0) / max_energy * 100)|round(1) if max_energy > 0 else 0 %}
+                 <div class="progress-bar progress-bar-energy" role="progressbar" style="width: {{ energy_perc }}%"></div>
+             </div>
+         </div>
+
+        {# Currency Stats #}
+        <div class="currency-stats">
+            <div class="currency-item">
+                 <div class="currency-label">
+                     <i class="fas fa-coins text-warning" style="font-size: 1.1rem;"></i>
+                     <span>Gold</span>
+                 </div>
+                <div class="currency-amount">{{ current_user.gold|default(0)|round(2) }}</div>
+            </div>
+            {# Only show local currency if citizenship is set #}
+            {% if current_user.current_region and current_user.current_region.current_owner %}
+            <div class="currency-item currency-dropdown-container">
+                 <div class="currency-label">
+                     <i class="fas fa-money-bill-wave" style="font-size: 1.1rem; color: #22c55e;"></i>
+                     <span id="selected-currency-code">{{ current_user.local_currency_code or 'N/A' }}</span>
+                     {% if current_user.all_currencies|length > 1 %}
+                     <i class="fas fa-chevron-down" style="font-size: 0.75rem; margin-left: 0.25rem; opacity: 0.7;"></i>
+                     {% endif %}
+                 </div>
+                <div class="currency-amount" id="selected-currency-amount">{{ "%.2f"|format(current_user.local_currency|float) }}</div>
+
+                {# Dropdown menu for multiple currencies #}
+                {% if current_user.all_currencies|length > 1 %}
+                <div class="currency-dropdown-menu" id="currency-dropdown">
+                    {% for currency in current_user.all_currencies %}
+                    <div class="currency-dropdown-item" data-currency-code="{{ currency.currency_code }}" data-amount="{{ "%.2f"|format(currency.amount|float) }}">
+                        <div class="dropdown-item-label">
+                            <i class="fas fa-money-bill-wave" style="font-size: 0.9rem; color: #22c55e;"></i>
+                            <span>{{ currency.currency_code }}</span>
+                        </div>
+                        <div class="dropdown-item-amount">{{ "%.2f"|format(currency.amount|float) }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# Currency & Messages Dropdown Scripts #}
+<script>
+(function() {
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDropdowns);
+    } else {
+        initDropdowns();
+    }
+
+    function initDropdowns() {
+        initCurrencyDropdown();
+        initMessagesDropdown();
+        initAlertsDropdown();
+    }
+
+    function initCurrencyDropdown() {
+        const currencyContainer = document.querySelector('.currency-dropdown-container');
+        const currencyDropdown = document.getElementById('currency-dropdown');
+        const selectedCurrencyCode = document.getElementById('selected-currency-code');
+        const selectedCurrencyAmount = document.getElementById('selected-currency-amount');
+
+        if (!currencyContainer || !currencyDropdown) return;
+
+        // Toggle dropdown on click
+        currencyContainer.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Close other dropdowns
+            const messagesDropdown = document.getElementById('messages-dropdown');
+            const alertsDropdown = document.getElementById('alerts-dropdown');
+            if (messagesDropdown) messagesDropdown.classList.remove('show');
+            if (alertsDropdown) alertsDropdown.classList.remove('show');
+
+            currencyDropdown.classList.toggle('show');
+        });
+
+        // Handle currency selection
+        const dropdownItems = currencyDropdown.querySelectorAll('.currency-dropdown-item');
+        dropdownItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const code = this.getAttribute('data-currency-code');
+                const amount = this.getAttribute('data-amount');
+
+                // Update displayed values
+                selectedCurrencyCode.textContent = code;
+                selectedCurrencyAmount.textContent = amount;
+
+                // Close dropdown
+                currencyDropdown.classList.remove('show');
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!currencyContainer.contains(e.target)) {
+                currencyDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    function initMessagesDropdown() {
+        const messagesTrigger = document.getElementById('messages-dropdown-trigger');
+        const messagesDropdown = document.getElementById('messages-dropdown');
+
+        if (!messagesTrigger || !messagesDropdown) return;
+
+        // Toggle dropdown on click
+        messagesTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            // Close other dropdowns
+            const currencyDropdown = document.getElementById('currency-dropdown');
+            const alertsDropdown = document.getElementById('alerts-dropdown');
+            if (currencyDropdown) currencyDropdown.classList.remove('show');
+            if (alertsDropdown) alertsDropdown.classList.remove('show');
+
+            messagesDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!messagesTrigger.contains(e.target)) {
+                messagesDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside
+        messagesDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+
+    function initAlertsDropdown() {
+        const alertsTrigger = document.getElementById('alerts-dropdown-trigger');
+        const alertsDropdown = document.getElementById('alerts-dropdown');
+
+        if (!alertsTrigger || !alertsDropdown) return;
+
+        // Toggle dropdown on click
+        alertsTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            // Close other dropdowns
+            const currencyDropdown = document.getElementById('currency-dropdown');
+            const messagesDropdown = document.getElementById('messages-dropdown');
+            if (currencyDropdown) currencyDropdown.classList.remove('show');
+            if (messagesDropdown) messagesDropdown.classList.remove('show');
+
+            alertsDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!alertsTrigger.contains(e.target)) {
+                alertsDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside
+        alertsDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+})();
+
+// Mark alert as read function
+function markAlertRead(alertId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    fetch('/alerts/mark-read/' + alertId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the alert item or mark it as read visually
+            const alertItem = document.getElementById('alert-item-' + alertId);
+            if (alertItem) {
+                alertItem.classList.remove('alert-unread');
+                // Remove the dismiss button
+                const dismissBtn = alertItem.querySelector('.alert-dismiss-btn');
+                if (dismissBtn) dismissBtn.remove();
+            }
+            // Update the badge count
+            const badge = document.querySelector('#alerts-dropdown-trigger .icon-badge');
+            if (badge) {
+                const count = parseInt(badge.textContent) - 1;
+                if (count <= 0) {
+                    badge.remove();
+                } else {
+                    badge.textContent = count;
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error marking alert as read:', error);
+    });
+}
+</script>
+</div>
+{% endif %}
+
+<!-- Dashboard Content - Separate Container -->
+<div class="dashboard-content-container">

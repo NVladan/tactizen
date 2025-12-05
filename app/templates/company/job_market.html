@@ -1,0 +1,330 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Job Market - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .training-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.7), rgba(15, 20, 25, 0.7)), url('{{ url_for("static", filename="images/buildings/jobmarket.png") }}');
+        background-size: cover;
+        background-position: center;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .training-header:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .training-header h2 {
+        color: #22c55e;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+        transform: translateY(-2px);
+    }
+
+    /* Modern Section Styles */
+    .modern-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 0;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .modern-section:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .modern-section-header {
+        background: rgba(34, 197, 94, 0.1);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .modern-section-header h4 {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .modern-section-body {
+        padding: 1.5rem;
+    }
+
+    /* Form Elements */
+    .form-control, .form-select {
+        background: #0f1419;
+        color: #fff;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: #0f1419;
+        color: #fff;
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .form-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+    }
+
+    /* Job Table Styles */
+    .job-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+    .job-table thead th {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.75rem 1rem;
+        border: none;
+    }
+
+    .job-row {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        transition: all 0.3s ease;
+    }
+
+    .job-row:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(34, 197, 94, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 8px rgba(34, 197, 94, 0.15);
+    }
+
+    .job-row td {
+        padding: 1rem;
+        color: #ffffff;
+        border: none;
+    }
+
+    .job-row td:first-child {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        border-left: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .job-row td:last-child {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-right: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .job-row:hover td:first-child {
+        border-left-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .job-row:hover td:last-child {
+        border-right-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .company-name {
+        color: #22c55e;
+        font-weight: 700;
+    }
+
+    .wage-amount {
+        color: #22c55e;
+        font-weight: 700;
+    }
+
+    .no-jobs {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .no-jobs i {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+        display: block;
+        color: #22c55e;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Tab Navigation Header -->
+        <ul class="nav nav-tabs mb-4" id="marketTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{% if country %}{{ url_for('main.marketplace', country_slug=country.slug) }}{% else %}#{% endif %}"><i class="fas fa-store me-1"></i>Marketplace</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('company.job_market') }}"><i class="fas fa-briefcase me-1"></i>Job Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.currency_market_default') }}"><i class="fas fa-money-bill-wave me-1"></i>Currency Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.zen_market') }}"><i class="fas fa-coins me-1"></i>Zen Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('marketplace.marketplace_page') }}"><i class="fas fa-gem me-1"></i>NFT Market</a>
+          </li>
+        </ul>
+
+        <!-- Job Market Header -->
+        <div class="training-header">
+            <div class="text-center">
+                <h2 class="mb-3">Job Market</h2>
+                <p class="text-muted mb-0">Browse and apply for jobs at companies</p>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="modern-section">
+            <div class="modern-section-header">
+                <h4><i class="fas fa-filter me-2"></i>Filters</h4>
+            </div>
+            <div class="modern-section-body">
+                <form method="GET" action="{{ url_for('company.job_market') }}" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Company Type</label>
+                        <select name="company_type" class="form-select">
+                            <option value="">All Types</option>
+                            <option value="resource_extraction">Resource Extraction</option>
+                            <option value="manufacture">Manufacture</option>
+                            <option value="construction">Construction</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Min Wage</label>
+                        <input type="number" name="min_wage" class="form-control" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Quality</label>
+                        <select name="quality" class="form-select">
+                            <option value="">Any</option>
+                            <option value="1">Q1</option>
+                            <option value="2">Q2</option>
+                            <option value="3">Q3</option>
+                            <option value="4">Q4</option>
+                            <option value="5">Q5</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Country</label>
+                        <select name="country_id" class="form-select">
+                            <option value="">All Countries</option>
+                            {% for country in countries %}
+                            <option value="{{ country.id }}">{{ country.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Job Listings -->
+        <div class="modern-section">
+            <div class="modern-section-header">
+                <h4><i class="fas fa-briefcase me-2"></i>Available Jobs ({{ job_offers|length }})</h4>
+            </div>
+            <div class="modern-section-body">
+                {% if job_offers %}
+                <table class="job-table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Type</th>
+                            <th>Quality</th>
+                            <th>Location</th>
+                            <th>Wage per PP</th>
+                            <th>Positions</th>
+                            <th>Min Skill</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in job_offers %}
+                        <tr class="job-row">
+                            <td class="company-name">{{ job.company.name }}</td>
+                            <td>{{ job.company.company_type.value }}</td>
+                            <td><span class="badge bg-primary">Q{{ job.company.quality_level }}</span></td>
+                            <td>{{ job.company.country.name }}</td>
+                            <td class="wage-amount">{{ "%.2f"|format(job.wage_per_pp|float) }} {{ job.company.country.currency_name }}</td>
+                            <td>
+                                <span class="badge {{ 'bg-success' if job.positions_available > 0 else 'bg-secondary' }}">
+                                    {{ job.positions_available }}
+                                </span>
+                            </td>
+                            <td>{{ job.minimum_skill_level }}</td>
+                            <td>
+                                {% if job.company_id in user_employments %}
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Already Employed</span>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('company.apply_job', job_id=job.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-paper-plane me-1"></i>Apply
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-jobs">
+                    <i class="fas fa-briefcase"></i>
+                    <p>No job offers available at the moment.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

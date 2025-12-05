@@ -1,0 +1,216 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+
+    .event-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .event-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .event-card-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 1rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        font-weight: 600;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .event-card-body {
+        padding: 1rem;
+    }
+
+    .event-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .event-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+        color: #ffffff;
+    }
+
+    .event-item:last-child {
+        border-bottom: none;
+    }
+
+    .event-item:hover {
+        background: rgba(34, 197, 94, 0.05);
+    }
+
+    .article-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .article-card:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .article-title {
+        color: #ffffff;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .article-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    /* Dashboard content container */
+    .dashboard-content-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #0a0e1a;
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .training-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .training-header:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .training-header h2 {
+        color: #22c55e;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <!-- Tab Navigation Header -->
+    <div class="main-container">
+        <ul class="nav nav-tabs mb-4" id="myPlacesTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('company.my_companies') }}"><i class="fas fa-building me-1"></i>Companies</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.training') }}"><i class="fas fa-dumbbell me-1"></i>Training Grounds</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.study') }}"><i class="fas fa-graduation-cap me-1"></i>Study</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.storage') }}"><i class="fas fa-warehouse me-1"></i>Storage</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.travel') }}"><i class="fas fa-plane me-1"></i>Travel</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.residence') }}"><i class="fas fa-home me-1"></i>Residence</a>
+          </li>
+        </ul>
+
+        <!-- Companies Header -->
+        <div class="training-header">
+            <div class="text-center">
+                <h2 class="mb-3">Companies</h2>
+                <p class="text-muted mb-0">Manage your businesses, hire employees, and grow your economic empire.</p>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="article-card text-center">
+                    <h4 class="article-title">My Companies</h4>
+                    <p class="article-meta">Manage your owned companies and jobs</p>
+                    <a href="{{ url_for('company.my_companies') }}" class="btn btn-primary mt-2">
+                        <i class="fas fa-briefcase me-1"></i> View My Companies
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="article-card text-center">
+                    <h4 class="article-title">Job Market</h4>
+                    <p class="article-meta">Browse available jobs and apply</p>
+                    <a href="{{ url_for('company.job_market') }}" class="btn btn-success mt-2">
+                        <i class="fas fa-search me-1"></i> Find Jobs
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="article-card text-center">
+                    <h4 class="article-title">Create New Company</h4>
+                    <p class="article-meta">Start your own business (Costs 20 Gold)</p>
+                    <a href="{{ url_for('company.create_company') }}" class="btn btn-warning mt-2">
+                        <i class="fas fa-plus me-1"></i> Create Company
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="event-card mt-4">
+            <div class="event-card-header">
+                <i class="fas fa-info-circle me-2"></i>
+                About Companies
+            </div>
+            <div class="event-card-body">
+                <ul class="event-list">
+                    <li class="event-item">
+                        <strong>Own Companies:</strong> Create and manage businesses, hire employees, and produce goods
+                    </li>
+                    <li class="event-item">
+                        <strong>Work for Companies:</strong> Apply for jobs and earn daily wages
+                    </li>
+                    <li class="event-item">
+                        <strong>Quality Levels:</strong> Upgrade from Q1 to Q5 for more employees and production bonuses
+                    </li>
+                    <li class="event-item">
+                        <strong>Company Types:</strong> Mining, Farming, Manufacturing, Construction, and more
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}

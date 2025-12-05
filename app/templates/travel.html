@@ -1,0 +1,448 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+
+    .event-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .event-card-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 1rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        font-weight: 600;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+    }
+
+    .event-card-body {
+        padding: 1rem;
+    }
+
+    .event-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .event-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+        transition: all 0.2s ease;
+        color: #ffffff;
+    }
+
+    .event-item:last-child {
+        border-bottom: none;
+    }
+
+    .event-item:hover {
+        background: rgba(34, 197, 94, 0.05);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+    }
+
+    .article-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .article-card:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-color: #22c55e;
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.3);
+    }
+
+    .article-title {
+        color: #ffffff;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .article-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .training-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.7), rgba(15, 20, 25, 0.7)), url('{{ url_for("static", filename="images/buildings/travel.png") }}');
+        background-size: cover;
+        background-position: center;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Tab Navigation Header -->
+        <ul class="nav nav-tabs mb-4" id="myPlacesTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('company.my_companies') }}"><i class="fas fa-building me-1"></i>Companies</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.training') }}"><i class="fas fa-dumbbell me-1"></i>Training Grounds</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.study') }}"><i class="fas fa-graduation-cap me-1"></i>Study</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.storage') }}"><i class="fas fa-warehouse me-1"></i>Storage</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('main.travel') }}"><i class="fas fa-plane me-1"></i>Travel</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.residence') }}"><i class="fas fa-home me-1"></i>Residence</a>
+          </li>
+        </ul>
+
+        <!-- Travel Header -->
+        <div class="training-header">
+            <div class="text-center">
+                <h2 class="mb-3">Travel</h2>
+                <p class="text-muted mb-0">Move to a new location anywhere in the world.</p>
+            </div>
+        </div>
+
+        <!-- Side by Side Layout for Current Location and Travel Form -->
+        <div class="row justify-content-center mb-4 g-4">
+            <div class="col-lg-5 col-md-6">
+                <div class="card location-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="location-icon">
+                                <i class="fas fa-map-marker-alt fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="location-name mb-1">Current Location</h4>
+                                <p class="location-info mb-0">{{ current_location }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 col-md-6">
+                <div class="card training-form-card h-100">
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('main.travel') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {{ form.hidden_tag() }}
+                            <div class="mb-4">
+                                {{ form.country.label(class="form-label") }}
+                                {{ form.country(class="form-select" + (" is-invalid" if form.country.errors else "")) }}
+                                {% if form.country.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.country.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-4">
+                                {{ form.region.label(class="form-label") }}
+                                {{ form.region(class="form-select" + (" is-invalid" if form.region.errors else ""), disabled=True) }}
+                                {% if form.region.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.region.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Payment Method Selection -->
+                            <div class="mb-3">
+                                <label class="form-label">Payment Method</label>
+                                <div class="btn-group d-flex" role="group">
+                                    <input type="radio" class="btn-check" name="payment_method" id="payment_gold" value="gold" checked>
+                                    <label class="btn btn-outline-warning" for="payment_gold">
+                                        <i class="fas fa-coins me-1"></i>1 Gold
+                                    </label>
+                                    <input type="radio" class="btn-check" name="payment_method" id="payment_stats" value="stats">
+                                    <label class="btn btn-outline-info" for="payment_stats">
+                                        <i class="fas fa-bolt me-1"></i>50 Energy
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="button" id="travel-btn" class="btn btn-success">
+                                    <i class="fas fa-plane me-2"></i>Move
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Insufficient Gold Modal -->
+<div class="modal fade" id="insufficientGoldModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(239, 68, 68, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.2);">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #f59e0b;"></i>Insufficient Gold
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <p class="text-white mb-0">You don't have enough gold to use premium travel. You need at least 1 Gold.</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(239, 68, 68, 0.2);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Insufficient Stats Modal -->
+<div class="modal fade" id="insufficientStatsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(239, 68, 68, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.2);">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #f59e0b;"></i>Insufficient Energy
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <p class="text-white mb-0">You need at least 50 Energy to travel using this method.</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(239, 68, 68, 0.2);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Travel Notification Modal -->
+<div class="modal fade" id="travelNotificationModal" tabindex="-1" aria-labelledby="travelNotificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="travelNotificationModalLabel">
+                    {% if message_type == 'success' %}
+                        <i class="fas fa-check-circle text-success me-2"></i>Travel Successful
+                    {% elif message_type == 'warning' %}
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>Travel Notice
+                    {% elif message_type == 'danger' %}
+                        <i class="fas fa-times-circle text-danger me-2"></i>Travel Error
+                    {% else %}
+                        <i class="fas fa-info-circle text-info me-2"></i>Travel Information
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ message }}
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add modal cleanup handlers
+        const insufficientGoldModal = document.getElementById('insufficientGoldModal');
+        const insufficientStatsModal = document.getElementById('insufficientStatsModal');
+
+        // Clean up backdrop when modals are hidden
+        [insufficientGoldModal, insufficientStatsModal].forEach(function(modalEl) {
+            if (modalEl) {
+                modalEl.addEventListener('hidden.bs.modal', function () {
+                    document.body.classList.remove('modal-open');
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(function(backdrop) {
+                        backdrop.remove();
+                    });
+                });
+            }
+        });
+
+        // Travel button handler with payment method validation
+        const travelBtn = document.getElementById('travel-btn');
+        const travelForm = document.querySelector('form[action="{{ url_for("main.travel") }}"]');
+        const goldRadio = document.getElementById('payment_gold');
+        const statsRadio = document.getElementById('payment_stats');
+
+        if (travelBtn && travelForm) {
+            travelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Check which payment method is selected
+                const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+                // Get user's current stats from the page
+                const userGold = parseFloat('{{ current_user.gold }}') || 0;
+                const userWellness = parseFloat('{{ current_user.wellness }}') || 0;
+                const userEnergy = parseFloat('{{ current_user.energy }}') || 0;
+
+                if (paymentMethod === 'gold') {
+                    // Check if user has enough gold
+                    if (userGold < 1) {
+                        const modal = new bootstrap.Modal(insufficientGoldModal);
+                        modal.show();
+                        return;
+                    }
+                } else if (paymentMethod === 'stats') {
+                    // Check if user has enough energy
+                    if (userEnergy < 50) {
+                        const modal = new bootstrap.Modal(insufficientStatsModal);
+                        modal.show();
+                        return;
+                    }
+                }
+
+                // Add payment method to form and submit
+                let paymentInput = travelForm.querySelector('input[name="payment_method"]');
+                if (!paymentInput) {
+                    paymentInput = document.createElement('input');
+                    paymentInput.type = 'hidden';
+                    paymentInput.name = 'payment_method';
+                    travelForm.appendChild(paymentInput);
+                }
+                paymentInput.value = paymentMethod;
+                travelForm.submit();
+            });
+        }
+
+        // Show notification if there's a message
+        {% if message %}
+            const notification = new bootstrap.Toast(document.createElement('div'));
+            const notificationElement = document.createElement('div');
+            notificationElement.className = 'toast align-items-center text-white bg-{{ message_type }} border-0 position-fixed top-0 end-0 m-3';
+            notificationElement.setAttribute('role', 'alert');
+            notificationElement.setAttribute('aria-live', 'assertive');
+            notificationElement.setAttribute('aria-atomic', 'true');
+            notificationElement.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            document.body.appendChild(notificationElement);
+            const toast = new bootstrap.Toast(notificationElement, {
+                autohide: true,
+                delay: 5000
+            });
+            toast.show();
+        {% endif %}
+
+        // Show modal notification if there's a message
+        {% if message %}
+            const travelModal = new bootstrap.Modal(document.getElementById('travelNotificationModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            
+            // Handle modal hidden event to remove backdrop
+            document.getElementById('travelNotificationModal').addEventListener('hidden.bs.modal', function () {
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            });
+
+            // Show the modal
+            travelModal.show();
+        {% endif %}
+
+        const countrySelect = document.getElementById('country');
+        const regionSelect = document.getElementById('region');
+        const regionLabel = document.querySelector('label[for="region"]');
+        function updateRegions() {
+            const countryId = countrySelect.value;
+            regionSelect.innerHTML = '<option value="" selected>-- First select a country --</option>';
+            regionSelect.disabled = true;
+            if (regionLabel) regionLabel.classList.add('text-muted');
+            if (!countryId) { return; }
+            fetch(`/api/regions/${countryId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Network response was not ok (${response.status})`);
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        return response.json();
+                    } else {
+                        return response.text().then(text => { throw new Error("Expected JSON, received: "+ text); });
+                    }
+                })
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    if (data.regions && data.regions.length > 0) {
+                        regionSelect.innerHTML = '<option value="" selected>-- Select a Region --</option>';
+                        data.regions.forEach(region => {
+                            const option = document.createElement('option');
+                            option.value = region.id;
+                            option.textContent = region.name;
+                            regionSelect.appendChild(option);
+                        });
+                        regionSelect.disabled = false;
+                        if (regionLabel) regionLabel.classList.remove('text-muted');
+                    } else {
+                        regionSelect.innerHTML = '<option value="">-- No regions available --</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching or processing regions:', error);
+                    regionSelect.innerHTML = '<option value="">-- First select a country --</option>';
+                    regionSelect.disabled = true;
+                    if (regionLabel) regionLabel.classList.add('text-muted');
+                });
+        }
+        if (countrySelect) {
+            countrySelect.addEventListener('change', updateRegions);
+            if (countrySelect.value) { updateRegions(); }
+        } else {
+            console.error("Country select element not found");
+        }
+        if (regionSelect && (!countrySelect || !countrySelect.value)) {
+            regionSelect.disabled = true;
+            if (regionLabel) regionLabel.classList.add('text-muted');
+        }
+    });
+</script>
+{% endblock %}
+{% endblock main_layout %}

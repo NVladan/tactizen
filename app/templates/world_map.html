@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D World Map - Tactizen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 320px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+        #info-panel h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #4CAF50;
+        }
+        #info-panel p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        #info-panel .label {
+            color: #888;
+            font-size: 12px;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px 50px;
+            border-radius: 8px;
+            z-index: 1000;
+            text-align: center;
+        }
+        #loading .progress {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #4CAF50;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            z-index: 100;
+        }
+        #controls p {
+            margin: 5px 0;
+        }
+        #back-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 100;
+            transition: background 0.3s;
+        }
+        #back-button:hover {
+            background: rgba(76, 175, 80, 1);
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <a href="{{ url_for('main.index') }}" id="back-button">← Back to Dashboard</a>
+    <div id="loading">
+        <div>Loading 3D Globe...</div>
+        <div class="progress" id="progress-text">Loading libraries...</div>
+    </div>
+    <div id="info-panel" class="hidden">
+        <h2 id="country-name">Hover over a country</h2>
+        <p class="label">ISO Code</p>
+        <p id="country-iso">-</p>
+        <p class="label">Continent</p>
+        <p id="country-continent">-</p>
+        <p class="label">Population</p>
+        <p id="country-population">-</p>
+        <p class="label">Region</p>
+        <p id="country-region">-</p>
+    </div>
+    <div id="controls">
+        <p><strong>Controls:</strong></p>
+        <p>Left Mouse: Rotate Globe</p>
+        <p>Right Mouse: Pan</p>
+        <p>Mouse Wheel: Zoom In/Out</p>
+        <p>Hover: Highlight Country</p>
+        <p>Click: Select Country</p>
+    </div>
+
+    <!-- Load Three.js r128 from local files -->
+    <script src="{{ url_for('static', filename='libs/threejs/three.min.js') }}"></script>
+
+    <!-- Load OrbitControls from local files -->
+    <script src="{{ url_for('static', filename='libs/threejs/OrbitControls.js') }}"></script>
+
+    <script>
+        console.log('=== WORLD MAP INITIALIZATION START ===');
+        console.log('Document readyState:', document.readyState);
+        console.log('Window location:', window.location.href);
+
+        // Check if libraries loaded
+        console.log('Checking THREE.js availability...');
+        if (typeof THREE === 'undefined') {
+            console.error('❌ THREE.js is not defined!');
+            console.error('THREE global variable:', typeof THREE);
+            document.getElementById('loading').innerHTML =
+                '<div style="color: #ff6b6b;">Error loading THREE.js</div>' +
+                '<div class="progress">Library file not loaded. Check console for details.</div>' +
+                '<div class="progress"><a href="{{ url_for("main.index") }}" style="color: #4CAF50;">Go back to dashboard</a></div>';
+            throw new Error('THREE.js failed to load');
+        }
+        console.log('✓ THREE.js loaded successfully');
+        console.log('  - THREE.REVISION:', THREE.REVISION);
+        console.log('  - THREE object keys (first 10):', Object.keys(THREE).slice(0, 10));
+
+        console.log('Checking OrbitControls availability...');
+        if (typeof THREE.OrbitControls === 'undefined') {
+            console.error('❌ OrbitControls is not defined!');
+            console.error('THREE.OrbitControls:', typeof THREE.OrbitControls);
+            console.error('Available THREE properties:', Object.keys(THREE).filter(k => k.includes('Control') || k.includes('Orbit')));
+            document.getElementById('loading').innerHTML =
+                '<div style="color: #ff6b6b;">Error loading OrbitControls</div>' +
+                '<div class="progress">Library file not loaded. Check console for details.</div>' +
+                '<div class="progress"><a href="{{ url_for("main.index") }}" style="color: #4CAF50;">Go back to dashboard</a></div>';
+            throw new Error('OrbitControls failed to load');
+        }
+        console.log('✓ OrbitControls loaded successfully');
+        console.log('  - OrbitControls type:', typeof THREE.OrbitControls);
+
+        // 3D Tiles Renderer not needed - using local textures
+        console.log('Using local NASA textures (no external dependencies)');
+
+        // Initialize the app
+        function initApp() {
+            console.log('=== INIT APP CALLED ===');
+            console.log('Starting application initialization...');
+
+            updateProgress('Initializing 3D scene...');
+
+            let tilesRenderer = null;
+
+            // Update progress
+            function updateProgress(message) {
+                const elem = document.getElementById('progress-text');
+                if (elem) {
+                    elem.textContent = message;
+                }
+                console.log('Progress:', message);
+            }
+
+            // Scene setup
+            console.log('Creating THREE.Scene...');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x001122);
+            console.log('✓ Scene created');
+
+            console.log('Creating PerspectiveCamera...');
+            const camera = new THREE.PerspectiveCamera(
+                60,
+                window.innerWidth / window.innerHeight,
+                1,
+                100000000
+            );
+
+            console.log('✓ Camera created');
+
+            console.log('Creating WebGLRenderer...');
+            const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setClearColor(0x001122);
+            console.log('✓ Renderer created');
+
+            console.log('Appending renderer to DOM...');
+            const container = document.getElementById('canvas-container');
+            console.log('Container element:', container);
+            container.appendChild(renderer.domElement);
+            console.log('✓ Renderer appended to canvas-container');
+
+            // Camera position
+            camera.position.set(0, 0, 20000000);
+            camera.lookAt(0, 0, 0);
+
+            // Controls
+            console.log('Creating OrbitControls...');
+            console.log('  - Camera:', camera);
+            console.log('  - Renderer DOM element:', renderer.domElement);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            console.log('✓ OrbitControls created successfully');
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 6500000;
+            controls.maxDistance = 50000000;
+            controls.screenSpacePanning = false;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            directionalLight.position.set(5, 3, 5);
+            scene.add(directionalLight);
+
+            // Create Earth sphere with texture
+            updateProgress('Loading Earth texture...');
+            console.log('Creating textured Earth sphere...');
+
+            const earthGeometry = new THREE.SphereGeometry(6371000, 128, 128);
+
+            // Load Earth texture locally
+            const textureLoader = new THREE.TextureLoader();
+            const earthTexture = textureLoader.load(
+                '{{ url_for("static", filename="textures/earth-blue-marble.jpg") }}',
+                () => {
+                    console.log('✅ Earth texture loaded successfully');
+                    updateProgress('Earth texture loaded!');
+                },
+                undefined,
+                (error) => {
+                    console.error('❌ Error loading Earth texture:', error);
+                    updateProgress('Using fallback colors');
+                }
+            );
+
+            const earthMaterial = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                shininess: 5,
+                specular: new THREE.Color(0x333333)
+            });
+
+            const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+            scene.add(earthMesh);
+            console.log('✅ Textured Earth sphere added to scene');
+
+            // Store reference for raycasting
+            const earthMeshRef = earthMesh;
+
+            // Country borders data
+            let countryBorders = null;
+            let countryLines = [];
+            let countryMeshes = new Map();
+            let hoveredCountry = null;
+            let selectedCountry = null;
+
+            // Raycaster for interaction
+            const raycaster = new THREE.Raycaster();
+            raycaster.params.Line.threshold = 150000;
+            const mouse = new THREE.Vector2();
+
+            // Load country data from Flask API
+            async function loadCountries() {
+                try {
+                    updateProgress('Loading country borders...');
+                    const response = await fetch('/api/countries');
+                    const data = await response.json();
+                    console.log(`Loaded ${data.features.length} countries`);
+                    countryBorders = data;
+
+                    updateProgress('Rendering country borders...');
+                    createCountryBorders();
+                    updateProgress('Ready!');
+
+                    setTimeout(() => {
+                        document.getElementById('loading').classList.add('hidden');
+                        document.getElementById('info-panel').classList.remove('hidden');
+                    }, 500);
+                } catch (error) {
+                    console.error('Error loading country data:', error);
+                    document.getElementById('loading').innerHTML =
+                        '<div>Error loading country data</div><div class="progress">' + error.message + '</div>';
+                }
+            }
+
+            // Convert lat/lon to 3D coordinates on sphere
+            function latLonToVector3(lat, lon, radius = 6371000) {
+                const phi = (90 - lat) * (Math.PI / 180);
+                const theta = (lon + 180) * (Math.PI / 180);
+
+                const x = -radius * Math.sin(phi) * Math.cos(theta);
+                const y = radius * Math.cos(phi);
+                const z = radius * Math.sin(phi) * Math.sin(theta);
+
+                return new THREE.Vector3(x, y, z);
+            }
+
+            // Create country border lines
+            function createCountryBorders() {
+                if (!countryBorders) return;
+
+                const borderGroup = new THREE.Group();
+                const elevationOffset = 6373000; // Slightly above Earth surface
+
+                let segmentCount = 0;
+                const countryMap = new Map();
+
+                countryBorders.features.forEach((feature) => {
+                    const geometry = feature.geometry;
+                    const properties = feature.properties;
+
+                    if (geometry.type === 'Polygon' || geometry.type === 'MultiPolygon') {
+                        const coordinates = geometry.type === 'Polygon'
+                            ? [geometry.coordinates]
+                            : geometry.coordinates;
+
+                        const countryKey = properties.NAME || 'Unknown';
+                        if (!countryMap.has(countryKey)) {
+                            countryMap.set(countryKey, []);
+                        }
+
+                        coordinates.forEach(polygon => {
+                            polygon.forEach(ring => {
+                                if (ring.length < 3) return;
+
+                                const points = [];
+                                ring.forEach(coord => {
+                                    const [lon, lat] = coord;
+                                    points.push(latLonToVector3(lat, lon, elevationOffset));
+                                });
+
+                                if (points.length > 1) {
+                                    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+                                    const lineMaterial = new THREE.LineBasicMaterial({
+                                        color: 0xffd700,
+                                        linewidth: 2,
+                                        transparent: true,
+                                        opacity: 0.9,
+                                        depthTest: true,
+                                        depthWrite: true
+                                    });
+
+                                    const line = new THREE.Line(lineGeometry, lineMaterial);
+                                    line.renderOrder = 1;
+                                    line.userData = {
+                                        country: countryKey,
+                                        iso: properties.ISO_A3 || properties.ISO_A2 || 'N/A',
+                                        continent: properties.CONTINENT || 'Unknown',
+                                        region: properties.SUBREGION || properties.REGION_UN || 'Unknown',
+                                        population: properties.POP_EST || 'N/A',
+                                        originalColor: 0xffd700
+                                    };
+
+                                    borderGroup.add(line);
+                                    countryLines.push(line);
+                                    countryMap.get(countryKey).push(line);
+                                    segmentCount++;
+                                }
+                            });
+                        });
+                    }
+                });
+
+                countryMeshes = countryMap;
+                scene.add(borderGroup);
+                console.log(`Added ${segmentCount} border segments for ${countryMap.size} countries`);
+            }
+
+            // Highlight all segments of a country
+            function highlightCountry(countryName, color, opacity) {
+                if (!countryMeshes.has(countryName)) return;
+                const lines = countryMeshes.get(countryName);
+                lines.forEach(line => {
+                    line.material.color.setHex(color);
+                    line.material.opacity = opacity;
+                });
+            }
+
+            // Reset country to original color
+            function resetCountry(countryName) {
+                if (!countryMeshes.has(countryName)) return;
+                const lines = countryMeshes.get(countryName);
+                lines.forEach(line => {
+                    line.material.color.setHex(line.userData.originalColor);
+                    line.material.opacity = 0.8;
+                });
+            }
+
+            // Update info panel
+            function updateInfoPanel(userData) {
+                if (!userData) {
+                    document.getElementById('country-name').textContent = 'Hover over a country';
+                    document.getElementById('country-iso').textContent = '-';
+                    document.getElementById('country-continent').textContent = '-';
+                    document.getElementById('country-population').textContent = '-';
+                    document.getElementById('country-region').textContent = '-';
+                    return;
+                }
+
+                document.getElementById('country-name').textContent = userData.country;
+                document.getElementById('country-iso').textContent = userData.iso;
+                document.getElementById('country-continent').textContent = userData.continent;
+                document.getElementById('country-region').textContent = userData.region;
+
+                const pop = userData.population;
+                if (pop !== 'N/A') {
+                    document.getElementById('country-population').textContent = parseInt(pop).toLocaleString();
+                } else {
+                    document.getElementById('country-population').textContent = 'N/A';
+                }
+            }
+
+            // Mouse move handler
+            function onMouseMove(event) {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(countryLines);
+
+                if (hoveredCountry && hoveredCountry !== selectedCountry) {
+                    resetCountry(hoveredCountry);
+                }
+
+                // Filter intersections to only include visible (front-facing) countries
+                let visibleIntersect = null;
+                for (let i = 0; i < intersects.length; i++) {
+                    const intersect = intersects[i];
+                    const point = intersect.point;
+
+                    // Check if the intersection point is on the visible side
+                    // by checking if it's facing the camera
+                    const pointToCamera = new THREE.Vector3().subVectors(camera.position, point);
+                    const dotProduct = point.clone().normalize().dot(pointToCamera.normalize());
+
+                    // Only accept if the point is facing the camera (positive dot product)
+                    if (dotProduct > 0.1) {
+                        visibleIntersect = intersect;
+                        break;
+                    }
+                }
+
+                if (visibleIntersect) {
+                    const intersected = visibleIntersect.object;
+                    const countryName = intersected.userData.country;
+
+                    if (countryName !== selectedCountry) {
+                        hoveredCountry = countryName;
+                        highlightCountry(countryName, 0x00ff00, 1.0);
+                    }
+                    updateInfoPanel(intersected.userData);
+                    renderer.domElement.style.cursor = 'pointer';
+                } else {
+                    hoveredCountry = null;
+                    if (!selectedCountry) {
+                        updateInfoPanel(null);
+                    }
+                    renderer.domElement.style.cursor = 'default';
+                }
+            }
+
+            // Click handler
+            function onClick(event) {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(countryLines);
+
+                if (selectedCountry) {
+                    resetCountry(selectedCountry);
+                }
+
+                // Filter intersections to only include visible (front-facing) countries
+                let visibleIntersect = null;
+                for (let i = 0; i < intersects.length; i++) {
+                    const intersect = intersects[i];
+                    const point = intersect.point;
+
+                    // Check if the intersection point is on the visible side
+                    const pointToCamera = new THREE.Vector3().subVectors(camera.position, point);
+                    const dotProduct = point.clone().normalize().dot(pointToCamera.normalize());
+
+                    if (dotProduct > 0.1) {
+                        visibleIntersect = intersect;
+                        break;
+                    }
+                }
+
+                if (visibleIntersect) {
+                    const countryName = visibleIntersect.object.userData.country;
+                    selectedCountry = countryName;
+                    highlightCountry(countryName, 0xff3333, 1.0);
+                    updateInfoPanel(visibleIntersect.object.userData);
+                    console.log('Selected:', countryName);
+                } else {
+                    selectedCountry = null;
+                }
+            }
+
+            // Event listeners
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('click', onClick);
+
+            // Window resize handler
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            // Start the application
+            console.log('Starting country data load...');
+            loadCountries();
+            console.log('Starting animation loop...');
+            animate();
+            console.log('=== APPLICATION INITIALIZED SUCCESSFULLY ===');
+        }
+
+        // Start initialization when DOM is ready
+        console.log('Checking document ready state for initialization...');
+        if (document.readyState === 'loading') {
+            console.log('Document still loading, adding DOMContentLoaded listener...');
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOMContentLoaded event fired, calling initApp()');
+                initApp();
+            });
+        } else {
+            console.log('Document already loaded, calling initApp() immediately');
+            initApp();
+        }
+    </script>
+</body>
+</html>

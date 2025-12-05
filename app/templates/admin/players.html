@@ -1,0 +1,492 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-users"></i> Player Management</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin
+        </a>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.players') }}" class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search Players</label>
+                    <input type="text"
+                           class="form-control"
+                           id="search"
+                           name="search"
+                           value="{{ search }}"
+                           placeholder="Username or wallet address...">
+                </div>
+                <div class="col-md-4">
+                    <label for="filter" class="form-label">Filter</label>
+                    <select class="form-select" id="filter" name="filter">
+                        <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Players</option>
+                        <option value="admin" {% if filter_type == 'admin' %}selected{% endif %}>Admins Only</option>
+                        <option value="active" {% if filter_type == 'active' %}selected{% endif %}>Active (7 days)</option>
+                        <option value="inactive" {% if filter_type == 'inactive' %}selected{% endif %}>Inactive (30+ days)</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Players Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Wallet</th>
+                            <th>Level</th>
+                            <th>Gold</th>
+                            <th>Last Seen</th>
+                            <th>Admin</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for player in players %}
+                        <tr>
+                            <td>{{ player.id }}</td>
+                            <td>
+                                {% if player.username %}
+                                    <strong>{{ player.username }}</strong>
+                                {% else %}
+                                    <em class="text-muted">No username</em>
+                                {% endif %}
+                                {% if player.is_currently_banned %}
+                                    <br><span class="badge bg-danger">BANNED</span>
+                                    {% if player.banned_until %}
+                                        <small class="text-muted">Until {{ player.banned_until.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td><code>{{ player.wallet_address[:10] }}...</code></td>
+                            <td>
+                                {% if player.experience %}
+                                    {{ player.level }}
+                                {% else %}
+                                    1
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.2f"|format(player.gold|float) }}</td>
+                            <td>
+                                {% if player.last_seen %}
+                                    <small>{{ player.last_seen.strftime('%Y-%m-%d %H:%M') }}</small>
+                                {% else %}
+                                    <em class="text-muted">Never</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if player.is_admin %}
+                                    <span class="badge bg-danger">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">User</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button"
+                                            class="btn btn-success"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#grantResourceModal{{ player.id }}"
+                                            title="Grant Resource">
+                                        <i class="fas fa-box"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-warning"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#grantMoneyModal{{ player.id }}"
+                                            title="Grant Gold">
+                                        <i class="fas fa-coins"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-info"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#grantNFTModal{{ player.id }}"
+                                            title="Grant Free NFT Mints">
+                                        <i class="fas fa-gift"></i>
+                                    </button>
+                                    {% if player.id != current_user.id %}
+                                    <button type="button"
+                                            class="btn {% if player.is_admin %}btn-secondary{% else %}btn-danger{% endif %}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#toggleAdminModal{{ player.id }}"
+                                            title="Toggle Admin">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </button>
+                                    {% if not player.is_admin %}
+                                        {% if player.is_currently_banned %}
+                                        <button type="button"
+                                                class="btn btn-success"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#unbanModal{{ player.id }}"
+                                                title="Unban Player">
+                                            <i class="fas fa-unlock"></i>
+                                        </button>
+                                        {% else %}
+                                        <button type="button"
+                                                class="btn btn-dark"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#banModal{{ player.id }}"
+                                                title="Ban Player">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% endif %}
+                                    <a href="{{ url_for('admin.user_activity', user_id=player.id) }}"
+                                       class="btn btn-info"
+                                       title="View Activity">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Grant Resource Modal -->
+                        <div class="modal fade" id="grantResourceModal{{ player.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Grant Resource to {{ player.username or player.wallet_address[:10] }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('admin.grant_resource', user_id=player.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="resource{{ player.id }}" class="form-label">Resource</label>
+                                                <select class="form-select" id="resource{{ player.id }}" name="resource_id" required>
+                                                    <option value="">-- Select Resource --</option>
+                                                    {% for resource in resources %}
+                                                    <option value="{{ resource.id }}">{{ resource.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="quantity{{ player.id }}" class="form-label">Quantity</label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="quantity{{ player.id }}"
+                                                       name="quantity"
+                                                       min="1"
+                                                       value="1"
+                                                       required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-success">Grant Resource</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grant Money Modal -->
+                        <div class="modal fade" id="grantMoneyModal{{ player.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Grant Gold to {{ player.username or player.wallet_address[:10] }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('admin.grant_money', user_id=player.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="amount{{ player.id }}" class="form-label">Amount (Gold)</label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="amount{{ player.id }}"
+                                                       name="amount"
+                                                       min="0.01"
+                                                       step="0.01"
+                                                       value="100"
+                                                       required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-warning">Grant Gold</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grant Free NFT Mints Modal -->
+                        <div class="modal fade" id="grantNFTModal{{ player.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title"><i class="fas fa-gift"></i> Grant Free NFT Mints to {{ player.username or player.wallet_address[:10] }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('admin.grant_free_nft', user_id=player.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="nft_amount{{ player.id }}" class="form-label">Number of Free NFT Mints</label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="nft_amount{{ player.id }}"
+                                                       name="amount"
+                                                       min="1"
+                                                       max="100"
+                                                       value="1"
+                                                       required>
+                                            </div>
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle"></i>
+                                                Current free mints: <strong>{{ player.free_nft_mints or 0 }}</strong>
+                                                <br><small>The player can claim these from the NFT Inventory page.</small>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-info">Grant Free NFT Mints</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Toggle Admin Modal -->
+                        {% if player.id != current_user.id %}
+                        <div class="modal fade" id="toggleAdminModal{{ player.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            {% if player.is_admin %}Revoke{% else %}Grant{% endif %} Admin for {{ player.username or player.wallet_address[:10] }}
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('admin.toggle_admin', user_id=player.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-body">
+                                            <p>
+                                                Are you sure you want to {% if player.is_admin %}revoke{% else %}grant{% endif %}
+                                                admin privileges for <strong>{{ player.username or player.wallet_address[:10] }}</strong>?
+                                            </p>
+                                            {% if not player.is_admin %}
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                This will give the user full admin access to the platform.
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn {% if player.is_admin %}btn-warning{% else %}btn-danger{% endif %}">
+                                                {% if player.is_admin %}Revoke Admin{% else %}Grant Admin{% endif %}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ban Player Modal -->
+                        {% if player.id != current_user.id and not player.is_admin %}
+                        <div class="modal fade" id="banModal{{ player.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Ban {{ player.username or player.wallet_address[:10] }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('admin.ban_player', user_id=player.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="banType{{ player.id }}" class="form-label">Ban Type</label>
+                                                <select class="form-select" id="banType{{ player.id }}" name="ban_type" onchange="toggleBanDuration{{ player.id }}(this.value)" required>
+                                                    <option value="permanent">Permanent Ban</option>
+                                                    <option value="temporary">Temporary Ban (Timeout)</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3" id="hoursDuration{{ player.id }}" style="display: none;">
+                                                <label for="hours{{ player.id }}" class="form-label">Duration (hours)</label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="hours{{ player.id }}"
+                                                       name="hours"
+                                                       min="1"
+                                                       value="24">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="banReason{{ player.id }}" class="form-label">Reason</label>
+                                                <textarea class="form-control"
+                                                          id="banReason{{ player.id }}"
+                                                          name="ban_reason"
+                                                          rows="3"
+                                                          placeholder="Reason for ban..."
+                                                          required></textarea>
+                                            </div>
+                                            <div class="alert alert-danger">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                The player will be unable to access the game while banned.
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger">Ban Player</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Unban Player Modal -->
+                        <div class="modal fade" id="unbanModal{{ player.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Unban {{ player.username or player.wallet_address[:10] }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('admin.unban_player', user_id=player.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to unban <strong>{{ player.username or player.wallet_address[:10] }}</strong>?</p>
+                                            {% if player.ban_reason %}
+                                            <div class="alert alert-info">
+                                                <strong>Ban Reason:</strong> {{ player.ban_reason }}
+                                            </div>
+                                            {% endif %}
+                                            {% if player.banned_until %}
+                                            <div class="alert alert-warning">
+                                                <strong>Ban Expiry:</strong> {{ player.banned_until.strftime('%Y-%m-%d %H:%M UTC') }}
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-danger">
+                                                <strong>Ban Type:</strong> Permanent
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-success">Unban Player</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <script>
+                            function toggleBanDuration{{ player.id }}(value) {
+                                const durationDiv = document.getElementById('hoursDuration{{ player.id }}');
+                                if (value === 'temporary') {
+                                    durationDiv.style.display = 'block';
+                                } else {
+                                    durationDiv.style.display = 'none';
+                                }
+                            }
+                        </script>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if pagination.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.players', page=pagination.prev_num, search=search, filter=filter_type) if pagination.has_prev else '#' }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.players', page=page_num, search=search, filter=filter_type) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.players', page=pagination.next_num, search=search, filter=filter_type) if pagination.has_next else '#' }}">
+                            Next
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .table-dark {
+        color: #ffffff;
+    }
+
+    .table-dark th {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        padding: 0.75rem;
+    }
+
+    .table-dark td {
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+
+    .btn-group-sm > .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .modal-content.bg-dark {
+        background: #262c3d !important;
+        color: #ffffff;
+    }
+
+    .pagination .page-link {
+        background: #2d344a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+
+    .pagination .page-link:hover {
+        background: #3b4357;
+        color: #ffffff;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background: #1e2433;
+        color: rgba(255, 255, 255, 0.4);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,1312 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Game Guide - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* Page Header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 30px rgba(59, 130, 246, 0.2);
+    }
+
+    .page-header h1 {
+        color: #3b82f6;
+        margin-bottom: 0.5rem;
+        font-size: 2.25rem;
+        font-weight: 700;
+    }
+
+    .page-header h1 i {
+        filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
+    }
+
+    .page-header p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 0;
+        font-size: 1.1rem;
+    }
+
+    /* Navigation Tabs */
+    .guide-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        justify-content: center;
+    }
+
+    .guide-nav-btn {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .guide-nav-btn:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.4);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    .guide-nav-btn.active {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border-color: #3b82f6;
+        color: #ffffff;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Section Cards */
+    .guide-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        display: none;
+    }
+
+    .guide-section.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+        color: #3b82f6;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .section-title i {
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+    }
+
+    /* Subsections */
+    .subsection {
+        margin-bottom: 2rem;
+    }
+
+    .subsection:last-child {
+        margin-bottom: 0;
+    }
+
+    .subsection-title {
+        color: #22c55e;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .subsection-content {
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.7;
+    }
+
+    .subsection-content p {
+        margin-bottom: 1rem;
+    }
+
+    /* Formula Boxes */
+    .formula-box {
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.95rem;
+        color: #c4b5fd;
+        overflow-x: auto;
+    }
+
+    .formula-box code {
+        color: #fbbf24;
+        background: none;
+        padding: 0;
+    }
+
+    /* Info Boxes */
+    .info-box {
+        background: rgba(59, 130, 246, 0.1);
+        border-left: 4px solid #3b82f6;
+        border-radius: 0 10px 10px 0;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+    }
+
+    .info-box.tip {
+        background: rgba(34, 197, 94, 0.1);
+        border-left-color: #22c55e;
+    }
+
+    .info-box.warning {
+        background: rgba(251, 191, 36, 0.1);
+        border-left-color: #fbbf24;
+    }
+
+    .info-box-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-box.tip .info-box-title {
+        color: #22c55e;
+    }
+
+    .info-box.warning .info-box-title {
+        color: #fbbf24;
+    }
+
+    /* Tables */
+    .guide-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+    }
+
+    .guide-table th {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .guide-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .guide-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .guide-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .guide-table tr:hover td {
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .guide-table tr:last-child td:first-child {
+        border-radius: 0 0 0 8px;
+    }
+
+    .guide-table tr:last-child td:last-child {
+        border-radius: 0 0 8px 0;
+    }
+
+    /* Quality Badges */
+    .quality-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .quality-badge.q1 { background: #6b7280; color: #fff; }
+    .quality-badge.q2 { background: #22c55e; color: #000; }
+    .quality-badge.q3 { background: #3b82f6; color: #fff; }
+    .quality-badge.q4 { background: #8b5cf6; color: #fff; }
+    .quality-badge.q5 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
+
+    /* Lists */
+    .guide-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+    }
+
+    .guide-list li {
+        padding: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .guide-list li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.85rem;
+        width: 6px;
+        height: 6px;
+        background: #3b82f6;
+        border-radius: 50%;
+    }
+
+    /* Grid Layout for Cards */
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .mini-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+
+    .mini-card-title {
+        color: #3b82f6;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .mini-card-value {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .mini-card-desc {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Resource Icons */
+    .resource-icon {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin-right: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .guide-nav {
+            flex-direction: column;
+        }
+
+        .guide-nav-btn {
+            text-align: center;
+        }
+
+        .guide-table {
+            font-size: 0.8rem;
+        }
+
+        .guide-table th,
+        .guide-table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <div class="page-header">
+            <h1><i class="fas fa-book-open me-2"></i>Game Guide</h1>
+            <p>Master every aspect of Tactizen with this comprehensive mechanics guide</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="guide-nav">
+            <button class="guide-nav-btn active" data-section="overview"><i class="fas fa-home me-1"></i>Overview</button>
+            <button class="guide-nav-btn" data-section="combat"><i class="fas fa-crosshairs me-1"></i>Combat</button>
+            <button class="guide-nav-btn" data-section="production"><i class="fas fa-industry me-1"></i>Production</button>
+            <button class="guide-nav-btn" data-section="resources"><i class="fas fa-boxes me-1"></i>Resources</button>
+            <button class="guide-nav-btn" data-section="training"><i class="fas fa-dumbbell me-1"></i>Training</button>
+            <button class="guide-nav-btn" data-section="wellness"><i class="fas fa-heart me-1"></i>Wellness</button>
+            <button class="guide-nav-btn" data-section="politics"><i class="fas fa-landmark me-1"></i>Politics</button>
+            <button class="guide-nav-btn" data-section="military"><i class="fas fa-shield-alt me-1"></i>Military Units</button>
+            <button class="guide-nav-btn" data-section="nft"><i class="fas fa-gem me-1"></i>NFTs</button>
+            <button class="guide-nav-btn" data-section="economy"><i class="fas fa-coins me-1"></i>Economy</button>
+        </div>
+
+        <!-- OVERVIEW SECTION -->
+        <div class="guide-section active" id="section-overview">
+            <h2 class="section-title"><i class="fas fa-flag-checkered"></i>Welcome to Tactizen</h2>
+
+            <div class="subsection">
+                <div class="subsection-content">
+                    <p>Tactizen is a strategic browser-based nation simulation game where you build your character, participate in politics, manage companies, and fight in battles. The game combines economic simulation, political strategy, and military combat with blockchain integration.</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-play-circle"></i>Getting Started</h3>
+                <div class="card-grid">
+                    <div class="mini-card">
+                        <div class="mini-card-title"><i class="fas fa-flag"></i>Choose Citizenship</div>
+                        <div class="mini-card-desc">Select your country to start your journey. Your citizenship affects which parties you can join and elections you can participate in.</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-card-title"><i class="fas fa-dumbbell"></i>Train Daily</div>
+                        <div class="mini-card-desc">Train every 23 hours to improve your military skills. Higher skills mean more damage in battle.</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-card-title"><i class="fas fa-briefcase"></i>Get a Job</div>
+                        <div class="mini-card-desc">Work at companies to earn currency and improve your work skills. Check the Job Market for available positions.</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-card-title"><i class="fas fa-fist-raised"></i>Join Battles</div>
+                        <div class="mini-card-desc">Fight for your country in active battles. Use weapons to maximize damage and earn military rank XP.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-chart-line"></i>Core Stats</h3>
+                <div class="card-grid">
+                    <div class="mini-card">
+                        <div class="mini-card-title"><i class="fas fa-star"></i>Level & XP</div>
+                        <div class="mini-card-value">+2 Base Damage/Level</div>
+                        <div class="mini-card-desc">Gain XP from training, working, and fighting. Each level increases your base damage.</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-card-title"><i class="fas fa-bolt"></i>Energy</div>
+                        <div class="mini-card-value">100 Base</div>
+                        <div class="mini-card-desc">Required for training, fighting, and traveling. Restore with beer or residence.</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-card-title"><i class="fas fa-heart"></i>Wellness</div>
+                        <div class="mini-card-value">100 Base</div>
+                        <div class="mini-card-desc">Required for fighting and working. Restore with bread or residence.</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-card-title"><i class="fas fa-medal"></i>Military Rank</div>
+                        <div class="mini-card-value">60 Ranks</div>
+                        <div class="mini-card-desc">Progress through 60 military ranks. Each rank provides damage bonuses.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMBAT SECTION -->
+        <div class="guide-section" id="section-combat">
+            <h2 class="section-title"><i class="fas fa-crosshairs"></i>Combat System</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-calculator"></i>Damage Formula</h3>
+                <div class="subsection-content">
+                    <p>Your damage in battle is calculated using multiple factors:</p>
+                    <div class="formula-box">
+                        <strong>Base Damage</strong> = (Player Level x 2) + (Skill x 10)<br><br>
+                        <strong>Final Damage</strong> = Base Damage x (1 + (Rank Bonus% + Weapon Bonus% + NFT Bonus%) / 100)
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-gun"></i>Weapon Bonuses</h3>
+                <div class="subsection-content">
+                    <p>Equip weapons before fighting to increase your damage output:</p>
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>Weapon Type</th>
+                                <th>Q1</th>
+                                <th>Q2</th>
+                                <th>Q3</th>
+                                <th>Q4</th>
+                                <th>Q5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-crosshairs me-2"></i>Rifle (Infantry)</td>
+                                <td>+30%</td>
+                                <td>+60%</td>
+                                <td>+90%</td>
+                                <td>+120%</td>
+                                <td>+150%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-tank-water me-2"></i>Tank (Armoured)</td>
+                                <td>+30%</td>
+                                <td>+60%</td>
+                                <td>+90%</td>
+                                <td>+120%</td>
+                                <td>+150%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-helicopter me-2"></i>Helicopter (Aviation)</td>
+                                <td>+30%</td>
+                                <td>+60%</td>
+                                <td>+90%</td>
+                                <td>+120%</td>
+                                <td>+150%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-trophy"></i>Battle Structure</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li>Battles last <strong>24 hours</strong> divided into <strong>3 rounds</strong> (8 hours each)</li>
+                        <li>Win a battle by winning <strong>2 out of 3 rounds</strong></li>
+                        <li>Three wall types: <strong>Infantry</strong>, <strong>Armoured</strong>, and <strong>Aviation</strong></li>
+                        <li>Each fight costs <strong>10 Energy</strong> and <strong>10 Wellness</strong></li>
+                        <li>Cooldown between fights: <strong>1.5 seconds</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-building"></i>Regional Constructions</h3>
+                <div class="subsection-content">
+                    <p>The President or Minister of Defense can place hospitals and fortresses in regions under their country's control. Only one of each type can exist per region.</p>
+
+                    <div class="card-grid">
+                        <div class="mini-card">
+                            <div class="mini-card-title" style="color: #ef4444;"><i class="fas fa-hospital"></i>Hospital</div>
+                            <div class="mini-card-desc">Allows defenders and their allies to restore wellness during active battles. Players must fight at least once to use the hospital.</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title" style="color: #8b5cf6;"><i class="fas fa-chess-rook"></i>Fortress</div>
+                            <div class="mini-card-desc">Provides defensive advantage by reducing attacker damage in battles fought in that region.</div>
+                        </div>
+                    </div>
+
+                    <h4 style="color: #ef4444; margin-top: 1.5rem; margin-bottom: 0.75rem;"><i class="fas fa-hospital me-2"></i>Hospital Benefits</h4>
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>Quality</th>
+                                <th>Wellness Restored</th>
+                                <th>Cooldown</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><span class="quality-badge q1">Q1</span></td><td>+10 Wellness</td><td rowspan="5">6 Hours (Global)</td></tr>
+                            <tr><td><span class="quality-badge q2">Q2</span></td><td>+20 Wellness</td></tr>
+                            <tr><td><span class="quality-badge q3">Q3</span></td><td>+30 Wellness</td></tr>
+                            <tr><td><span class="quality-badge q4">Q4</span></td><td>+40 Wellness</td></tr>
+                            <tr><td><span class="quality-badge q5">Q5</span></td><td>+50 Wellness</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="info-box tip">
+                        <div class="info-box-title"><i class="fas fa-lightbulb"></i>Hospital Usage</div>
+                        Only <strong>defenders and their allies</strong> can use the hospital during active battles. You must fight at least once before the hospital button becomes available. The 6-hour cooldown is global (applies across all battles).
+                    </div>
+
+                    <h4 style="color: #8b5cf6; margin-top: 1.5rem; margin-bottom: 0.75rem;"><i class="fas fa-chess-rook me-2"></i>Fortress Benefits</h4>
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>Quality</th>
+                                <th>Attacker Damage Reduction</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><span class="quality-badge q1">Q1</span></td><td>-5% Attacker Damage</td></tr>
+                            <tr><td><span class="quality-badge q2">Q2</span></td><td>-10% Attacker Damage</td></tr>
+                            <tr><td><span class="quality-badge q3">Q3</span></td><td>-15% Attacker Damage</td></tr>
+                            <tr><td><span class="quality-badge q4">Q4</span></td><td>-20% Attacker Damage</td></tr>
+                            <tr><td><span class="quality-badge q5">Q5</span></td><td>-25% Attacker Damage</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="info-box warning">
+                        <div class="info-box-title"><i class="fas fa-exclamation-triangle"></i>Destruction on Conquest</div>
+                        When a region is conquered by another nation, <strong>all constructions are destroyed</strong>. Hospitals and fortresses cannot be removed manually - they are permanent until the region changes ownership.
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-medal"></i>Military Ranks</h3>
+                <div class="subsection-content">
+                    <p>Progress through 60 military ranks from Recruit to Field Marshal. Earn rank XP by dealing damage in battles.</p>
+                    <div class="formula-box">
+                        <strong>Rank XP Earned</strong> = Damage Dealt x 0.1<br><br>
+                        <strong>With Military Tutor NFT:</strong> Rank XP x (1 + NFT Bonus% / 100)
+                    </div>
+                    <div class="info-box tip">
+                        <div class="info-box-title"><i class="fas fa-lightbulb"></i>Pro Tip</div>
+                        Higher ranks provide increasing damage bonuses. A Q5 Military Tutor NFT doubles your rank XP gain!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTION SECTION -->
+        <div class="guide-section" id="section-production">
+            <h2 class="section-title"><i class="fas fa-industry"></i>Production System</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-cogs"></i>Production Points (PP)</h3>
+                <div class="subsection-content">
+                    <p>When you work at a company, you generate Production Points based on your skill level:</p>
+                    <div class="formula-box">
+                        <strong>Base PP</strong> = Hours Worked x (1 + Skill Level)<br><br>
+                        <strong>With Electricity:</strong> PP x 1.3 (+30% boost)<br><br>
+                        <strong>With Production NFT:</strong> Final PP x (1 + NFT Bonus% / 100)
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-boxes"></i>PP Required per Product</h3>
+                <div class="subsection-content">
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>Quality</th>
+                                <th>PP Required</th>
+                                <th>With Q5 Speed NFT (-65%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="quality-badge q1">Q1</span></td>
+                                <td>5 PP</td>
+                                <td>1.75 PP</td>
+                            </tr>
+                            <tr>
+                                <td><span class="quality-badge q2">Q2</span></td>
+                                <td>10 PP</td>
+                                <td>3.5 PP</td>
+                            </tr>
+                            <tr>
+                                <td><span class="quality-badge q3">Q3</span></td>
+                                <td>15 PP</td>
+                                <td>5.25 PP</td>
+                            </tr>
+                            <tr>
+                                <td><span class="quality-badge q4">Q4</span></td>
+                                <td>20 PP</td>
+                                <td>7 PP</td>
+                            </tr>
+                            <tr>
+                                <td><span class="quality-badge q5">Q5</span></td>
+                                <td>25 PP</td>
+                                <td>8.75 PP</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-warehouse"></i>Material Requirements (Manufacturing)</h3>
+                <div class="subsection-content">
+                    <p>Manufacturing companies require raw materials to produce goods:</p>
+                    <div class="formula-box">
+                        <strong>Materials Required</strong> = Quality Level x 5 units per product<br><br>
+                        <strong>With Material Efficiency NFT:</strong> Materials x (1 - Efficiency% / 100)
+                    </div>
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>Quality</th>
+                                <th>Base Materials</th>
+                                <th>With Q5 Efficiency NFT (-60%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><span class="quality-badge q1">Q1</span></td><td>5 units</td><td>2 units</td></tr>
+                            <tr><td><span class="quality-badge q2">Q2</span></td><td>10 units</td><td>4 units</td></tr>
+                            <tr><td><span class="quality-badge q3">Q3</span></td><td>15 units</td><td>6 units</td></tr>
+                            <tr><td><span class="quality-badge q4">Q4</span></td><td>20 units</td><td>8 units</td></tr>
+                            <tr><td><span class="quality-badge q5">Q5</span></td><td>25 units</td><td>10 units</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-building"></i>Company Upgrades</h3>
+                <div class="subsection-content">
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>Upgrade</th>
+                                <th>Cost</th>
+                                <th>Max Employees</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Q1 (Start)</td><td>-</td><td>2</td></tr>
+                            <tr><td>Q1 to Q2</td><td>20 Gold</td><td>4</td></tr>
+                            <tr><td>Q2 to Q3</td><td>80 Gold</td><td>6</td></tr>
+                            <tr><td>Q3 to Q4</td><td>160 Gold</td><td>8</td></tr>
+                            <tr><td>Q4 to Q5</td><td>320 Gold</td><td>10</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESOURCES SECTION -->
+        <div class="guide-section" id="section-resources">
+            <h2 class="section-title"><i class="fas fa-boxes"></i>Resources</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-mountain"></i>Raw Materials</h3>
+                <div class="subsection-content">
+                    <p>Extracted from mining and extraction companies:</p>
+                    <ul class="guide-list">
+                        <li><strong>Coal</strong> - Used for steel production and electricity</li>
+                        <li><strong>Iron Ore</strong> - Refined into steel for weapons and construction</li>
+                        <li><strong>Stone</strong> - Building material for construction</li>
+                        <li><strong>Clay</strong> - Used to produce bricks</li>
+                        <li><strong>Oil</strong> - Energy source and manufacturing component</li>
+                        <li><strong>Sand</strong> - Used for concrete production</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-utensils"></i>Food & Consumables</h3>
+                <div class="subsection-content">
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Effect</th>
+                                <th>Q1</th>
+                                <th>Q2</th>
+                                <th>Q3</th>
+                                <th>Q4</th>
+                                <th>Q5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-bread-slice me-2"></i>Bread</td>
+                                <td>Restores Wellness</td>
+                                <td>+2</td>
+                                <td>+4</td>
+                                <td>+6</td>
+                                <td>+8</td>
+                                <td>+10</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-beer me-2"></i>Beer</td>
+                                <td>Restores Energy</td>
+                                <td>+2</td>
+                                <td>+4</td>
+                                <td>+6</td>
+                                <td>+8</td>
+                                <td>+10</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-wine-glass me-2"></i>Wine</td>
+                                <td>Restores Both</td>
+                                <td>+2</td>
+                                <td>+4</td>
+                                <td>+6</td>
+                                <td>+8</td>
+                                <td>+10</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="info-box warning">
+                        <div class="info-box-title"><i class="fas fa-exclamation-triangle"></i>Daily Limit</div>
+                        You can consume a maximum of <strong>10 items per day</strong> for each type (bread, beer, wine).
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-gun"></i>Weapons</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li><strong>Rifle</strong> - Infantry weapon, provides damage bonus</li>
+                        <li><strong>Tank</strong> - Armoured weapon, provides damage bonus</li>
+                        <li><strong>Helicopter</strong> - Aviation weapon, provides damage bonus</li>
+                    </ul>
+                    <p>All weapons provide the same bonus (+30% to +150% based on quality). Choose based on the current battle wall type for maximum effectiveness.</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-hard-hat"></i>Construction</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li><strong>House</strong> - Provides passive wellness and energy regeneration</li>
+                        <li><strong>Fort</strong> - Defensive structure for regions</li>
+                        <li><strong>Hospital</strong> - Healthcare infrastructure</li>
+                        <li><strong>Bricks</strong> - Construction material</li>
+                        <li><strong>Concrete</strong> - Construction material</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRAINING SECTION -->
+        <div class="guide-section" id="section-training">
+            <h2 class="section-title"><i class="fas fa-dumbbell"></i>Training & Skills</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-crosshairs"></i>Military Training</h3>
+                <div class="subsection-content">
+                    <div class="card-grid">
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-clock"></i>Cooldown</div>
+                            <div class="mini-card-value">23 Hours</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-bolt"></i>Energy Cost</div>
+                            <div class="mini-card-value">10 Energy</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-star"></i>XP Gained</div>
+                            <div class="mini-card-value">2 XP</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-chart-line"></i>Skill Gain</div>
+                            <div class="mini-card-value">+0.5</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;">Military skills: <strong>Infantry</strong>, <strong>Armoured</strong>, <strong>Aviation</strong></p>
+                    <p>Each skill point adds +10 damage when fighting on the corresponding wall type.</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-graduation-cap"></i>Study (Work Skills)</h3>
+                <div class="subsection-content">
+                    <div class="card-grid">
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-clock"></i>Cooldown</div>
+                            <div class="mini-card-value">23 Hours</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-bolt"></i>Energy Cost</div>
+                            <div class="mini-card-value">10 Energy</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-star"></i>XP Gained</div>
+                            <div class="mini-card-value">1 XP</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-chart-line"></i>Skill Gain</div>
+                            <div class="mini-card-value">+0.5</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;">Work skills: <strong>Resource Extraction</strong>, <strong>Manufacture</strong>, <strong>Construction</strong></p>
+                    <p>Higher work skills increase your Production Points when working at companies.</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-level-up-alt"></i>Leveling Up</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li>Base XP requirement: <strong>20 XP</strong> for level 1 to 2</li>
+                        <li>XP requirement increases with each level</li>
+                        <li>Level up bonus: <strong>+1 Gold</strong> per level</li>
+                        <li>Each level adds <strong>+2 base damage</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- WELLNESS SECTION -->
+        <div class="guide-section" id="section-wellness">
+            <h2 class="section-title"><i class="fas fa-heart"></i>Wellness & Energy</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-battery-full"></i>Base Stats</h3>
+                <div class="subsection-content">
+                    <div class="card-grid">
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-heart"></i>Base Wellness</div>
+                            <div class="mini-card-value">100</div>
+                            <div class="mini-card-desc">Maximum without house bonus</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-bolt"></i>Base Energy</div>
+                            <div class="mini-card-value">100</div>
+                            <div class="mini-card-desc">Maximum without house bonus</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-home"></i>House Bonuses</h3>
+                <div class="subsection-content">
+                    <p>Activate a house to increase your maximum wellness/energy and gain passive regeneration:</p>
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>House Quality</th>
+                                <th>Max Bonus</th>
+                                <th>Regen/15min</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="quality-badge q1">Q1</span></td>
+                                <td>+10</td>
+                                <td>+2/+2</td>
+                                <td>30 days</td>
+                            </tr>
+                            <tr>
+                                <td><span class="quality-badge q2">Q2</span></td>
+                                <td>+20</td>
+                                <td>+4/+4</td>
+                                <td>30 days</td>
+                            </tr>
+                            <tr>
+                                <td><span class="quality-badge q3">Q3</span></td>
+                                <td>+30</td>
+                                <td>+6/+6</td>
+                                <td>30 days</td>
+                            </tr>
+                            <tr>
+                                <td><span class="quality-badge q4">Q4</span></td>
+                                <td>+40</td>
+                                <td>+8/+8</td>
+                                <td>30 days</td>
+                            </tr>
+                            <tr>
+                                <td><span class="quality-badge q5">Q5</span></td>
+                                <td>+50</td>
+                                <td>+10/+10</td>
+                                <td>30 days</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="info-box tip">
+                        <div class="info-box-title"><i class="fas fa-lightbulb"></i>Pro Tip</div>
+                        A Q5 house gives you 150 max wellness/energy and regenerates 40 wellness + 40 energy per hour passively!
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-utensils"></i>Restoration Methods</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li><strong>Bread</strong> - Restores wellness (Quality x 2), max 10/day</li>
+                        <li><strong>Beer</strong> - Restores energy (Quality x 2), max 10/day</li>
+                        <li><strong>Wine</strong> - Restores both (Quality x 2 each), max 10/day</li>
+                        <li><strong>House</strong> - Passive restoration every 15 minutes</li>
+                        <li><strong>NFTs</strong> - Energy/Wellness Regen NFTs provide hourly bonuses</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- POLITICS SECTION -->
+        <div class="guide-section" id="section-politics">
+            <h2 class="section-title"><i class="fas fa-landmark"></i>Political System</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-flag"></i>Political Parties</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li>Create a party for <strong>5 Gold</strong></li>
+                        <li>Parties are country-specific</li>
+                        <li>Party President is elected by members</li>
+                        <li>Members can run for government positions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-vote-yea"></i>Presidential Elections</h3>
+                <div class="subsection-content">
+                    <div class="card-grid">
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-user-plus"></i>Nominations</div>
+                            <div class="mini-card-desc">1st - 5th of each month, 9 AM CET</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-check-to-slot"></i>Voting</div>
+                            <div class="mini-card-desc">5th - 6th of each month, 9 AM CET</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;">The President can appoint ministers and propose laws to Congress.</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-building-columns"></i>Congressional Elections</h3>
+                <div class="subsection-content">
+                    <div class="card-grid">
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-user-plus"></i>Applications</div>
+                            <div class="mini-card-desc">1st - 25th of each month, 9 AM CET</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-check-to-slot"></i>Voting</div>
+                            <div class="mini-card-desc">25th - 26th of each month, 9 AM CET</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;">Congress members vote on laws proposed by the President.</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-gavel"></i>Government Positions</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li><strong>President</strong> - Head of state, proposes laws, appoints ministers</li>
+                        <li><strong>Congress</strong> - Legislative body, votes on laws</li>
+                        <li><strong>Minister of Finance</strong> - Manages economy, taxes, currency</li>
+                        <li><strong>Minister of Defence</strong> - Military affairs, bounty contracts</li>
+                        <li><strong>Minister of Foreign Affairs</strong> - Alliances, diplomacy</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-scroll"></i>Law Types</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li><strong>War Declaration</strong> - Declare war on another country</li>
+                        <li><strong>Trade Embargo</strong> - Restrict trade with a country</li>
+                        <li><strong>Military Budget</strong> - Allocate funds for defense</li>
+                        <li><strong>Currency Printing</strong> - Issue new currency</li>
+                        <li><strong>Tax Changes</strong> - Modify tax rates</li>
+                        <li><strong>Alliance</strong> - Form alliances with other nations</li>
+                        <li><strong>Impeachment</strong> - Remove the President from office</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- MILITARY UNITS SECTION -->
+        <div class="guide-section" id="section-military">
+            <h2 class="section-title"><i class="fas fa-shield-alt"></i>Military Units</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-users"></i>Unit Basics</h3>
+                <div class="subsection-content">
+                    <div class="card-grid">
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-coins"></i>Creation Cost</div>
+                            <div class="mini-card-value">20 Gold</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="mini-card-title"><i class="fas fa-users"></i>Max Members</div>
+                            <div class="mini-card-value">50</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-sitemap"></i>Unit Ranks</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li><strong>Commander</strong> - Unit leader, full management access</li>
+                        <li><strong>Officer</strong> - Can manage members and inventory</li>
+                        <li><strong>Soldier</strong> - Full member status</li>
+                        <li><strong>Recruit</strong> - New member, limited privileges</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-file-contract"></i>Bounty Contracts</h3>
+                <div class="subsection-content">
+                    <p>Military units can accept bounty contracts from Ministers of Defence:</p>
+                    <ul class="guide-list">
+                        <li>Contracts specify a target damage amount in a battle</li>
+                        <li>Unit members contribute to the damage goal</li>
+                        <li>Successful completion rewards the unit treasury</li>
+                        <li>Failed contracts may have penalties</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- NFT SECTION -->
+        <div class="guide-section" id="section-nft">
+            <h2 class="section-title"><i class="fas fa-gem"></i>NFT System</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-info-circle"></i>NFT Basics</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li>Players can equip up to <strong>3 NFTs</strong></li>
+                        <li>Q1 NFTs can be purchased for <strong>1 ZEN token</strong></li>
+                        <li>Higher quality NFTs obtained by <strong>burning 3:1</strong> (3 Q1 = 1 Q2, etc.)</li>
+                        <li>Companies have NFT slots based on quality (Q1-Q2: 1, Q3-Q4: 2, Q5: 3)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-user"></i>Player NFTs</h3>
+                <div class="subsection-content">
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>NFT Type</th>
+                                <th>Q1</th>
+                                <th>Q2</th>
+                                <th>Q3</th>
+                                <th>Q4</th>
+                                <th>Q5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-fist-raised me-2"></i>Combat Boost</td>
+                                <td>+5%</td>
+                                <td>+15%</td>
+                                <td>+25%</td>
+                                <td>+40%</td>
+                                <td>+60%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-bolt me-2"></i>Energy Regen</td>
+                                <td>+2/hr</td>
+                                <td>+5/hr</td>
+                                <td>+10/hr</td>
+                                <td>+20/hr</td>
+                                <td>+35/hr</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-heart me-2"></i>Wellness Regen</td>
+                                <td>+2/hr</td>
+                                <td>+5/hr</td>
+                                <td>+10/hr</td>
+                                <td>+20/hr</td>
+                                <td>+35/hr</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-medal me-2"></i>Military Tutor</td>
+                                <td>+20%</td>
+                                <td>+40%</td>
+                                <td>+60%</td>
+                                <td>+80%</td>
+                                <td>+100%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-plane me-2"></i>Travel Discount</td>
+                                <td>-20%</td>
+                                <td>-40%</td>
+                                <td>-60%</td>
+                                <td>-80%</td>
+                                <td>-100%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-warehouse me-2"></i>Storage Increase</td>
+                                <td>+1000</td>
+                                <td>+2000</td>
+                                <td>+3000</td>
+                                <td>+4000</td>
+                                <td>+5000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-building"></i>Company NFTs</h3>
+                <div class="subsection-content">
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th>NFT Type</th>
+                                <th>Q1</th>
+                                <th>Q2</th>
+                                <th>Q3</th>
+                                <th>Q4</th>
+                                <th>Q5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-chart-line me-2"></i>Production Boost</td>
+                                <td>+10%</td>
+                                <td>+20%</td>
+                                <td>+35%</td>
+                                <td>+55%</td>
+                                <td>+80%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-recycle me-2"></i>Material Efficiency</td>
+                                <td>-5%</td>
+                                <td>-15%</td>
+                                <td>-25%</td>
+                                <td>-40%</td>
+                                <td>-60%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-arrow-up me-2"></i>Upgrade Discount</td>
+                                <td>-5%</td>
+                                <td>-15%</td>
+                                <td>-25%</td>
+                                <td>-40%</td>
+                                <td>-50%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-tachometer-alt me-2"></i>Speed Boost</td>
+                                <td>-10%</td>
+                                <td>-20%</td>
+                                <td>-30%</td>
+                                <td>-45%</td>
+                                <td>-65%</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-robot me-2"></i>Android Worker</td>
+                                <td>Skill 1</td>
+                                <td>Skill 2</td>
+                                <td>Skill 3</td>
+                                <td>Skill 4</td>
+                                <td>Skill 5</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-percentage me-2"></i>Tax Breaks</td>
+                                <td>-20%</td>
+                                <td>-40%</td>
+                                <td>-60%</td>
+                                <td>-80%</td>
+                                <td>-100%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ECONOMY SECTION -->
+        <div class="guide-section" id="section-economy">
+            <h2 class="section-title"><i class="fas fa-coins"></i>Economy</h2>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-dollar-sign"></i>Currencies</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li><strong>Gold</strong> - Global premium currency, used for company creation, party creation, etc.</li>
+                        <li><strong>Local Currency</strong> - Each country has its own currency for local trade</li>
+                        <li><strong>ZEN Token</strong> - Blockchain token for NFT purchases</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-exchange-alt"></i>Marketplace</h3>
+                <div class="subsection-content">
+                    <p>Buy and sell resources on the marketplace:</p>
+                    <ul class="guide-list">
+                        <li>List items at your desired price</li>
+                        <li>Market prices fluctuate based on supply and demand</li>
+                        <li>Quality affects resource value</li>
+                        <li>Currency exchange available for international trade</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-briefcase"></i>Working & Wages</h3>
+                <div class="subsection-content">
+                    <div class="formula-box">
+                        <strong>Worker Payment</strong> = Production Points Generated x Wage Per PP
+                    </div>
+                    <p>Company owners set the wage rate. Higher skilled workers generate more PP and earn more.</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-plane"></i>Travel</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li>Base travel cost: <strong>1 Gold</strong> or <strong>50 Energy</strong></li>
+                        <li>Travel Discount NFT reduces or eliminates costs</li>
+                        <li>Q5 Travel Discount = <strong>Free travel</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title"><i class="fas fa-box"></i>Storage</h3>
+                <div class="subsection-content">
+                    <ul class="guide-list">
+                        <li>Base storage limit: <strong>1000 items</strong></li>
+                        <li>Storage Increase NFT: <strong>+1000 to +5000</strong> additional slots</li>
+                        <li>Maximum with Q5 NFT: <strong>6000 items</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navButtons = document.querySelectorAll('.guide-nav-btn');
+    const sections = document.querySelectorAll('.guide-section');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetSection = this.dataset.section;
+
+            // Update active button
+            navButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Update active section
+            sections.forEach(s => s.classList.remove('active'));
+            document.getElementById('section-' + targetSection).classList.add('active');
+
+            // Scroll to top of content
+            document.querySelector('.main-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+});
+</script>
+{% endblock %}

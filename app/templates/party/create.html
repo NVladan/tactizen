@@ -1,0 +1,274 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Create Party - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    body {
+        background: #1a1f2e;
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* User Info Panel Styles */
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-header h2 {
+        color: #3b82f6;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 0;
+    }
+
+    .form-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .form-header h2 {
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .form-label {
+        color: #ffffff;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        background: #2d344a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: #2d344a;
+        border-color: #3b82f6;
+        color: #ffffff;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .char-counter {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.875rem;
+        text-align: right;
+        margin-top: 0.25rem;
+    }
+
+    .info-box {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box-title {
+        color: #3b82f6;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-box-content {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+    }
+
+    .info-box ul {
+        margin: 0.5rem 0 0 1.5rem;
+        padding: 0;
+    }
+
+    .info-box li {
+        margin-bottom: 0.25rem;
+    }
+
+    .cost-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: #000;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .btn-group-custom {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn-group-custom .btn {
+        flex: 1;
+    }
+
+    .invalid-feedback {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .is-invalid {
+        border-color: #ef4444 !important;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <div class="page-header">
+            <h2><i class="fas fa-flag me-2"></i>Create Political Party</h2>
+            <p>Establish your own political party and lead it to victory</p>
+        </div>
+
+        <div class="form-card">
+            <div class="form-header">
+                <div class="cost-badge">
+                    <i class="fas fa-coins"></i>
+                    <span>Cost: 5 Gold</span>
+                </div>
+            </div>
+
+            <!-- Information Box -->
+            <div class="info-box">
+                <div class="info-box-title">
+                    <i class="fas fa-info-circle"></i>
+                    Party Creation Guidelines
+                </div>
+                <div class="info-box-content">
+                    <ul>
+                        <li>Party names must be unique within your country</li>
+                        <li>You will automatically become the party president</li>
+                        <li>Party president elections are held monthly (15th-16th)</li>
+                        <li>You can edit the party description and logo anytime as president</li>
+                        <li>Your gold balance: <strong>{{ current_user.gold|round(2) }} Gold</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form method="POST" action="{{ url_for('party.create') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form.hidden_tag() }}
+
+                <!-- Party Name -->
+                <div class="mb-4">
+                    <label for="name" class="form-label">
+                        <i class="fas fa-signature me-1"></i>Party Name *
+                    </label>
+                    {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                    {% if form.name.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.name.errors[0] }}
+                        </div>
+                    {% endif %}
+                    <div class="char-counter">
+                        <span id="name-count">0</span>/50 characters
+                    </div>
+                </div>
+
+                <!-- Party Description -->
+                <div class="mb-4">
+                    <label for="description" class="form-label">
+                        <i class="fas fa-align-left me-1"></i>Party Description (Optional)
+                    </label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else "")) }}
+                    {% if form.description.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.description.errors[0] }}
+                        </div>
+                    {% endif %}
+                    <div class="char-counter">
+                        <span id="description-count">0</span>/500 characters
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="btn-group-custom">
+                    <a href="{{ url_for('party.browse') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Character counters
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('name');
+        const nameCount = document.getElementById('name-count');
+        const descriptionInput = document.getElementById('description');
+        const descriptionCount = document.getElementById('description-count');
+
+        function updateCount(input, counter) {
+            counter.textContent = input.value.length;
+        }
+
+        if (nameInput && nameCount) {
+            updateCount(nameInput, nameCount);
+            nameInput.addEventListener('input', () => updateCount(nameInput, nameCount));
+        }
+
+        if (descriptionInput && descriptionCount) {
+            updateCount(descriptionInput, descriptionCount);
+            descriptionInput.addEventListener('input', () => updateCount(descriptionInput, descriptionCount));
+        }
+    });
+</script>
+{% endblock %}

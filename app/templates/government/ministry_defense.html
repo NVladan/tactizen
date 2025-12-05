@@ -1,0 +1,2259 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Ministry of Defense - {{ country.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .defense-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .page-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(239, 68, 68, 0.15);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef4444;
+        font-size: 1.25rem;
+    }
+
+    .page-title {
+        color: #ef4444;
+        font-size: 1.5rem;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    .page-subtitle img {
+        height: 14px;
+        border-radius: 2px;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .action-btn-primary {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: #fff;
+    }
+
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .action-btn-secondary {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+    }
+
+    .action-btn-secondary:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-box {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-box.gold { border-color: rgba(234, 179, 8, 0.3); }
+    .stat-box.currency { border-color: rgba(34, 197, 94, 0.3); }
+    .stat-box.war { border-color: rgba(239, 68, 68, 0.3); }
+    .stat-box.treasury { border-color: rgba(59, 130, 246, 0.3); }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.gold { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+    .stat-icon.currency { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .stat-icon.war { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .stat-icon.treasury { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+    .stat-content { flex: 1; min-width: 0; }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.2rem;
+    }
+
+    .stat-value {
+        font-size: 1.35rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .stat-value.gold { color: #eab308; }
+    .stat-value.currency { color: #22c55e; }
+    .stat-value.war { color: #ef4444; }
+    .stat-value.treasury { color: #3b82f6; }
+
+    /* Content Layout */
+    .content-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .content-layout { grid-template-columns: 1fr; }
+    }
+
+    /* Section Styling */
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .section.war-section { border-color: rgba(239, 68, 68, 0.25); }
+    .section.budget-section { border-color: rgba(168, 85, 247, 0.25); }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: #22c55e;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .section-title.war { color: #ef4444; }
+    .section-title.budget { color: #a855f7; }
+
+    .section-title i {
+        font-size: 0.9rem;
+    }
+
+    .section-link {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .section-link:hover { color: #22c55e; }
+
+    .section-body {
+        padding: 1.25rem;
+    }
+
+    /* War Cards */
+    .war-card {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        border: 1px solid rgba(239, 68, 68, 0.15);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s;
+    }
+
+    .war-card:last-child { margin-bottom: 0; }
+
+    .war-card:hover {
+        background: rgba(0, 0, 0, 0.3);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .war-countries {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .war-country {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .war-flag img {
+        height: 24px;
+        border-radius: 2px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .war-country-name {
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .war-vs {
+        color: #ef4444;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        background: rgba(239, 68, 68, 0.15);
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    .war-status {
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .war-status.active {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .war-status.peace {
+        background: rgba(234, 179, 8, 0.15);
+        color: #eab308;
+    }
+
+    .war-details-btn {
+        padding: 0.4rem 0.75rem;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 6px;
+        color: #ef4444;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .war-details-btn:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    /* Budget History Items */
+    .budget-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+
+    .budget-item:last-child { margin-bottom: 0; }
+
+    .budget-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .budget-icon.gold { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+    .budget-icon.currency { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+    .budget-details { flex: 1; min-width: 0; }
+
+    .budget-amount {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .budget-amount.gold { color: #eab308; }
+    .budget-amount.currency { color: #22c55e; }
+
+    .budget-meta {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.75rem;
+        margin-top: 0.1rem;
+    }
+
+    .budget-meta a {
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: none;
+    }
+
+    .budget-meta a:hover { color: #22c55e; }
+
+    /* Sidebar Cards */
+    .sidebar-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .sidebar-title {
+        color: #22c55e;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .sidebar-title i { font-size: 0.85rem; }
+
+    /* Minister Display */
+    .minister-box {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(59, 130, 246, 0.08);
+        border-radius: 8px;
+        border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+
+    .minister-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3b82f6;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .minister-info { flex: 1; }
+
+    .minister-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .minister-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-top: 0.1rem;
+    }
+
+    .minister-name a {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    .minister-name a:hover { color: #60a5fa; }
+
+    .minister-vacant {
+        color: rgba(255, 255, 255, 0.4);
+        font-style: italic;
+    }
+
+    /* Pending Vote Card */
+    .pending-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(234, 179, 8, 0.08);
+        border: 1px solid rgba(234, 179, 8, 0.2);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+
+    .pending-item:last-child { margin-bottom: 0; }
+
+    .pending-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(234, 179, 8, 0.15);
+        color: #eab308;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .pending-info { flex: 1; min-width: 0; }
+
+    .pending-amount {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .pending-status {
+        color: #eab308;
+        font-size: 0.7rem;
+        margin-top: 0.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .pending-status i {
+        animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    .pending-vote-btn {
+        padding: 0.4rem 0.75rem;
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+        border-radius: 6px;
+        color: #000;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+
+    .pending-vote-btn:hover {
+        color: #000;
+        transform: translateY(-1px);
+    }
+
+    /* Treasury Grid */
+    .treasury-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .treasury-item {
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .treasury-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .treasury-value {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .treasury-value.gold { color: #eab308; }
+    .treasury-value.currency { color: #22c55e; }
+    .treasury-value.reserved { color: #f97316; }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        opacity: 0.5;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    /* Inventory Section */
+    .section.inventory-section { border-color: rgba(59, 130, 246, 0.25); }
+    .section-title.inventory { color: #3b82f6; }
+
+    .inventory-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .inventory-item {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .inventory-item-icon {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .inventory-item-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .inventory-item-quality {
+        color: #a855f7;
+        font-size: 0.75rem;
+        margin-top: 0.1rem;
+    }
+
+    .inventory-item-qty {
+        color: #22c55e;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-top: 0.35rem;
+    }
+
+    /* Purchase Section */
+    .section.purchase-section { border-color: rgba(234, 179, 8, 0.25); }
+    .section-title.purchase { color: #eab308; }
+
+    .purchase-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .purchase-tab {
+        flex: 1;
+        padding: 0.6rem;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .purchase-tab:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+    }
+
+    .purchase-tab.active {
+        background: rgba(234, 179, 8, 0.15);
+        border-color: rgba(234, 179, 8, 0.3);
+        color: #eab308;
+    }
+
+    .purchase-content { display: none; }
+    .purchase-content.active { display: block; }
+
+    .quality-options {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .quality-btn {
+        flex: 1;
+        min-width: 50px;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .quality-btn:hover {
+        background: rgba(168, 85, 247, 0.1);
+        border-color: rgba(168, 85, 247, 0.3);
+    }
+
+    .quality-btn.active {
+        background: rgba(168, 85, 247, 0.15);
+        border-color: rgba(168, 85, 247, 0.4);
+        color: #a855f7;
+    }
+
+    .purchase-info {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .purchase-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .purchase-info-row:last-child { margin-bottom: 0; }
+
+    .purchase-info-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .purchase-info-value {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .purchase-info-value.price { color: #eab308; }
+
+    .purchase-form {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+    }
+
+    .purchase-form-group {
+        flex: 1;
+    }
+
+    .purchase-form-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.35rem;
+        display: block;
+    }
+
+    .purchase-input {
+        width: 100%;
+        padding: 0.6rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: #fff;
+        font-size: 0.9rem;
+    }
+
+    .purchase-input:focus {
+        outline: none;
+        border-color: rgba(234, 179, 8, 0.5);
+    }
+
+    .purchase-btn {
+        padding: 0.6rem 1.25rem;
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+        border: none;
+        border-radius: 6px;
+        color: #000;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .purchase-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+    }
+
+    .purchase-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Regional Constructions Section */
+    .section.constructions-section { border-color: rgba(139, 92, 246, 0.25); }
+    .section-title.constructions { color: #8b5cf6; }
+
+    /* Stats Row */
+    .construct-stats-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .construct-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .construct-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .construct-stat-icon.hospital {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .construct-stat-icon.fortress {
+        background: rgba(139, 92, 246, 0.15);
+        color: #8b5cf6;
+    }
+
+    .construct-stat-info { flex: 1; }
+
+    .construct-stat-value {
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .construct-stat-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Place Card */
+    .construct-place-card {
+        background: rgba(139, 92, 246, 0.05);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 10px;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .construct-place-title {
+        color: #8b5cf6;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .construct-place-field label {
+        display: block;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.4rem;
+    }
+
+    .construct-select {
+        width: 100%;
+        padding: 0.65rem 1rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .construct-select:focus {
+        outline: none;
+        border-color: rgba(139, 92, 246, 0.6);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .construct-select option {
+        background: #1a1f2e;
+        color: #fff;
+    }
+
+    .construct-select option:disabled {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Region Info Panel */
+    .region-info-panel {
+        margin-top: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid rgba(139, 92, 246, 0.15);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .region-info-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .region-info-header i:first-child {
+        color: #8b5cf6;
+    }
+
+    .region-info-link {
+        margin-left: auto;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.8rem;
+        transition: color 0.2s;
+    }
+
+    .region-info-link:hover {
+        color: #8b5cf6;
+    }
+
+    .region-info-slots {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    @media (max-width: 600px) {
+        .region-info-slots {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .region-slot {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .region-slot.hospital {
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .region-slot.fortress {
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    .region-slot-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .region-slot-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+
+    .region-slot-icon.hospital {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .region-slot-icon.fortress {
+        background: rgba(139, 92, 246, 0.15);
+        color: #8b5cf6;
+    }
+
+    .region-slot-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .region-slot-status {
+        margin-bottom: 0.75rem;
+    }
+
+    .region-slot-status .slot-empty {
+        color: rgba(255, 255, 255, 0.4);
+        font-style: italic;
+        font-size: 0.85rem;
+    }
+
+    .region-slot-status .slot-filled {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .region-slot-status .slot-quality {
+        color: #a855f7;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .region-slot-status .slot-bonus {
+        color: #22c55e;
+        font-size: 0.75rem;
+    }
+
+    .region-slot-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .slot-action-btn {
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        border: none;
+    }
+
+    .slot-action-btn.place {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .slot-action-btn.place:hover {
+        background: rgba(34, 197, 94, 0.25);
+    }
+
+    .slot-permanent {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    /* Region Empty State */
+    .region-empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 1rem;
+    }
+
+    .region-empty-state i {
+        font-size: 2rem;
+        color: rgba(139, 92, 246, 0.3);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .region-empty-state p {
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    /* Existing Constructions List */
+    .construct-existing-title {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .construct-existing-title i {
+        color: #8b5cf6;
+    }
+
+    .construct-existing-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .construct-existing-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 0.85rem;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .construct-existing-region {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+    }
+
+    .construct-existing-region i {
+        color: rgba(139, 92, 246, 0.6);
+        font-size: 0.75rem;
+    }
+
+    .construct-existing-region a {
+        color: #fff;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .construct-existing-region a:hover {
+        color: #8b5cf6;
+    }
+
+    .construct-existing-badges {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    .construct-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .construct-badge.hospital {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .construct-badge.fortress {
+        background: rgba(139, 92, 246, 0.15);
+        color: #8b5cf6;
+    }
+
+    /* Place Construction Modal */
+    .place-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .place-modal-overlay.active {
+        display: flex;
+    }
+
+    .place-modal {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .place-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .place-modal-title {
+        color: #8b5cf6;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .place-modal-close {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+
+    .place-modal-close:hover {
+        color: #fff;
+    }
+
+    .place-modal-body {
+        margin-bottom: 1rem;
+    }
+
+    .place-modal-region {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+
+    .place-modal-region i {
+        color: #8b5cf6;
+    }
+
+    .place-modal-region span {
+        color: #fff;
+        font-weight: 500;
+    }
+
+    .place-modal-quality-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .place-modal-quality-options {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .place-modal-quality-btn {
+        flex: 1;
+        min-width: 60px;
+        padding: 0.6rem;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .place-modal-quality-btn:hover:not(:disabled) {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    .place-modal-quality-btn.active {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.4);
+        color: #8b5cf6;
+    }
+
+    .place-modal-quality-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .place-modal-quality-btn .quality-stock {
+        display: block;
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 0.2rem;
+    }
+
+    .place-modal-quality-btn.active .quality-stock {
+        color: rgba(139, 92, 246, 0.7);
+    }
+
+    .place-modal-footer {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .place-modal-btn {
+        flex: 1;
+        padding: 0.7rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .place-modal-btn.cancel {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .place-modal-btn.cancel:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+    }
+
+    .place-modal-btn.confirm {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: #fff;
+    }
+
+    .place-modal-btn.confirm:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+    .place-modal-btn.confirm:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="defense-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-title-group">
+            <div class="page-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Ministry of Defense</h1>
+                <div class="page-subtitle">
+                    {% if country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' + country.flag_code + '.png') }}" alt="">
+                    {% endif %}
+                    {{ country.name }}
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            {% if is_president or is_defense_minister %}
+            <a href="{{ url_for('military_unit.create_bounty') }}" class="action-btn action-btn-primary">
+                <i class="fas fa-coins"></i> Create Bounty
+            </a>
+            <a href="{{ url_for('government.propose_law') }}" class="action-btn action-btn-primary" style="background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);">
+                <i class="fas fa-plus"></i> Allocate Budget
+            </a>
+            {% endif %}
+            <a href="{{ url_for('military_unit.bounties') }}" class="action-btn action-btn-secondary" style="border-color: rgba(251, 191, 36, 0.3); color: #fbbf24;">
+                <i class="fas fa-file-contract"></i> View Bounties
+            </a>
+            <a href="{{ url_for('government.president', country_id=country.id) }}" class="action-btn action-btn-secondary">
+                <i class="fas fa-landmark"></i> Government
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-box gold">
+            <div class="stat-icon gold">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Military Gold</div>
+                <div class="stat-value gold">{{ "{:,.0f}".format(country.military_budget_gold) }}</div>
+            </div>
+        </div>
+
+        <div class="stat-box currency">
+            <div class="stat-icon currency">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Military {{ country.currency_code }}</div>
+                <div class="stat-value currency">{{ "{:,.0f}".format(country.military_budget_currency) }}</div>
+            </div>
+        </div>
+
+        <div class="stat-box treasury">
+            <div class="stat-icon treasury">
+                <i class="fas fa-landmark"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Treasury {{ country.currency_code }}</div>
+                <div class="stat-value treasury">{{ "{:,.0f}".format(country.treasury_currency) }}</div>
+            </div>
+        </div>
+
+        <div class="stat-box treasury">
+            <div class="stat-icon treasury">
+                <i class="fas fa-university"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Treasury Gold</div>
+                <div class="stat-value treasury">{{ "{:,.0f}".format(country.treasury_gold) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-layout">
+        <div class="main-content">
+            <!-- Active Wars -->
+            <div class="section war-section">
+                <div class="section-header">
+                    <h2 class="section-title war">
+                        <i class="fas fa-fire-alt"></i> Active Wars
+                    </h2>
+                    <a href="{{ url_for('main.wars_list') }}" class="section-link">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="section-body">
+                    {% if active_wars %}
+                        {% for war in active_wars %}
+                        <div class="war-card">
+                            <div class="war-countries">
+                                <div class="war-country">
+                                    <span class="war-flag">
+                                        {% if war.attacker_country.flag_code %}
+                                        <img src="{{ url_for('static', filename='images/country-flags/' + war.attacker_country.flag_code + '.png') }}" alt="">
+                                        {% endif %}
+                                    </span>
+                                    <span class="war-country-name">{{ war.attacker_country.name }}</span>
+                                </div>
+                                <span class="war-vs">VS</span>
+                                <div class="war-country">
+                                    <span class="war-flag">
+                                        {% if war.defender_country.flag_code %}
+                                        <img src="{{ url_for('static', filename='images/country-flags/' + war.defender_country.flag_code + '.png') }}" alt="">
+                                        {% endif %}
+                                    </span>
+                                    <span class="war-country-name">{{ war.defender_country.name }}</span>
+                                </div>
+                            </div>
+                            <span class="war-status {% if war.status.name == 'PEACE_PROPOSED' %}peace{% else %}active{% endif %}">
+                                {% if war.status.name == 'PEACE_PROPOSED' %}Peace{% else %}Active{% endif %}
+                            </span>
+                            <a href="{{ url_for('government.view_war', war_id=war.id) }}" class="war-details-btn">
+                                Details
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-peace"></i>
+                        <p>{{ country.name }} is at peace with all nations</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Military Inventory -->
+            <div class="section inventory-section">
+                <div class="section-header">
+                    <h2 class="section-title inventory">
+                        <i class="fas fa-boxes"></i> Military Inventory
+                    </h2>
+                </div>
+                <div class="section-body">
+                    {% if military_inventory %}
+                    <div class="inventory-grid">
+                        {% for item in military_inventory %}
+                        <div class="inventory-item">
+                            <div class="inventory-item-icon">
+                                {% if item.resource.name == 'Hospital' %}
+                                <i class="fas fa-hospital" style="color: #ef4444;"></i>
+                                {% elif item.resource.name == 'Fort' %}
+                                <i class="fas fa-chess-rook" style="color: #8b5cf6;"></i>
+                                {% else %}
+                                <i class="fas fa-cube" style="color: #22c55e;"></i>
+                                {% endif %}
+                            </div>
+                            <div class="inventory-item-name">{{ item.resource.name }}</div>
+                            <div class="inventory-item-quality">Quality {{ item.quality }}</div>
+                            <div class="inventory-item-qty">x{{ item.quantity }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-boxes"></i>
+                        <p>No military equipment in inventory</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Regional Constructions (only for President/Defense Minister) -->
+            {% if is_president or is_defense_minister %}
+            <div class="section constructions-section">
+                <div class="section-header">
+                    <h2 class="section-title constructions">
+                        <i class="fas fa-building"></i> Regional Constructions
+                    </h2>
+                    <span class="section-link" style="cursor: default;">{{ controlled_regions|length }} Regions</span>
+                </div>
+                <div class="section-body">
+                    {% if controlled_regions %}
+                    <!-- Stats Summary -->
+                    <div class="construct-stats-row">
+                        <div class="construct-stat">
+                            <div class="construct-stat-icon hospital">
+                                <i class="fas fa-hospital"></i>
+                            </div>
+                            <div class="construct-stat-info">
+                                <div class="construct-stat-value">
+                                    {% set hospital_count = region_constructions.values()|selectattr('hospital')|list|length %}
+                                    {{ hospital_count }} / {{ controlled_regions|length }}
+                                </div>
+                                <div class="construct-stat-label">Hospitals Placed</div>
+                            </div>
+                        </div>
+                        <div class="construct-stat">
+                            <div class="construct-stat-icon fortress">
+                                <i class="fas fa-chess-rook"></i>
+                            </div>
+                            <div class="construct-stat-info">
+                                <div class="construct-stat-value">
+                                    {% set fortress_count = region_constructions.values()|selectattr('fortress')|list|length %}
+                                    {{ fortress_count }} / {{ controlled_regions|length }}
+                                </div>
+                                <div class="construct-stat-label">Fortresses Placed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Place New Construction -->
+                    <div class="construct-place-card">
+                        <div class="construct-place-title">
+                            <i class="fas fa-plus-circle"></i> Place New Construction
+                        </div>
+                        <div class="construct-place-form">
+                            <div class="construct-place-row">
+                                <div class="construct-place-field">
+                                    <label>Select Region</label>
+                                    <select id="constructRegionSelect" class="construct-select">
+                                        <option value="">-- Choose a region --</option>
+                                        {% for region in controlled_regions %}
+                                        {% set has_battle = region.id in regions_with_active_battles %}
+                                        {% set constructions = region_constructions.get(region.id, {'hospital': None, 'fortress': None}) %}
+                                        <option value="{{ region.id }}"
+                                                data-name="{{ region.name }}"
+                                                data-slug="{{ region.slug }}"
+                                                data-battle="{{ 'true' if has_battle else 'false' }}"
+                                                data-hospital="{{ constructions.hospital.quality if constructions.hospital else '0' }}"
+                                                data-fortress="{{ constructions.fortress.quality if constructions.fortress else '0' }}"
+                                                {% if has_battle %}disabled{% endif %}>
+                                            {{ region.name }}{% if has_battle %} (Battle Active){% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Region Info Display -->
+                            <div id="regionInfoPanel" class="region-info-panel" style="display: none;">
+                                <div class="region-info-header">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span id="regionInfoName">Region Name</span>
+                                    <a id="regionInfoLink" href="#" class="region-info-link" target="_blank">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                                <div class="region-info-slots">
+                                    <!-- Hospital Slot -->
+                                    <div class="region-slot hospital" id="hospitalSlot">
+                                        <div class="region-slot-header">
+                                            <div class="region-slot-icon hospital">
+                                                <i class="fas fa-hospital"></i>
+                                            </div>
+                                            <div class="region-slot-title">Hospital</div>
+                                        </div>
+                                        <div class="region-slot-status" id="hospitalStatus">
+                                            <span class="slot-empty">Not Built</span>
+                                        </div>
+                                        <div class="region-slot-actions" id="hospitalActions">
+                                            <!-- Actions populated by JS -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Fortress Slot -->
+                                    <div class="region-slot fortress" id="fortressSlot">
+                                        <div class="region-slot-header">
+                                            <div class="region-slot-icon fortress">
+                                                <i class="fas fa-chess-rook"></i>
+                                            </div>
+                                            <div class="region-slot-title">Fortress</div>
+                                        </div>
+                                        <div class="region-slot-status" id="fortressStatus">
+                                            <span class="slot-empty">Not Built</span>
+                                        </div>
+                                        <div class="region-slot-actions" id="fortressActions">
+                                            <!-- Actions populated by JS -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Empty state when no region selected -->
+                            <div id="regionEmptyState" class="region-empty-state">
+                                <i class="fas fa-hand-pointer"></i>
+                                <p>Select a region above to manage constructions</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Existing Constructions List -->
+                    {% set has_any_construction = region_constructions.values()|selectattr('hospital')|list|length > 0 or region_constructions.values()|selectattr('fortress')|list|length > 0 %}
+                    {% if has_any_construction %}
+                    <div class="construct-existing-title">
+                        <i class="fas fa-layer-group"></i> Active Constructions
+                    </div>
+                    <div class="construct-existing-list">
+                        {% for region in controlled_regions %}
+                        {% set constructions = region_constructions.get(region.id, {'hospital': None, 'fortress': None}) %}
+                        {% if constructions.hospital or constructions.fortress %}
+                        <div class="construct-existing-item">
+                            <div class="construct-existing-region">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <a href="{{ url_for('main.region', slug=region.slug) }}">{{ region.name }}</a>
+                            </div>
+                            <div class="construct-existing-badges">
+                                {% if constructions.hospital %}
+                                <span class="construct-badge hospital">
+                                    <i class="fas fa-hospital"></i> Q{{ constructions.hospital.quality }}
+                                </span>
+                                {% endif %}
+                                {% if constructions.fortress %}
+                                <span class="construct-badge fortress">
+                                    <i class="fas fa-chess-rook"></i> Q{{ constructions.fortress.quality }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-globe"></i>
+                        <p>No regions under {{ country.name }}'s control</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Purchase Equipment (only for President/Defense Minister) -->
+            {% if is_president or is_defense_minister %}
+            <div class="section purchase-section">
+                <div class="section-header">
+                    <h2 class="section-title purchase">
+                        <i class="fas fa-shopping-cart"></i> Purchase Equipment
+                    </h2>
+                    <span class="section-link" style="cursor: default;">Uses Military {{ country.currency_code }}</span>
+                </div>
+                <div class="section-body">
+                    <!-- Tabs -->
+                    <div class="purchase-tabs">
+                        <div class="purchase-tab active" data-tab="hospital">
+                            <i class="fas fa-hospital"></i> Hospital
+                        </div>
+                        <div class="purchase-tab" data-tab="fort">
+                            <i class="fas fa-chess-rook"></i> Fort
+                        </div>
+                    </div>
+
+                    <!-- Hospital Tab Content -->
+                    <div class="purchase-content active" id="hospital-content">
+                        {% if hospital_market_items %}
+                        <div class="quality-options" data-resource="hospital">
+                            {% for item in hospital_market_items %}
+                            <div class="quality-btn {% if loop.first %}active{% endif %}"
+                                 data-quality="{{ item.quality }}"
+                                 data-price="{{ item.buy_price }}"
+                                 data-resource-id="{{ item.resource_id }}">
+                                Q{{ item.quality }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="purchase-info" id="hospital-info">
+                            <div class="purchase-info-row">
+                                <span class="purchase-info-label">Unit Price</span>
+                                <span class="purchase-info-value price" id="hospital-price">
+                                    {{ "{:,.2f}".format(hospital_market_items[0].buy_price) }} {{ country.currency_code }}
+                                </span>
+                            </div>
+                            <div class="purchase-info-row">
+                                <span class="purchase-info-label">Available Budget</span>
+                                <span class="purchase-info-value" style="color: #22c55e;">
+                                    {{ "{:,.2f}".format(country.military_budget_currency) }} {{ country.currency_code }}
+                                </span>
+                            </div>
+                        </div>
+                        <form class="purchase-form" id="hospital-form">
+                            <input type="hidden" name="resource_id" value="{{ hospital_resource.id }}">
+                            <input type="hidden" name="quality" value="{{ hospital_market_items[0].quality }}">
+                            <div class="purchase-form-group">
+                                <label class="purchase-form-label">Quantity</label>
+                                <input type="number" name="quantity" class="purchase-input" value="1" min="1" max="100">
+                            </div>
+                            <button type="submit" class="purchase-btn">
+                                <i class="fas fa-shopping-cart"></i> Buy
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="empty-state" style="padding: 1rem;">
+                            <i class="fas fa-store-slash" style="font-size: 1.5rem;"></i>
+                            <p>Hospitals not available on market</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Fort Tab Content -->
+                    <div class="purchase-content" id="fort-content">
+                        {% if fort_market_items %}
+                        <div class="quality-options" data-resource="fort">
+                            {% for item in fort_market_items %}
+                            <div class="quality-btn {% if loop.first %}active{% endif %}"
+                                 data-quality="{{ item.quality }}"
+                                 data-price="{{ item.buy_price }}"
+                                 data-resource-id="{{ item.resource_id }}">
+                                Q{{ item.quality }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="purchase-info" id="fort-info">
+                            <div class="purchase-info-row">
+                                <span class="purchase-info-label">Unit Price</span>
+                                <span class="purchase-info-value price" id="fort-price">
+                                    {{ "{:,.2f}".format(fort_market_items[0].buy_price) }} {{ country.currency_code }}
+                                </span>
+                            </div>
+                            <div class="purchase-info-row">
+                                <span class="purchase-info-label">Available Budget</span>
+                                <span class="purchase-info-value" style="color: #22c55e;">
+                                    {{ "{:,.2f}".format(country.military_budget_currency) }} {{ country.currency_code }}
+                                </span>
+                            </div>
+                        </div>
+                        <form class="purchase-form" id="fort-form">
+                            <input type="hidden" name="resource_id" value="{{ fort_resource.id }}">
+                            <input type="hidden" name="quality" value="{{ fort_market_items[0].quality }}">
+                            <div class="purchase-form-group">
+                                <label class="purchase-form-label">Quantity</label>
+                                <input type="number" name="quantity" class="purchase-input" value="1" min="1" max="100">
+                            </div>
+                            <button type="submit" class="purchase-btn">
+                                <i class="fas fa-shopping-cart"></i> Buy
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="empty-state" style="padding: 1rem;">
+                            <i class="fas fa-store-slash" style="font-size: 1.5rem;"></i>
+                            <p>Forts not available on market</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Budget Allocation History -->
+            <div class="section budget-section">
+                <div class="section-header">
+                    <h2 class="section-title budget">
+                        <i class="fas fa-history"></i> Budget Allocations
+                    </h2>
+                    <span class="section-link" style="cursor: default;">Last 90 days</span>
+                </div>
+                <div class="section-body">
+                    {% if budget_history %}
+                        {% for law in budget_history %}
+                        {% set is_gold = law.law_details.get('currency_type', 'gold') == 'gold' %}
+                        <div class="budget-item">
+                            <div class="budget-icon {% if is_gold %}gold{% else %}currency{% endif %}">
+                                <i class="fas fa-{% if is_gold %}coins{% else %}money-bill-wave{% endif %}"></i>
+                            </div>
+                            <div class="budget-details">
+                                <div class="budget-amount {% if is_gold %}gold{% else %}currency{% endif %}">
+                                    +{{ "{:,.0f}".format(law.law_details.get('amount', 0)) }}
+                                    {% if is_gold %}Gold{% else %}{{ country.currency_code }}{% endif %}
+                                </div>
+                                <div class="budget-meta">
+                                    {{ law.created_at.strftime('%b %d, %Y') }} &bull;
+                                    <a href="{{ url_for('main.view_profile', username=law.proposed_by.username) }}">{{ law.proposed_by.username }}</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <p>No budget allocations in the past 90 days</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Defense Minister -->
+            <div class="sidebar-card">
+                <div class="sidebar-title">
+                    <i class="fas fa-user-shield"></i> Defense Minister
+                </div>
+                <div class="minister-box">
+                    <div class="minister-avatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="minister-info">
+                        <div class="minister-label">Minister of Defense</div>
+                        {% if defense_minister %}
+                        <div class="minister-name">
+                            <a href="{{ url_for('main.view_profile', username=defense_minister.user.username) }}">
+                                {{ defense_minister.user.username }}
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="minister-name minister-vacant">Position Vacant</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Votes -->
+            <div class="sidebar-card">
+                <div class="sidebar-title">
+                    <i class="fas fa-hourglass-half"></i> Pending Votes
+                </div>
+                {% if pending_budget %}
+                    {% for law in pending_budget %}
+                    {% set is_gold = law.law_details.get('currency_type', 'gold') == 'gold' %}
+                    <div class="pending-item">
+                        <div class="pending-icon">
+                            <i class="fas fa-vote-yea"></i>
+                        </div>
+                        <div class="pending-info">
+                            <div class="pending-amount">
+                                {{ "{:,.0f}".format(law.law_details.get('amount', 0)) }}
+                                {% if is_gold %}Gold{% else %}{{ country.currency_code }}{% endif %}
+                            </div>
+                            <div class="pending-status">
+                                <i class="fas fa-circle"></i> Voting in progress
+                            </div>
+                        </div>
+                        <a href="{{ url_for('government.view_law', law_id=law.id) }}" class="pending-vote-btn">Vote</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-state" style="padding: 1rem;">
+                    <i class="fas fa-inbox" style="font-size: 1.5rem;"></i>
+                    <p>No pending proposals</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Treasury Overview -->
+            <div class="sidebar-card">
+                <div class="sidebar-title">
+                    <i class="fas fa-landmark"></i> Treasury Overview
+                </div>
+                <div class="treasury-grid">
+                    <div class="treasury-item">
+                        <div class="treasury-label">Gold</div>
+                        <div class="treasury-value gold">{{ "{:,.0f}".format(country.treasury_gold) }}</div>
+                    </div>
+                    <div class="treasury-item">
+                        <div class="treasury-label">{{ country.currency_code }}</div>
+                        <div class="treasury-value currency">{{ "{:,.0f}".format(country.treasury_currency) }}</div>
+                    </div>
+                </div>
+                {% if country.reserved_gold > 0 or country.reserved_currency > 0 %}
+                <div class="treasury-grid" style="margin-top: 0.5rem;">
+                    <div class="treasury-item" style="grid-column: span 2;">
+                        <div class="treasury-label">Reserved (Pending)</div>
+                        <div class="treasury-value reserved">
+                            {% if country.reserved_gold > 0 %}{{ "{:,.0f}".format(country.reserved_gold) }} Gold{% endif %}
+                            {% if country.reserved_gold > 0 and country.reserved_currency > 0 %} / {% endif %}
+                            {% if country.reserved_currency > 0 %}{{ "{:,.0f}".format(country.reserved_currency) }} {{ country.currency_code }}{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Place Construction Modal -->
+{% if is_president or is_defense_minister %}
+<div class="place-modal-overlay" id="placeModal">
+    <div class="place-modal">
+        <div class="place-modal-header">
+            <div class="place-modal-title">
+                <i class="fas fa-building"></i>
+                <span id="placeModalTitle">Place Construction</span>
+            </div>
+            <button type="button" class="place-modal-close" onclick="closePlaceModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="placeConstructionForm" action="{{ url_for('government.place_construction') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="region_id" id="placeRegionId">
+            <input type="hidden" name="construction_type" id="placeConstructionType">
+            <input type="hidden" name="quality" id="placeQuality" value="">
+            <div class="place-modal-body">
+                <div class="place-modal-region">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span id="placeRegionName">Region Name</span>
+                </div>
+                <div class="place-modal-quality-label">Select Quality (from inventory):</div>
+                <div class="place-modal-quality-options" id="placeQualityOptions">
+                    <!-- Quality options will be populated by JS -->
+                </div>
+            </div>
+            <div class="place-modal-footer">
+                <button type="button" class="place-modal-btn cancel" onclick="closePlaceModal()">Cancel</button>
+                <button type="submit" class="place-modal-btn confirm" id="placeConfirmBtn" disabled>
+                    <i class="fas fa-check"></i> Place
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    const tabs = document.querySelectorAll('.purchase-tab');
+    const contents = document.querySelectorAll('.purchase-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetTab = this.dataset.tab;
+
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            this.classList.add('active');
+            document.getElementById(targetTab + '-content').classList.add('active');
+        });
+    });
+
+    // Quality selection
+    const qualityBtns = document.querySelectorAll('.quality-btn');
+
+    qualityBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const resource = this.closest('.quality-options').dataset.resource;
+            const quality = this.dataset.quality;
+            const price = this.dataset.price;
+            const resourceId = this.dataset.resourceId;
+
+            // Update active state
+            this.closest('.quality-options').querySelectorAll('.quality-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+
+            // Update price display
+            const priceEl = document.getElementById(resource + '-price');
+            if (priceEl) {
+                priceEl.textContent = parseFloat(price).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }) + ' {{ country.currency_code }}';
+            }
+
+            // Update form hidden fields
+            const form = document.getElementById(resource + '-form');
+            if (form) {
+                form.querySelector('input[name="quality"]').value = quality;
+                form.querySelector('input[name="resource_id"]').value = resourceId;
+            }
+        });
+    });
+
+    // Form submission
+    const purchaseForms = document.querySelectorAll('.purchase-form');
+
+    purchaseForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const btn = this.querySelector('.purchase-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buying...';
+
+            const formData = new FormData(this);
+
+            fetch('{{ url_for("government.ministry_defense_buy") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+
+                if (data.success) {
+                    // Show success message
+                    showToast(data.message, 'success');
+                    // Reload page to update inventory and budget
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                showToast('An error occurred. Please try again.', 'error');
+                console.error('Error:', error);
+            });
+        });
+    });
+
+    // Toast notification function
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            max-width: 350px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        `;
+
+        if (type === 'success') {
+            toast.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+        } else {
+            toast.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        }
+
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+// Inventory data for construction placement
+const hospitalInventory = {{ hospital_inventory | tojson | safe }};
+const fortressInventory = {{ fortress_inventory | tojson | safe }};
+
+// Construction IDs for removal (populated from server)
+const constructionIds = {{ region_constructions_json | tojson | safe }};
+
+// Region selection handler
+const regionSelect = document.getElementById('constructRegionSelect');
+if (regionSelect) {
+    regionSelect.addEventListener('change', function() {
+        const regionInfoPanel = document.getElementById('regionInfoPanel');
+        const regionEmptyState = document.getElementById('regionEmptyState');
+        const option = this.options[this.selectedIndex];
+
+        if (!this.value) {
+            regionInfoPanel.style.display = 'none';
+            regionEmptyState.style.display = 'block';
+            return;
+        }
+
+        // Get data from selected option
+        const regionId = this.value;
+        const regionName = option.dataset.name;
+        const regionSlug = option.dataset.slug;
+        const hospitalQuality = parseInt(option.dataset.hospital) || 0;
+        const fortressQuality = parseInt(option.dataset.fortress) || 0;
+
+        // Update panel header
+        document.getElementById('regionInfoName').textContent = regionName;
+        document.getElementById('regionInfoLink').href = '/region/' + regionSlug;
+
+        // Update hospital slot
+        const hospitalStatus = document.getElementById('hospitalStatus');
+        const hospitalActions = document.getElementById('hospitalActions');
+        if (hospitalQuality > 0) {
+            hospitalStatus.innerHTML = `
+                <div class="slot-filled">
+                    <span class="slot-quality">Quality ${hospitalQuality}</span>
+                    <span class="slot-bonus">+${hospitalQuality * 5}% Wellness Recovery</span>
+                </div>
+            `;
+            // No remove button - constructions are permanent until region is conquered
+            hospitalActions.innerHTML = '<span class="slot-permanent"><i class="fas fa-check-circle"></i> Active</span>';
+        } else {
+            hospitalStatus.innerHTML = '<span class="slot-empty">Not Built</span>';
+            hospitalActions.innerHTML = `
+                <button type="button" class="slot-action-btn place" onclick="openPlaceModal(${regionId}, '${regionName}', 'hospital')">
+                    <i class="fas fa-plus"></i> Place
+                </button>
+            `;
+        }
+
+        // Update fortress slot
+        const fortressStatus = document.getElementById('fortressStatus');
+        const fortressActions = document.getElementById('fortressActions');
+        if (fortressQuality > 0) {
+            fortressStatus.innerHTML = `
+                <div class="slot-filled">
+                    <span class="slot-quality">Quality ${fortressQuality}</span>
+                    <span class="slot-bonus">+${fortressQuality * 5}% Defense Bonus</span>
+                </div>
+            `;
+            // No remove button - constructions are permanent until region is conquered
+            fortressActions.innerHTML = '<span class="slot-permanent"><i class="fas fa-check-circle"></i> Active</span>';
+        } else {
+            fortressStatus.innerHTML = '<span class="slot-empty">Not Built</span>';
+            fortressActions.innerHTML = `
+                <button type="button" class="slot-action-btn place" onclick="openPlaceModal(${regionId}, '${regionName}', 'fortress')">
+                    <i class="fas fa-plus"></i> Place
+                </button>
+            `;
+        }
+
+        // Show panel, hide empty state
+        regionInfoPanel.style.display = 'block';
+        regionEmptyState.style.display = 'none';
+    });
+}
+
+function openPlaceModal(regionId, regionName, constructionType) {
+    const modal = document.getElementById('placeModal');
+    const titleEl = document.getElementById('placeModalTitle');
+    const regionNameEl = document.getElementById('placeRegionName');
+    const regionIdInput = document.getElementById('placeRegionId');
+    const constructionTypeInput = document.getElementById('placeConstructionType');
+    const qualityOptionsEl = document.getElementById('placeQualityOptions');
+    const confirmBtn = document.getElementById('placeConfirmBtn');
+    const qualityInput = document.getElementById('placeQuality');
+
+    // Set values
+    regionIdInput.value = regionId;
+    constructionTypeInput.value = constructionType;
+    regionNameEl.textContent = regionName;
+
+    // Set title and icon based on type
+    if (constructionType === 'hospital') {
+        titleEl.innerHTML = '<i class="fas fa-hospital" style="color: #ef4444;"></i> Place Hospital';
+    } else {
+        titleEl.innerHTML = '<i class="fas fa-chess-rook" style="color: #8b5cf6;"></i> Place Fortress';
+    }
+
+    // Get inventory for this construction type
+    const inventory = constructionType === 'hospital' ? hospitalInventory : fortressInventory;
+
+    // Clear and populate quality options
+    qualityOptionsEl.innerHTML = '';
+    qualityInput.value = '';
+    confirmBtn.disabled = true;
+
+    let hasAnyStock = false;
+    for (let q = 1; q <= 5; q++) {
+        const stock = inventory[q] || 0;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'place-modal-quality-btn';
+        btn.dataset.quality = q;
+        btn.innerHTML = `Q${q}<span class="quality-stock">${stock} in stock</span>`;
+
+        if (stock === 0) {
+            btn.disabled = true;
+        } else {
+            hasAnyStock = true;
+            btn.addEventListener('click', function() {
+                // Remove active from all
+                qualityOptionsEl.querySelectorAll('.place-modal-quality-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                // Set this as active
+                this.classList.add('active');
+                qualityInput.value = this.dataset.quality;
+                confirmBtn.disabled = false;
+            });
+        }
+
+        qualityOptionsEl.appendChild(btn);
+    }
+
+    // Show warning if no stock
+    if (!hasAnyStock) {
+        const warning = document.createElement('div');
+        warning.style.cssText = 'color: #ef4444; font-size: 0.8rem; margin-top: 0.75rem; text-align: center;';
+        warning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> No ' + constructionType + 's available in inventory. Purchase some first.';
+        qualityOptionsEl.appendChild(warning);
+    }
+
+    // Show modal
+    modal.classList.add('active');
+}
+
+function closePlaceModal() {
+    const modal = document.getElementById('placeModal');
+    modal.classList.remove('active');
+}
+
+// Close modal on overlay click
+document.getElementById('placeModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePlaceModal();
+    }
+});
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closePlaceModal();
+    }
+});
+</script>
+{% endblock %}

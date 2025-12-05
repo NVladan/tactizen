@@ -1,0 +1,744 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Companies{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    /* Dashboard content container */
+    .dashboard-content-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #0a0e1a;
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .training-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.7), rgba(15, 20, 25, 0.7)), url('{{ url_for("static", filename="images/buildings/companies.png") }}');
+        background-size: cover;
+        background-position: center;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .training-header:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .training-header h2 {
+        color: #22c55e;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(90deg, #4b5563 0%, #374151 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background: linear-gradient(90deg, #374151 0%, #4b5563 100%);
+        transform: translateY(-2px);
+    }
+
+    .hour-slider {
+        width: 100%;
+        height: 8px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        outline: none;
+        -webkit-appearance: none;
+    }
+
+    .hour-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #22c55e;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .hour-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #22c55e;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .hour-display {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #22c55e;
+        text-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+    }
+
+    .work-modal .modal-content {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    /* My Job Section Styles */
+    .job-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 0;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .job-section:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .job-header {
+        background: rgba(34, 197, 94, 0.1);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .job-header h3 {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .job-body {
+        padding: 1.5rem;
+    }
+
+    .job-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .job-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(34, 197, 94, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .job-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .job-info-item {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .job-info-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .job-info-value {
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .job-info-value.company-name {
+        color: #22c55e;
+        font-size: 1.1rem;
+    }
+
+    .job-info-value.wage {
+        color: #22c55e;
+    }
+
+    .job-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .no-job-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .no-job-message i {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+        display: block;
+        color: #22c55e;
+    }
+
+    .no-job-message p {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    /* Companies I Own Section Styles */
+    .companies-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 0;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .companies-section:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .companies-header {
+        background: rgba(34, 197, 94, 0.1);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .companies-header h3 {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .companies-body {
+        padding: 1.5rem;
+    }
+
+    .company-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .company-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .company-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(34, 197, 94, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .company-card-header {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .company-card-name {
+        color: #22c55e;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 0 5px rgba(34, 197, 94, 0.2);
+    }
+
+    .company-card-type {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .company-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .company-stat {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .company-stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .company-stat-value {
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .company-stat-value.gold {
+        color: #fbbf24;
+    }
+
+    .company-stat-value.employees {
+        color: #22c55e;
+    }
+
+    .company-card-footer {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .no-companies-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .no-companies-message i {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+        display: block;
+        color: #22c55e;
+    }
+
+    .no-companies-message p {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<!-- Work Modal -->
+<div class="modal fade work-modal" id="workModal" tabindex="-1" aria-labelledby="workModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white" id="workModalLabel">
+                    <i class="fas fa-briefcase me-2"></i><span id="workModalCompanyName">Work</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Time Remaining Info -->
+                <div class="text-center mb-4 p-3" style="background: rgba(34, 197, 94, 0.05); border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.2);">
+                    <div class="text-muted small mb-1">Hours Remaining Today</div>
+                    <div class="text-success fw-bold fs-4">{{ remaining_hours }}/24</div>
+                    <div class="text-muted small mt-1">
+                        <i class="fas fa-clock me-1"></i>Resets in: {{ time_remaining }}
+                    </div>
+                </div>
+
+                <!-- Work Info -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="text-muted small">Your Skill</div>
+                        <div class="text-white fw-bold" id="workModalSkill">-</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted small">Wage per PP</div>
+                        <div class="text-success fw-bold" id="workModalWage">-</div>
+                    </div>
+                </div>
+
+                <form method="POST" id="workForm" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <!-- Hours Slider -->
+                    <div class="mb-4">
+                        <label class="form-label text-white">Hours to Work (Max: 12)</label>
+                        <div class="text-center mb-3">
+                            <div class="hour-display" id="work-hour-display">1</div>
+                            <div class="text-muted">hours</div>
+                        </div>
+                        <input type="range" class="hour-slider" name="hours" id="work-hour-slider" min="1" max="12" value="1" step="1">
+                        <div class="d-flex justify-content-between text-muted small mt-1">
+                            <span>1h</span>
+                            <span>12h</span>
+                        </div>
+                    </div>
+
+                    <!-- Cost/Earnings Summary -->
+                    <div class="mb-4 p-3" style="background: rgba(34, 197, 94, 0.05); border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.2);">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="text-muted small">Energy Cost</div>
+                                <div class="text-warning fw-bold" id="work-energy-cost">2</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-muted small">Wellness Cost</div>
+                                <div class="text-danger fw-bold" id="work-wellness-cost">2</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-muted small">Est. Earnings</div>
+                                <div class="text-success fw-bold" id="work-earnings">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" {% if remaining_hours == 0 %}disabled{% endif %}>
+                            {% if remaining_hours > 0 %}
+                                <i class="fas fa-briefcase me-2"></i>Start Working
+                            {% else %}
+                                <i class="fas fa-clock me-2"></i>No Hours Remaining
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quit Confirmation Modal -->
+<div class="modal fade" id="quitConfirmModal" tabindex="-1" aria-labelledby="quitConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-gray-200" id="quitConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>127.0.0.1:5000 says
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-3">
+                    <p class="h5 mb-3 text-gray-200">Are you sure you want to quit?</p>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" id="confirmQuitBtn">OK</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle quit confirmation
+    let quitFormToSubmit = null;
+    let currentWorkData = {
+        skill: 1.0,
+        wage: 1.0,
+        currency: 'USD'
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle work button clicks
+        document.querySelectorAll('.work-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const companyId = this.getAttribute('data-company-id');
+                const companyName = this.getAttribute('data-company-name');
+                const wage = parseFloat(this.getAttribute('data-wage'));
+                const skill = parseFloat(this.getAttribute('data-skill')) || 1.0;
+                const currency = this.getAttribute('data-currency');
+
+                // Store current work data
+                currentWorkData = { skill, wage, currency };
+
+                // Update modal
+                document.getElementById('workModalCompanyName').textContent = companyName;
+                document.getElementById('workModalSkill').textContent = skill.toFixed(2);
+                document.getElementById('workModalWage').textContent = wage.toFixed(2) + ' ' + currency + '/PP';
+                document.getElementById('workForm').action = '{{ url_for("company.work", company_id=0) }}'.replace('/0', '/' + companyId);
+
+                // Reset slider to 1
+                const slider = document.getElementById('work-hour-slider');
+                slider.value = 1;
+                updateWorkCalculations(1);
+
+                // Show modal
+                var workModal = new bootstrap.Modal(document.getElementById('workModal'));
+                workModal.show();
+            });
+        });
+
+        // Handle work hour slider
+        const workSlider = document.getElementById('work-hour-slider');
+        const workHourDisplay = document.getElementById('work-hour-display');
+
+        if (workSlider) {
+            workSlider.addEventListener('input', function() {
+                const hours = parseInt(this.value);
+                updateWorkCalculations(hours);
+            });
+        }
+
+        // Handle quit button clicks
+        document.querySelectorAll('.quit-job-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                quitFormToSubmit = this.closest('form');
+                var quitModal = new bootstrap.Modal(document.getElementById('quitConfirmModal'));
+                quitModal.show();
+            });
+        });
+
+        // Handle confirm quit
+        document.getElementById('confirmQuitBtn').addEventListener('click', function() {
+            if (quitFormToSubmit) {
+                quitFormToSubmit.submit();
+            }
+        });
+    });
+
+    function updateWorkCalculations(hours) {
+        // Update hour display
+        document.getElementById('work-hour-display').textContent = hours;
+
+        // Calculate costs
+        const energyCost = hours * 2;
+        const wellnessCost = hours * 2;
+
+        // Calculate earnings (hours * skill * wage_per_pp)
+        const productionPoints = hours * currentWorkData.skill;
+        const earnings = productionPoints * currentWorkData.wage;
+
+        // Update displays
+        document.getElementById('work-energy-cost').textContent = energyCost;
+        document.getElementById('work-wellness-cost').textContent = wellnessCost;
+        document.getElementById('work-earnings').textContent = earnings.toFixed(2) + ' ' + currentWorkData.currency;
+    }
+</script>
+
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Tab Navigation Header -->
+        <ul class="nav nav-tabs mb-4" id="myPlacesTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('company.my_companies') }}"><i class="fas fa-building me-1"></i>Companies</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.training') }}"><i class="fas fa-dumbbell me-1"></i>Training Grounds</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.study') }}"><i class="fas fa-graduation-cap me-1"></i>Study</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.storage') }}"><i class="fas fa-warehouse me-1"></i>Storage</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.travel') }}"><i class="fas fa-plane me-1"></i>Travel</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.residence') }}"><i class="fas fa-home me-1"></i>Residence</a>
+          </li>
+        </ul>
+
+        <!-- Companies Header -->
+        <div class="training-header">
+            <div class="text-center">
+                <h2 class="mb-3">My Companies</h2>
+                <p class="text-muted mb-0">Manage your business empire and workforce</p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mb-4 text-center">
+            <a href="{{ url_for('company.create_company') }}" class="btn btn-primary me-2">
+                <i class="fas fa-plus me-2"></i>Create New Company
+            </a>
+            <a href="{{ url_for('company.job_market') }}" class="btn btn-secondary">
+                <i class="fas fa-briefcase me-2"></i>Job Market
+            </a>
+        </div>
+
+        <!-- My Job Section -->
+        <div class="job-section">
+            <div class="job-header">
+                <h3><i class="fas fa-briefcase me-2"></i>My Job</h3>
+            </div>
+            <div class="job-body">
+                {% if employments %}
+                    {% for employment in employments %}
+                    <div class="job-card">
+                        <div class="row g-3 align-items-center">
+                            <!-- Left: Company Avatar & Name -->
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ url_for('static', filename=get_company_image(employment.company.company_type, employment.company.quality_level)) }}"
+                                         alt="{{ employment.company.name }}"
+                                         style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 2px solid rgba(34, 197, 94, 0.3); margin-right: 16px;">
+                                    <div>
+                                        <div style="color: #22c55e; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">
+                                            {{ employment.company.name }}
+                                        </div>
+                                        <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.85rem;">
+                                            {{ employment.company.company_type.value }} • Q{{ employment.company.quality_level }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Middle: Job Info -->
+                            <div class="col-md-5">
+                                <div class="row g-2">
+                                    <div class="col-4 text-center">
+                                        <div style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.25rem;">Wage</div>
+                                        <div style="color: #22c55e; font-weight: 600; font-size: 1rem;">{{ "%.2f"|format(employment.wage_per_pp|float) }} {{ employment.company.country.currency_code }}/PP</div>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.25rem;">Last Worked</div>
+                                        <div style="color: #ffffff; font-weight: 600; font-size: 0.95rem;">{{ employment.last_worked or 'Never' }}</div>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div style="color: rgba(255, 255, 255, 0.5); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.25rem;">Total Hours</div>
+                                        <div style="color: #ffffff; font-weight: 600; font-size: 0.95rem;">{{ employment.total_hours_worked }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Action Buttons -->
+                            <div class="col-md-4">
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-success flex-fill work-btn"
+                                            data-company-id="{{ employment.company_id }}"
+                                            data-company-name="{{ employment.company.name }}"
+                                            data-wage="{{ employment.wage_per_pp }}"
+                                            data-skill="{{ current_user.get_skill_for_company_type(employment.company.company_type) }}"
+                                            data-currency="{{ employment.company.country.currency_code }}">
+                                        <i class="fas fa-briefcase me-1"></i>Work
+                                    </button>
+                                    <a href="{{ url_for('company.view_company', company_id=employment.company_id) }}" class="btn btn-primary flex-fill">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    <form method="POST" action="{{ url_for('company.quit_job', company_id=employment.company_id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="button" class="btn btn-danger quit-job-btn">
+                                            Quit
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-job-message">
+                        <i class="fas fa-briefcase"></i>
+                        <p>You are not employed at any company.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Companies I Own Section -->
+        <div class="companies-section">
+            <div class="companies-header">
+                <h3><i class="fas fa-building me-2"></i>Companies I Own ({{ companies|length }})</h3>
+            </div>
+            <div class="companies-body">
+                {% if companies %}
+                    <div class="company-grid">
+                        {% for company in companies %}
+                        <div class="company-card">
+                            <div class="company-card-header">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="{{ url_for('static', filename=get_company_image(company.company_type, company.quality_level)) }}"
+                                         alt="{{ company.name }}"
+                                         style="width: 80px; height: 80px; border-radius: 10px; object-fit: cover; border: 2px solid rgba(34, 197, 94, 0.3); margin-right: 16px;">
+                                    <div style="flex-grow: 1;">
+                                        <h4 class="company-card-name">{{ company.name }}</h4>
+                                        <div class="company-card-type">
+                                            <i class="fas fa-industry"></i>
+                                            {{ company.company_type.value }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="company-stats-grid">
+                                <div class="company-stat">
+                                    <div class="company-stat-label">Quality</div>
+                                    <div class="company-stat-value">Q{{ company.quality_level }}</div>
+                                </div>
+                                <div class="company-stat">
+                                    <div class="company-stat-label">Location</div>
+                                    <div class="company-stat-value">{{ company.country.name }}</div>
+                                </div>
+                                <div class="company-stat">
+                                    <div class="company-stat-label">Employees</div>
+                                    <div class="company-stat-value employees">{{ company.current_employee_count }}/{{ company.max_employees }}</div>
+                                </div>
+                                <div class="company-stat">
+                                    <div class="company-stat-label">Gold Balance</div>
+                                    <div class="company-stat-value gold">{{ "%.2f"|format(company.gold_balance|float) }}</div>
+                                </div>
+                            </div>
+                            <div class="company-card-footer">
+                                <a href="{{ url_for('company.view_company', company_id=company.id) }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-cog me-2"></i>Manage
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-companies-message">
+                        <i class="fas fa-building"></i>
+                        <p>You don't own any companies yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock %}

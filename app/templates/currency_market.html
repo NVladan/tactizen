@@ -1,0 +1,694 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Currency Market - {{ country.name }}{% endblock %}
+
+{# *** ADDED head_extra block with styles copied from marketplace.html *** #}
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    /* Modern dark theme with green accents */
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+    .dropdown-select-wrapper {
+        position: relative;
+    }
+    .custom-dropdown-select {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        color: #fff;
+        border: 1.5px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        padding-right: 2.5rem;
+        font-size: 1.1rem;
+        min-height: 48px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        transition: all 0.3s ease;
+    }
+    .custom-dropdown-select:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+    .dropdown-chevron {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #22c55e;
+        font-size: 1.2rem;
+    }
+    .market-item-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 18px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        margin-top: 1.5rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        transition: all 0.3s ease;
+    }
+    .market-item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+    .market-resource-icon img, .market-resource-icon .resource-placeholder-icon {
+        display: block;
+        margin: 0 auto;
+    }
+    .market-resource-icon {
+        margin-bottom: 1rem;
+    }
+    .market-item-card .form-control-lg {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        color: #fff;
+        border: 1.5px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        font-size: 1.15rem;
+        min-height: 48px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+    .market-item-card .form-control-lg:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+    .market-item-card .btn-lg {
+        font-size: 1.1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .market-item-card .btn-lg:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+    .currency-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.7), rgba(15, 20, 25, 0.7)), url('{{ url_for("static", filename="images/buildings/currencymarket.png") }}');
+        background-size: cover;
+        background-position: center bottom;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .currency-header h2 {
+        color: #22c55e;
+    }
+    .price-display {
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+    .buy-price {
+        color: #22c55e;
+    }
+    .sell-price {
+        color: #22c55e;
+    }
+    .progress-bar-gold {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+    }
+    .modal-content {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .modal-header {
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+    .modal-footer {
+        border-top: 1px solid rgba(34, 197, 94, 0.2);
+    }
+    .modal-title {
+        color: #22c55e;
+    }
+    .modal-body {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    .nav-tabs .nav-link {
+        color: rgba(255, 255, 255, 0.7);
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+    }
+    .nav-tabs .nav-link:hover {
+        color: #22c55e;
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+    .nav-tabs .nav-link.active {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        color: #22c55e;
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+</style>
+{% endblock %}
+{# *** END head_extra block *** #}
+
+{# Override the main_layout block #}
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+    {# Inner container for the main content below the user panel #}
+    <div class="main-container"> {# Inner wrapper with styles from head_extra #}
+
+        <ul class="nav nav-tabs mb-4" id="marketTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.marketplace', country_slug=country.slug) }}"><i class="fas fa-store me-1"></i>Marketplace</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('company.job_market') }}"><i class="fas fa-briefcase me-1"></i>Job Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('main.currency_market', country_slug=country.slug) }}"><i class="fas fa-money-bill-wave me-1"></i>Currency Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.zen_market') }}"><i class="fas fa-coins me-1"></i>Zen Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('marketplace.marketplace_page') }}"><i class="fas fa-gem me-1"></i>NFT Market</a>
+          </li>
+        </ul>
+
+        <div class="currency-header text-center">
+            <h2 class="mb-3">Currency Market - {{ country.name }}</h2>
+            <p class="text-muted mb-0">Trade Gold for {{ country.currency_code }}.</p>
+        </div>
+
+        <div class="market-selector-area mt-4">
+            <div class="training-header" style="margin-bottom: 1.5rem;">
+                <form method="GET" id="countrySelectorForm" class="row g-3 align-items-end p-3" style="background: #262c3d; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="col-md-5">
+                        <label for="countrySelectorMarket" class="form-label">Select Currency to trade:</label>
+                        <div class="dropdown-select-wrapper position-relative">
+                            <select name="country_select_dummy" id="countrySelectorMarket" class="form-select form-select-lg custom-dropdown-select" onchange="if(this.value) window.location.href='/currency-market/' + this.value;">
+                                {% for c in all_countries %}
+                                    <option value="{{ c.slug }}" {% if c.slug == country.slug %}selected{% endif %}>{{ c.name }} ({{c.currency_code}})</option>
+                                {% endfor %}
+                            </select>
+                            <span class="dropdown-chevron"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <hr class="bg-secondary">
+        </div>
+
+        {% if gold_market_item %}
+            <div class="row g-4">
+                <!-- Left Column: Currency Market Card -->
+                <div class="col-lg-6">
+                    <div class="card h-100 shadow-lg border-0 market-item-card">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-3">
+                                 <img src="{{ url_for('static', filename='images/gold-coin.png') }}" alt="Gold" style="width: 70px; height: 70px; object-fit: contain;">
+                                <h4 class="card-title mt-2 text-white">Gold / {{ country.currency_code }}</h4>
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <span class="badge bg-secondary">Price Level: {{ gold_market_item.price_level|int }}</span>
+                                    {% if price_change %}
+                                    <span class="badge {% if price_change.direction == 'up' %}bg-success{% elif price_change.direction == 'down' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        {% if price_change.direction == 'up' %}
+                                            <i class="fas fa-arrow-up me-1"></i>
+                                        {% elif price_change.direction == 'down' %}
+                                            <i class="fas fa-arrow-down me-1"></i>
+                                        {% else %}
+                                            <i class="fas fa-minus me-1"></i>
+                                        {% endif %}
+                                        {{ "%.2f"|format(price_change.percent|abs) }}% today
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>Progress to Next Level Change:</span>
+                                    <span>{{ gold_market_item.progress_within_level|int }} / {{ gold_market_item.volume_per_level|int }} Gold Traded</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    {% set progress_percent = (gold_market_item.progress_within_level / gold_market_item.volume_per_level * 100) if gold_market_item.volume_per_level > 0 else 0 %}
+                                    <div class="progress-bar progress-bar-gold" role="progressbar" style="width: {{ progress_percent }}%;" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted mt-1">
+                                   <span>Buy ~{{ gold_market_item.gold_volume_to_next_level }} more Gold to increase rate</span>
+                                   <span>Sell ~{{ gold_market_item.gold_volume_to_previous_level }} more Gold to decrease rate</span>
+                               </div>
+                            </div>
+
+                            <div class="row text-center mb-4">
+                                <div class="col-md-6">
+                                    <h5>Buy 1 Gold</h5>
+                                    <p class="price-display buy-price">{{ "%.2f"|format(gold_market_item.buy_gold_price) }} {{ country.currency_code }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>Sell 1 Gold</h5>
+                                    <p class="price-display sell-price">{{ "%.2f"|format(gold_market_item.sell_gold_price) }} {{ country.currency_code }}</p>
+                                </div>
+                            </div>
+
+                            <div class="w-100 d-flex flex-column flex-md-row gap-2 mt-2">
+                                <form action="{{ url_for('main.currency_market_buy_gold', slug=country.slug) }}" method="POST" class="flex-grow-1 d-flex gap-2" novalidate>
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {{ buy_form.hidden_tag() }}
+                                    {{ buy_form.quantity(class="form-control form-control-lg", placeholder="Amount of Gold to Buy", type="number", step="1", min="1", required=True, **{"aria-label": "Amount of Gold to Buy"}) }}
+                                    <button type="submit" name="submit" class="btn btn-success btn-lg px-4">Buy</button>
+                                </form>
+                                <form action="{{ url_for('main.currency_market_sell_gold', slug=country.slug) }}" method="POST" class="flex-grow-1 d-flex gap-2" novalidate>
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {{ sell_form.hidden_tag() }}
+                                    {{ sell_form.quantity(class="form-control form-control-lg", placeholder="Amount of Gold to Sell", type="number", step="1", min="1", required=True, **{"aria-label": "Amount of Gold to Sell"}) }}
+                                    <button type="submit" name="submit" class="btn btn-danger btn-lg px-4">Sell</button>
+                                </form>
+                            </div>
+                             {% if buy_form.quantity.errors or sell_form.quantity.errors %}
+                                <div class="row mt-2">
+                                    {% if buy_form.quantity.errors %}
+                                    <div class="col-md-6 text-danger small">
+                                         Buy Error: {% for error in buy_form.quantity.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                     {% if sell_form.quantity.errors %}
+                                     <div class="col-md-6 text-danger small {% if not buy_form.quantity.errors %}offset-md-6{% endif %}">
+                                         Sell Error: {% for error in sell_form.quantity.errors %}{{ error }}{% endfor %}
+                                     </div>
+                                     {% endif %}
+                                </div>
+                             {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Price History Graph -->
+                <div class="col-lg-6">
+                    <div class="card h-100 shadow-lg border-0 market-item-card">
+                        <div class="card-body p-4">
+                            <h5 class="text-white mb-3">30-Day Exchange Rate History</h5>
+                            <canvas id="currencyPriceHistoryChart" style="max-height: 400px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center text-muted mt-5">
+                <i class="fas fa-sad-tear fa-3x mb-3"></i>
+                <p class="lead">The currency market for {{ country.name }} is currently unavailable.</p>
+                <p>This might be because it hasn't been set up yet. Please check back later or contact an administrator.</p>
+            </div>
+        {% endif %}
+        {# End Currency Market Display Area #}
+
+        <!-- Message Modal -->
+        <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="messageModalLabel">Notification</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="modalMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buy Confirmation Modal -->
+        <div class="modal fade" id="buyConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-success"><i class="fas fa-shopping-cart me-2"></i>Confirm Purchase</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="buyBreakdown">
+                        <!-- Breakdown will be inserted here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="confirmBuyBtn">
+                            <i class="fas fa-check me-1"></i>Confirm Buy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sell Confirmation Modal -->
+        <div class="modal fade" id="sellConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger"><i class="fas fa-hand-holding-usd me-2"></i>Confirm Sale</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="sellBreakdown">
+                        <!-- Breakdown will be inserted here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmSellBtn">
+                            <i class="fas fa-check me-1"></i>Confirm Sell
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> {# End main-container #}
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %} {# End override main_layout block #}
+
+{# Keep the scripts block separate #}
+{% block scripts %}
+{{ super() }} {# Include base scripts #}
+{# Add Chart.js and chartjs-chart-financial for candlestick #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.0/dist/chartjs-chart-financial.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const countrySelector = document.getElementById('countrySelectorMarket');
+    if (countrySelector) {
+        countrySelector.addEventListener('change', function() {
+            const selectedCountrySlug = this.value;
+            if (selectedCountrySlug) {
+                window.location.href = `/currency-market/${selectedCountrySlug}`;
+            }
+        });
+    }
+
+    // Handle showing messages in modal
+    {% if message %}
+    const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+    document.getElementById('modalMessage').textContent = "{{ message }}";
+    messageModal.show();
+    {% endif %}
+
+    // AJAX Buy/Sell with confirmation modals
+    let pendingBuyData = null;
+    let pendingSellData = null;
+
+    // Buy form handler
+    const buyForm = document.querySelector('form[action*="buy-gold"]');
+    if (buyForm) {
+        buyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const quantityInput = form.querySelector('input[name="quantity"]');
+            const quantity = parseInt(quantityInput.value);
+
+            if (!quantity || quantity < 1) {
+                showMessage('Please enter a valid quantity.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('quantity', quantity);
+            formData.append('csrf_token', '{{ csrf_token() }}');
+
+            fetch('{{ url_for("main.currency_market_preview_buy", slug=country.slug) }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showMessage(data.error);
+                    return;
+                }
+
+                pendingBuyData = {form: form, data: data};
+
+                let breakdownHTML = `<h6 class="text-white mb-3">Buy ${data.quantity} Gold</h6><div class="mb-3">`;
+
+                if (data.breakdown.length === 1) {
+                    const [qty, price] = data.breakdown[0];
+                    breakdownHTML += `<p class="text-gray-300">${qty} Gold at ${price.toFixed(2)} ${data.currency_code} each = <strong>${(qty * price).toFixed(2)} ${data.currency_code}</strong></p>`;
+                } else {
+                    breakdownHTML += `<p class="text-warning mb-2"><i class="fas fa-info-circle"></i> Purchase spans multiple price levels:</p>`;
+                    data.breakdown.forEach((item) => {
+                        const [qty, price] = item;
+                        breakdownHTML += `<p class="text-gray-300 mb-1">• ${qty} Gold at ${price.toFixed(2)} ${data.currency_code} = ${(qty * price).toFixed(2)} ${data.currency_code}</p>`;
+                    });
+                }
+
+                breakdownHTML += `</div><div class="border-top border-secondary pt-3 mt-3"><h5 class="text-success">Total Cost: ${data.total_cost.toFixed(2)} ${data.currency_code}</h5></div>`;
+                document.getElementById('buyBreakdown').innerHTML = breakdownHTML;
+
+                const modal = new bootstrap.Modal(document.getElementById('buyConfirmModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('An error occurred. Please try again.');
+            });
+        });
+    }
+
+    // Sell form handler
+    const sellForm = document.querySelector('form[action*="sell-gold"]');
+    if (sellForm) {
+        sellForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const quantityInput = form.querySelector('input[name="quantity"]');
+            const quantity = parseInt(quantityInput.value);
+
+            if (!quantity || quantity < 1) {
+                showMessage('Please enter a valid quantity.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('quantity', quantity);
+            formData.append('csrf_token', '{{ csrf_token() }}');
+
+            fetch('{{ url_for("main.currency_market_preview_sell", slug=country.slug) }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showMessage(data.error);
+                    return;
+                }
+
+                pendingSellData = {form: form, data: data};
+
+                let breakdownHTML = `<h6 class="text-white mb-3">Sell ${data.quantity} Gold</h6><div class="mb-3">`;
+
+                if (data.breakdown.length === 1) {
+                    const [qty, price] = data.breakdown[0];
+                    breakdownHTML += `<p class="text-gray-300">${qty} Gold at ${price.toFixed(2)} ${data.currency_code} each = <strong>${(qty * price).toFixed(2)} ${data.currency_code}</strong></p>`;
+                } else {
+                    breakdownHTML += `<p class="text-warning mb-2"><i class="fas fa-info-circle"></i> Sale spans multiple price levels:</p>`;
+                    data.breakdown.forEach((item) => {
+                        const [qty, price] = item;
+                        breakdownHTML += `<p class="text-gray-300 mb-1">• ${qty} Gold at ${price.toFixed(2)} ${data.currency_code} = ${(qty * price).toFixed(2)} ${data.currency_code}</p>`;
+                    });
+                }
+
+                breakdownHTML += `</div><div class="border-top border-secondary pt-3 mt-3"><h5 class="text-success">Total Proceeds: ${data.total_proceeds.toFixed(2)} ${data.currency_code}</h5></div>`;
+                document.getElementById('sellBreakdown').innerHTML = breakdownHTML;
+
+                const modal = new bootstrap.Modal(document.getElementById('sellConfirmModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('An error occurred. Please try again.');
+            });
+        });
+    }
+
+    // Confirm buy button
+    document.getElementById('confirmBuyBtn')?.addEventListener('click', function() {
+        if (pendingBuyData) {
+            // Create and submit form with proper data
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("main.currency_market_buy_gold", slug=country.slug) }}';
+            form.style.display = 'none';
+
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
+
+            // Add quantity
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'hidden';
+            qtyInput.name = 'quantity';
+            qtyInput.value = pendingBuyData.data.quantity;
+            form.appendChild(qtyInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+
+    // Confirm sell button
+    document.getElementById('confirmSellBtn')?.addEventListener('click', function() {
+        if (pendingSellData) {
+            // Create and submit form with proper data
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("main.currency_market_sell_gold", slug=country.slug) }}';
+            form.style.display = 'none';
+
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
+
+            // Add quantity
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'hidden';
+            qtyInput.name = 'quantity';
+            qtyInput.value = pendingSellData.data.quantity;
+            form.appendChild(qtyInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+
+    function showMessage(msg) {
+        document.getElementById('modalMessage').textContent = msg;
+        const modal = new bootstrap.Modal(document.getElementById('messageModal'));
+        modal.show();
+    }
+
+    // Currency Price History Chart (OHLC Bar Chart)
+    {% if gold_market_item and currency_history_data %}
+    const ctx = document.getElementById('currencyPriceHistoryChart');
+    if (ctx) {
+        const rawCandleData = {{ currency_history_data.candlestick | tojson }};
+        console.log('Currency history data:', rawCandleData);
+        console.log('Data points:', rawCandleData.length);
+
+        // Convert data to proper format
+        const candleData = rawCandleData.map(d => ({
+            x: d.x,
+            o: parseFloat(d.o),
+            h: parseFloat(d.h),
+            l: parseFloat(d.l),
+            c: parseFloat(d.c)
+        }));
+
+        try {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    datasets: [
+                        {
+                            label: 'High',
+                            data: candleData.map(d => ({x: d.x, y: d.h})),
+                            backgroundColor: 'rgba(34, 197, 94, 0.3)',
+                            borderColor: '#22c55e',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        },
+                        {
+                            label: 'Low',
+                            data: candleData.map(d => ({x: d.x, y: d.l})),
+                            backgroundColor: 'rgba(239, 68, 68, 0.3)',
+                            borderColor: '#ef4444',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        },
+                        {
+                            label: 'Close',
+                            data: candleData.map(d => ({x: d.x, y: d.c})),
+                            backgroundColor: 'rgba(107, 114, 128, 0.3)',
+                            borderColor: '#6b7280',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#9ca3af'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#22c55e',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const candle = candleData[dataIndex];
+                                    if (!candle) return '';
+
+                                    return [
+                                        'Open: ' + candle.o.toFixed(2) + ' {{ country.currency_code }}',
+                                        'High: ' + candle.h.toFixed(2) + ' {{ country.currency_code }}',
+                                        'Low: ' + candle.l.toFixed(2) + ' {{ country.currency_code }}',
+                                        'Close: ' + candle.c.toFixed(2) + ' {{ country.currency_code }}'
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            ticks: {
+                                color: '#9ca3af',
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    return value.toFixed(2) + ' {{ country.currency_code }}';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error creating currency history chart:', error);
+        }
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

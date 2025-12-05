@@ -1,0 +1,515 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Congress of {{ country.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .congress-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        color: #22c55e;
+        font-size: 1.75rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title-icon {
+        font-size: 1.5rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #22c55e;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .action-link:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1rem 1.25rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #22c55e;
+        line-height: 1.2;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.yellow { color: #fbbf24; }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+
+    .grid-layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+        .grid-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Party Distribution */
+    .party-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(26, 31, 46, 0.6);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+
+    .party-seats {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .party-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .party-name {
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .party-votes {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .party-bar {
+        height: 4px;
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 2px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+
+    .party-bar-fill {
+        height: 100%;
+        background: #3b82f6;
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+
+    /* Term Info */
+    .term-info {
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .term-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .term-dates {
+        color: #fbbf24;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+
+    /* Congress Members Table */
+    .members-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .members-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+    .members-table th {
+        text-align: left;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+
+    .members-table th:last-child {
+        text-align: right;
+    }
+
+    .member-row {
+        background: rgba(26, 31, 46, 0.6);
+        transition: all 0.2s;
+    }
+
+    .member-row:hover {
+        background: rgba(26, 31, 46, 0.9);
+    }
+
+    .member-row td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    .member-row td:first-child {
+        border-radius: 8px 0 0 8px;
+    }
+
+    .member-row td:last-child {
+        border-radius: 0 8px 8px 0;
+        text-align: right;
+    }
+
+    .member-rank {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .rank-gold {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: #000;
+    }
+
+    .rank-silver {
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        color: #000;
+    }
+
+    .rank-bronze {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        color: #fff;
+    }
+
+    .rank-normal {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+
+    .member-details {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .member-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .member-info {
+        min-width: 0;
+    }
+
+    .member-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+    }
+
+    .member-name a {
+        color: #22c55e;
+        text-decoration: none;
+    }
+
+    .member-name a:hover {
+        text-decoration: underline;
+    }
+
+    .member-party {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+
+    .member-votes {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.95rem;
+    }
+
+    .vote-count {
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .vote-percent {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin-left: 0.25rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        padding: 3rem 1rem;
+        font-style: italic;
+    }
+
+    .is-you-badge {
+        display: inline-block;
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="congress-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-icon">&#127963;</span>
+            Congress of {{ country.name }}
+        </h1>
+        <div class="header-actions">
+            <a href="{{ url_for('government.president', country_id=country.id) }}" class="action-link">
+                Government Overview
+            </a>
+            <a href="{{ url_for('government.elections') }}" class="action-link">
+                Elections
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value">{{ congress_members|length }} / 20</div>
+            <div class="stat-label">Seats Filled</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value blue">{{ party_distribution|length }}</div>
+            <div class="stat-label">Parties Represented</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value yellow">{{ "{:,}".format(total_votes) }}</div>
+            <div class="stat-label">Total Votes Cast</div>
+        </div>
+        {% if term_end %}
+        <div class="stat-card">
+            <div class="stat-value" style="font-size: 1.25rem;">{{ term_end.strftime('%b %d, %Y') }}</div>
+            <div class="stat-label">Term Ends</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid-layout">
+        <!-- Left Sidebar -->
+        <div>
+            <!-- Party Distribution -->
+            <div class="section">
+                <h2 class="section-title">Party Distribution</h2>
+
+                {% if party_distribution %}
+                    {% for party_name, data in party_distribution.items() %}
+                    <div class="party-item">
+                        <div class="party-seats">{{ data.count }}</div>
+                        <div class="party-info">
+                            <div class="party-name">{{ party_name }}</div>
+                            <div class="party-votes">{{ "{:,}".format(data.votes) }} votes</div>
+                            <div class="party-bar">
+                                <div class="party-bar-fill" style="width: {{ (data.count / 20 * 100)|int }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state" style="padding: 1rem;">No parties represented</div>
+                {% endif %}
+            </div>
+
+            <!-- Term Information -->
+            {% if term_start and term_end %}
+            <div class="section">
+                <h2 class="section-title">Current Term</h2>
+                <div class="term-info">
+                    <div class="term-label">Term Period</div>
+                    <div class="term-dates">
+                        {{ term_start.strftime('%b %d, %Y') }} - {{ term_end.strftime('%b %d, %Y') }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Main Content - Members List -->
+        <div>
+            <div class="section">
+                <div class="members-header">
+                    <h2 class="section-title" style="border: none; margin: 0; padding: 0;">Congress Members</h2>
+                </div>
+
+                {% if congress_members %}
+                <table class="members-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Rank</th>
+                            <th>Member</th>
+                            <th>Votes Received</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in congress_members %}
+                        <tr class="member-row">
+                            <td>
+                                <div class="member-rank {% if member.final_rank == 1 %}rank-gold{% elif member.final_rank == 2 %}rank-silver{% elif member.final_rank == 3 %}rank-bronze{% else %}rank-normal{% endif %}">
+                                    {{ member.final_rank }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="member-details">
+                                    <div class="member-avatar">
+                                        {{ member.user.username[0].upper() }}
+                                    </div>
+                                    <div class="member-info">
+                                        <div class="member-name">
+                                            <a href="{{ url_for('main.view_profile', username=member.user.username) }}">
+                                                {{ member.user.username }}
+                                            </a>
+                                            {% if current_user.is_authenticated and member.user_id == current_user.id %}
+                                            <span class="is-you-badge">You</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="member-party">{{ member.party.name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="member-votes">
+                                <span class="vote-count">{{ "{:,}".format(member.votes_received) }}</span>
+                                {% if total_votes > 0 %}
+                                <span class="vote-percent">({{ "%.1f"|format(member.votes_received / total_votes * 100) }}%)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    No congress members elected yet.<br>
+                    <span style="font-size: 0.85rem;">Congressional elections are held on the 25th of each month.</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}

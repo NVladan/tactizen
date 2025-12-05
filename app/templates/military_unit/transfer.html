@@ -1,0 +1,194 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Transfer Command - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .transfer-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h2 {
+        color: #fbbf24;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .warning-banner {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .warning-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(239, 68, 68, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef4444;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .warning-content h4 {
+        color: #ef4444;
+        margin: 0 0 0.25rem 0;
+        font-size: 1rem;
+    }
+
+    .warning-content p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        color: #fbbf24;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-select {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+    }
+
+    .form-select:focus {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: #fbbf24;
+        box-shadow: 0 0 0 0.2rem rgba(251, 191, 36, 0.25);
+        color: #fff;
+    }
+
+    .form-text {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .btn-transfer {
+        width: 100%;
+        padding: 0.875rem;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        border: none;
+        color: #000;
+        font-weight: 600;
+    }
+
+    .btn-transfer:hover {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: #000;
+    }
+
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0;
+    }
+
+    .info-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .info-list li:last-child {
+        border-bottom: none;
+    }
+
+    .info-list i {
+        color: #fbbf24;
+        width: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="transfer-container">
+        <div class="page-header">
+            <h2><i class="fas fa-exchange-alt me-2"></i>Transfer Command</h2>
+            <p class="text-muted">Hand over leadership of {{ unit.name }}</p>
+        </div>
+
+        <div class="form-card">
+            <div class="warning-banner">
+                <div class="warning-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="warning-content">
+                    <h4>Important Notice</h4>
+                    <p>Transferring command is permanent. You will become an Officer and the new commander will have full control over the unit.</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('military_unit.transfer_command', unit_id=unit.id) }}">
+                {{ form.hidden_tag() }}
+
+                <div class="form-group">
+                    <label class="form-label" for="new_commander_id">Select New Commander</label>
+                    {{ form.new_commander_id(class="form-select") }}
+                    <div class="form-text">Choose a member to take over as commander.</div>
+                    {% if form.new_commander_id.errors %}
+                        {% for error in form.new_commander_id.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <ul class="info-list">
+                    <li><i class="fas fa-arrow-right"></i>The new commander will have full control</li>
+                    <li><i class="fas fa-arrow-right"></i>You will be demoted to Officer rank</li>
+                    <li><i class="fas fa-arrow-right"></i>The unit's country will change to the new commander's citizenship</li>
+                    <li><i class="fas fa-arrow-right"></i>This action cannot be undone</li>
+                </ul>
+
+                <button type="submit" class="btn btn-transfer">
+                    <i class="fas fa-exchange-alt me-2"></i>Transfer Command
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <a href="{{ url_for('military_unit.detail', unit_id=unit.id) }}" class="text-muted">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Unit
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

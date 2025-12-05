@@ -1,0 +1,1021 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ party.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .party-content-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Party Header */
+    .party-hero {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .party-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #22c55e 100%);
+    }
+
+    .party-hero-content {
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+    }
+
+    .party-logo-wrapper {
+        flex-shrink: 0;
+    }
+
+    .party-logo {
+        width: 100px;
+        height: 100px;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 3px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .party-logo-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border: 3px solid rgba(34, 197, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #22c55e;
+    }
+
+    .party-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .party-title-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .party-name {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0;
+    }
+
+    .country-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .country-badge img {
+        width: 20px;
+        height: 14px;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+
+    .party-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+
+    .party-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .party-meta-item i {
+        color: #22c55e;
+        width: 16px;
+    }
+
+    .party-meta-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .party-meta-item a:hover {
+        color: #22c55e;
+    }
+
+    .party-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .stats-bar {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #22c55e;
+        line-height: 1.2;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.yellow { color: #fbbf24; }
+    .stat-value.purple { color: #a855f7; }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+
+    /* Grid Layout */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Section Cards */
+    .section-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-body {
+        padding: 1.25rem;
+    }
+
+    /* Election Alert */
+    .election-banner {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .election-banner-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .election-banner-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(251, 191, 36, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fbbf24;
+        font-size: 1.25rem;
+    }
+
+    .election-banner-title {
+        color: #fbbf24;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .election-banner-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    .election-banner-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .candidate-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .candidate-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 0.4rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .candidate-pill img {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    /* Member List */
+    .member-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .member-card {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .member-card:hover {
+        background: rgba(34, 197, 94, 0.05);
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    .member-card.is-president {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .member-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        flex-shrink: 0;
+    }
+
+    .member-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .member-name {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .president-tag {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #000;
+        font-size: 0.65rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .member-meta {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .member-meta i {
+        color: #22c55e;
+        margin-right: 0.25rem;
+    }
+
+    /* Description */
+    .description-content {
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    /* Sidebar */
+    .sidebar-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .sidebar-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .sidebar-title {
+        color: #22c55e;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .sidebar-body {
+        padding: 1rem;
+    }
+
+    /* President Card */
+    .president-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: rgba(34, 197, 94, 0.05);
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .president-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .president-info h4 {
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .president-info p {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    /* Election History */
+    .history-item {
+        padding: 0.875rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .history-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .history-item:first-child {
+        padding-top: 0;
+    }
+
+    .history-date {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .history-winner {
+        color: #ffffff;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .history-winner i {
+        color: #fbbf24;
+    }
+
+    .history-stats {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Candidate Management Links */
+    .candidate-mgmt-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(251, 191, 36, 0.05);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .candidate-mgmt-link:hover {
+        background: rgba(251, 191, 36, 0.1);
+        border-color: rgba(251, 191, 36, 0.4);
+        transform: translateX(4px);
+    }
+
+    .candidate-mgmt-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(251, 191, 36, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fbbf24;
+        flex-shrink: 0;
+    }
+
+    .candidate-mgmt-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .candidate-mgmt-title {
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .candidate-mgmt-status {
+        font-size: 0.75rem;
+    }
+
+    .pending-badge {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .party-hero-content {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .party-meta {
+            justify-content: center;
+        }
+
+        .party-actions {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="party-content-container">
+    <!-- Party Hero Header -->
+    <div class="party-hero">
+        <div class="party-hero-content">
+            <div class="party-logo-wrapper">
+                {% if party.logo_path %}
+                    <img src="{{ url_for('static', filename=party.logo_path) }}" alt="{{ party.name }}" class="party-logo">
+                {% else %}
+                    <div class="party-logo-placeholder">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="party-info">
+                <div class="party-title-row">
+                    <h1 class="party-name">{{ party.name }} <small class="text-muted" style="font-size: 0.5em;">#{{ party.id }}</small></h1>
+                    {% if party.country %}
+                    <span class="country-badge">
+                        {% if party.country.flag_code %}
+                        <img src="{{ url_for('static', filename='images/country-flags/' + party.country.flag_code + '.png') }}" alt="{{ party.country.name }}">
+                        {% endif %}
+                        {{ party.country.name }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="party-meta">
+                    <div class="party-meta-item">
+                        <i class="fas fa-users"></i>
+                        <a href="{{ url_for('party.members', party_id=party.id) }}">{{ members|length }} member{{ 's' if members|length != 1 else '' }}</a>
+                    </div>
+                    <div class="party-meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Founded {{ party.founded_date.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    {% if party.congress_seats|default(0) > 0 %}
+                    <div class="party-meta-item">
+                        <i class="fas fa-landmark"></i>
+                        <span>{{ party.congress_seats }} Congress seat{{ 's' if party.congress_seats != 1 else '' }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="party-actions">
+                    {% if current_user.party and current_user.party.id == party.id %}
+                        {% if current_user.is_party_president %}
+                            <a href="{{ url_for('party.edit', party_id=party.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>Edit Party
+                            </a>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('party.leave', party_id=party.id) }}" style="display: inline;" id="leave-party-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn btn-outline-danger btn-sm" id="leave-party-btn">
+                                <i class="fas fa-sign-out-alt me-1"></i>Leave Party
+                            </button>
+                        </form>
+                    {% elif can_join %}
+                        <form method="POST" action="{{ url_for('party.join', party_id=party.id) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-user-plus me-1"></i>Join Party
+                            </button>
+                        </form>
+                    {% endif %}
+                    <a href="{{ url_for('party.browse') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>All Parties
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value">{{ members|length }}</div>
+            <div class="stat-label">Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value blue">{{ party.total_experience|default(0)|int }}</div>
+            <div class="stat-label">Total XP</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value yellow">{{ party.average_level|default(0)|round(1) }}</div>
+            <div class="stat-label">Avg Level</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value purple">{{ party.congress_seats|default(0) }}</div>
+            <div class="stat-label">Congress Seats</div>
+        </div>
+    </div>
+
+    <!-- Election Banner (if active) -->
+    {% if election_data %}
+    <div class="election-banner">
+        <div class="election-banner-header">
+            <div class="election-banner-icon">
+                <i class="fas fa-vote-yea"></i>
+            </div>
+            <div>
+                <h3 class="election-banner-title">
+                    {% if election_data.election.status.value == 'scheduled' %}
+                        Party President Election Scheduled
+                    {% else %}
+                        Party President Election in Progress
+                    {% endif %}
+                </h3>
+                <p class="election-banner-subtitle">
+                    {% if election_data.election.status.value == 'scheduled' %}
+                        Voting starts {{ election_data.election.start_time.strftime('%b %d at %I:%M %p UTC') }}
+                    {% else %}
+                        Voting ends {{ election_data.election.end_time.strftime('%b %d at %I:%M %p UTC') }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        {% if election_data.candidates %}
+        <div class="candidate-pills">
+            <span style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-right: 0.5rem;">Candidates:</span>
+            {% for candidate in election_data.candidates %}
+            <span class="candidate-pill">
+                <i class="fas fa-user" style="color: #22c55e;"></i>
+                {{ candidate.user.username }}
+            </span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">
+            No candidates yet. Be the first to announce your candidacy!
+        </p>
+        {% endif %}
+
+        {% if current_user.party and current_user.party.id == party.id %}
+        <div class="election-banner-actions">
+            {% if not election_data.user_is_candidate and election_data.election.can_announce_candidacy() %}
+                <form method="POST" action="{{ url_for('party.announce_candidacy', party_id=party.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning btn-sm">
+                        <i class="fas fa-hand-paper me-1"></i>Announce Candidacy
+                    </button>
+                </form>
+            {% elif election_data.user_is_candidate and election_data.election.can_announce_candidacy() %}
+                <form method="POST" action="{{ url_for('party.withdraw_candidacy', party_id=party.id) }}" id="withdraw-candidacy-form" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="withdraw-candidacy-btn">
+                        <i class="fas fa-times-circle me-1"></i>Withdraw
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if election_data.election.is_active() and not election_data.user_voted %}
+                <a href="{{ url_for('party.vote', party_id=party.id) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-vote-yea me-1"></i>Vote Now
+                </a>
+            {% elif election_data.user_voted %}
+                <span class="badge bg-success" style="padding: 0.5rem 0.75rem;">
+                    <i class="fas fa-check me-1"></i>Vote Cast
+                </span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+        <!-- Left Column -->
+        <div class="main-column">
+            <!-- About Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-info-circle"></i> About</h3>
+                    {% if current_user.is_party_president and current_user.party and current_user.party.id == party.id %}
+                    <a href="{{ url_for('party.edit', party_id=party.id) }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="section-body">
+                    {% if party.description %}
+                        <div class="description-content">{{ party.description }}</div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-file-alt"></i>
+                            <p>No description available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Members Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-users"></i> Members ({{ members|length }})</h3>
+                    <a href="{{ url_for('party.members', party_id=party.id) }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                        View All
+                    </a>
+                </div>
+                <div class="section-body">
+                    <div class="member-grid">
+                        {% for member in members[:12] %}
+                        <div class="member-card {% if member.id == party.president_id %}is-president{% endif %}">
+                            {% if member.avatar %}
+                                <img src="{{ url_for('static', filename='uploads/avatars/' + member.id|string + '.png') }}?v={{ range(1, 10000)|random }}" alt="{{ member.username }}" class="member-avatar">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="{{ member.username }}" class="member-avatar">
+                            {% endif %}
+
+                            <div class="member-details">
+                                <div class="member-name">
+                                    {{ member.username }}
+                                    {% if member.id == party.president_id %}
+                                    <span class="president-tag"><i class="fas fa-crown me-1"></i>President</span>
+                                    {% endif %}
+                                </div>
+                                <div class="member-meta">
+                                    <i class="fas fa-star"></i> Level {{ member.level }} &bull; {{ member.experience }} XP
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if members|length > 12 %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('party.members', party_id=party.id) }}" class="btn btn-outline-primary btn-sm">
+                            View all {{ members|length }} members
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="sidebar-column">
+            <!-- President Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h4 class="sidebar-title"><i class="fas fa-crown"></i> Party President</h4>
+                </div>
+                <div class="sidebar-body">
+                    <div class="president-card">
+                        {% if party.president.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + party.president.id|string + '.png') }}?v={{ range(1, 10000)|random }}" alt="{{ party.president.username }}" class="president-avatar">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="{{ party.president.username }}" class="president-avatar">
+                        {% endif %}
+                        <div class="president-info">
+                            <h4>{{ party.president.username }}</h4>
+                            <p><i class="fas fa-star me-1" style="color: #22c55e;"></i>Level {{ party.president.level }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Election History -->
+            {% if past_elections %}
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h4 class="sidebar-title"><i class="fas fa-history"></i> Election History</h4>
+                </div>
+                <div class="sidebar-body">
+                    {% for election in past_elections[:5] %}
+                    <div class="history-item">
+                        <div class="history-date">{{ election.end_time.strftime('%b %d, %Y') }}</div>
+                        <div class="history-winner">
+                            {% if election.winner %}
+                                <i class="fas fa-crown"></i>
+                                {{ election.winner.username }}
+                            {% else %}
+                                <span style="color: rgba(255,255,255,0.5);">No winner</span>
+                            {% endif %}
+                        </div>
+                        <div class="history-stats">
+                            {{ election.vote_count }} votes &bull; {{ election.candidate_count }} candidates
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Candidate Management (Party President Only) -->
+            {% if current_user.is_party_president and current_user.party and current_user.party.id == party.id %}
+            <div class="sidebar-card" style="border-color: rgba(251, 191, 36, 0.3);">
+                <div class="sidebar-header" style="background: rgba(251, 191, 36, 0.1);">
+                    <h4 class="sidebar-title" style="color: #fbbf24;"><i class="fas fa-user-check"></i> Candidate Management</h4>
+                </div>
+                <div class="sidebar-body" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0;">
+                        As party president, you can approve or reject candidates for national elections.
+                    </p>
+                    {% if active_country_elections %}
+                        {% for election in active_country_elections %}
+                        <a href="{{ url_for('government.election_detail', election_id=election.id) }}" class="candidate-mgmt-link">
+                            <div class="candidate-mgmt-icon">
+                                {% if election.election_type.value == 'presidential' %}
+                                <i class="fas fa-crown"></i>
+                                {% else %}
+                                <i class="fas fa-landmark"></i>
+                                {% endif %}
+                            </div>
+                            <div class="candidate-mgmt-info">
+                                <span class="candidate-mgmt-title">
+                                    {% if election.election_type.value == 'presidential' %}
+                                        Presidential Election
+                                    {% else %}
+                                        Congress Election
+                                    {% endif %}
+                                </span>
+                                <span class="candidate-mgmt-status">
+                                    {% if election.pending_candidates|default(0) > 0 %}
+                                        <span class="pending-badge">{{ election.pending_candidates }} pending</span>
+                                    {% else %}
+                                        <span style="color: rgba(255,255,255,0.5);">No pending candidates</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color: rgba(255,255,255,0.3);"></i>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 0.75rem; color: rgba(255,255,255,0.5); font-size: 0.85rem;">
+                            <i class="fas fa-calendar-check mb-2" style="font-size: 1.25rem; display: block;"></i>
+                            No active elections
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Links -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h4 class="sidebar-title"><i class="fas fa-link"></i> Quick Links</h4>
+                </div>
+                <div class="sidebar-body" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <a href="{{ url_for('party.members', party_id=party.id) }}" class="btn btn-outline-secondary btn-sm w-100 text-start">
+                        <i class="fas fa-users me-2"></i>View All Members
+                    </a>
+                    {% if party.country %}
+                    <a href="{{ url_for('main.country', slug=party.country.slug) }}" class="btn btn-outline-secondary btn-sm w-100 text-start">
+                        <i class="fas fa-flag me-2"></i>View Country
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('government.congress', country_id=party.country_id) }}" class="btn btn-outline-secondary btn-sm w-100 text-start">
+                        <i class="fas fa-landmark me-2"></i>View Congress
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Candidacy Modal -->
+<div class="modal fade" id="withdrawCandidacyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(34, 197, 94, 0.2);">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #f59e0b;"></i>Confirm Withdrawal
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <p class="text-white mb-0">Are you sure you want to withdraw your candidacy?</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-withdraw-btn">Withdraw</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Party Modal -->
+<div class="modal fade" id="leavePartyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(239, 68, 68, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.2);">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>Leave Party
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <p class="text-white mb-0">Are you sure you want to leave <strong>{{ party.name }}</strong>?</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(239, 68, 68, 0.2);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-leave-btn">Leave Party</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock main_layout %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Withdraw candidacy modal
+    const withdrawBtn = document.getElementById('withdraw-candidacy-btn');
+    const withdrawForm = document.getElementById('withdraw-candidacy-form');
+    const confirmWithdrawBtn = document.getElementById('confirm-withdraw-btn');
+
+    if (withdrawBtn && withdrawForm) {
+        withdrawBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            new bootstrap.Modal(document.getElementById('withdrawCandidacyModal')).show();
+        });
+
+        if (confirmWithdrawBtn) {
+            confirmWithdrawBtn.addEventListener('click', function() {
+                withdrawForm.submit();
+            });
+        }
+    }
+
+    // Leave party modal
+    const leaveBtn = document.getElementById('leave-party-btn');
+    const leaveForm = document.getElementById('leave-party-form');
+    const confirmLeaveBtn = document.getElementById('confirm-leave-btn');
+
+    if (leaveBtn && leaveForm) {
+        leaveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            new bootstrap.Modal(document.getElementById('leavePartyModal')).show();
+        });
+
+        if (confirmLeaveBtn) {
+            confirmLeaveBtn.addEventListener('click', function() {
+                leaveForm.submit();
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

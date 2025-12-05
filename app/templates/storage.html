@@ -1,0 +1,682 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+
+    .event-card {
+        background: #262c3d;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .event-card-header {
+        background: #2d344a;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .event-card-body {
+        padding: 1rem;
+    }
+
+    .event-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .event-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+        color: #ffffff;
+    }
+
+    .event-item:last-child {
+        border-bottom: none;
+    }
+
+    .event-item:hover {
+        background: #2d344a;
+    }
+
+    .article-card {
+        background: #262c3d;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .article-card:hover {
+        transform: translateY(-2px);
+        background: #2d344a;
+    }
+
+    .article-title {
+        color: #ffffff;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .article-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .resource-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .resource-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .resource-image {
+        width: 100%;
+        height: 140px;
+        object-fit: contain;
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.2));
+        transition: all 0.3s ease;
+    }
+
+    .resource-card:hover .resource-image {
+        filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.4));
+        transform: scale(1.05);
+    }
+
+    .resource-name {
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .resource-amount {
+        font-family: 'Roboto Mono', monospace;
+        color: #22c55e;
+        font-weight: 700;
+        font-size: 1.5rem;
+        text-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+        margin-bottom: 0.5rem;
+    }
+
+    .resource-placeholder-icon {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: rgba(34, 197, 94, 0.3);
+    }
+
+    .category-header {
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+        text-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+    }
+
+    .bread-actions {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .bread-btn {
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .bread-btn-one {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .bread-btn-one:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    }
+
+    .bread-btn-max {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
+    }
+
+    .bread-btn-max:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+
+    .bread-btn:disabled {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .wellness-info {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 0.75rem;
+        line-height: 1.4;
+        font-weight: 500;
+    }
+
+    .wellness-limit-badge {
+        display: inline-block;
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        font-weight: 600;
+    }
+
+    .beer-actions {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .beer-btn {
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .beer-btn-one {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 10px rgba(6, 182, 212, 0.2);
+    }
+
+    .beer-btn-one:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    }
+
+    .beer-btn-max {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 10px rgba(139, 92, 246, 0.2);
+    }
+
+    .beer-btn-max:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    }
+
+    .beer-btn:disabled {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .energy-info {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 0.75rem;
+        line-height: 1.4;
+        font-weight: 500;
+    }
+
+    .energy-limit-badge {
+        display: inline-block;
+        background: rgba(6, 182, 212, 0.15);
+        color: #06b6d4;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        font-weight: 600;
+    }
+
+    .wine-actions {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .wine-btn {
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .wine-btn-one {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 10px rgba(220, 38, 38, 0.2);
+    }
+
+    .wine-btn-one:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+        background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    }
+
+    .wine-btn-max {
+        background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 10px rgba(219, 39, 119, 0.2);
+    }
+
+    .wine-btn-max:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(219, 39, 119, 0.4);
+        background: linear-gradient(135deg, #be185d 0%, #9f1239 100%);
+    }
+
+    .wine-btn:disabled {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .wine-info {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 0.75rem;
+        line-height: 1.4;
+        font-weight: 500;
+    }
+
+    .wine-limit-badge {
+        display: inline-block;
+        background: rgba(220, 38, 38, 0.15);
+        color: #dc2626;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(220, 38, 38, 0.3);
+        font-weight: 600;
+    }
+
+    .house-actions {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .house-btn {
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .house-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    }
+
+    .house-btn:disabled {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .house-info {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 0.75rem;
+        line-height: 1.4;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    /* Storage Header */
+    .training-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.7), rgba(15, 20, 25, 0.7)), url('{{ url_for("static", filename="images/buildings/storage.png") }}');
+        background-size: cover;
+        background-position: center;
+        padding: 4rem 2rem;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-radius: 20px;
+        margin-bottom: 2.5rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 197, 94, 0.1);
+    }
+
+    .training-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        text-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Animation on load */
+    .resource-card {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .resource-card:nth-child(1) { animation-delay: 0.05s; }
+    .resource-card:nth-child(2) { animation-delay: 0.1s; }
+    .resource-card:nth-child(3) { animation-delay: 0.15s; }
+    .resource-card:nth-child(4) { animation-delay: 0.2s; }
+    .resource-card:nth-child(5) { animation-delay: 0.25s; }
+    .resource-card:nth-child(6) { animation-delay: 0.3s; }
+    .resource-card:nth-child(7) { animation-delay: 0.35s; }
+    .resource-card:nth-child(8) { animation-delay: 0.4s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Empty state styling */
+    .text-center.text-muted.py-5 {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+        padding: 3rem !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .text-center.text-muted.py-5 i {
+        color: rgba(34, 197, 94, 0.3);
+        font-size: 3rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Tab Navigation Header -->
+        <ul class="nav nav-tabs mb-4" id="myPlacesTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('company.my_companies') }}"><i class="fas fa-building me-1"></i>Companies</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.training') }}"><i class="fas fa-dumbbell me-1"></i>Training Grounds</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.study') }}"><i class="fas fa-graduation-cap me-1"></i>Study</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="{{ url_for('main.storage') }}"><i class="fas fa-warehouse me-1"></i>Storage</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.travel') }}"><i class="fas fa-plane me-1"></i>Travel</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.residence') }}"><i class="fas fa-home me-1"></i>Residence</a>
+          </li>
+        </ul>
+
+        <!-- Storage Header -->
+        <div class="training-header">
+            <div class="text-center">
+                <h2 class="mb-3">Storage</h2>
+                <p class="text-muted mb-2">All your items and resources in one place.</p>
+                {% set storage_count = current_user.get_total_inventory_count() %}
+                {% set storage_limit = current_user.USER_STORAGE_LIMIT %}
+                {% set storage_pct = (storage_count / storage_limit * 100) if storage_limit > 0 else 0 %}
+                <div class="storage-indicator mx-auto text-center" style="max-width: 400px;">
+                    <div class="d-flex justify-content-center align-items-center mb-2">
+                        <span style="color: {% if storage_pct >= 90 %}#ef4444{% elif storage_pct >= 75 %}#fbbf24{% else %}#10b981{% endif %}; font-size: 1.1rem; font-weight: 600;">
+                            <i class="fas fa-box me-1"></i>{{ storage_count }} / {{ storage_limit }}
+                        </span>
+                    </div>
+                    <div class="progress" style="height: 8px; background-color: rgba(255,255,255,0.1);">
+                        <div class="progress-bar" role="progressbar"
+                             style="width: {{ storage_pct }}%; background-color: {% if storage_pct >= 90 %}#ef4444{% elif storage_pct >= 75 %}#fbbf24{% else %}#10b981{% endif %};"
+                             aria-valuenow="{{ storage_count }}" aria-valuemin="0" aria-valuemax="{{ storage_limit }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Cards by Category -->
+        {% if inventory_by_category %}
+            {% for category, items in inventory_by_category.items() %}
+                <div class="category-header">{{ category }}</div>
+                <div class="row g-4 mb-4">
+                    {% for item in items %}
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <div class="resource-card h-100">
+                            <div class="resource-image mb-3">
+                                {% if item.resource.icon_path %}
+                                    <img src="{{ url_for('static', filename=item.resource.icon_path) }}" alt="{{ item.resource.name }}">
+                                {% else %}
+                                    <span class="resource-placeholder-icon"><i class="fas fa-box"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="resource-name">
+                                {{ item.resource.name }}
+                                {# Show quality stars for manufactured goods #}
+                                {% if item.quality > 0 %}
+                                    <div style="color: #fbbf24; font-size: 0.9rem; margin-top: 0.25rem;">
+                                        {% for i in range(item.quality) %}★{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="resource-amount">{{ item.quantity }}</div>
+
+                            {# Add bread eating buttons if this is bread #}
+                            {% if wellness_data and item.resource.id == wellness_data.bread_resource_id %}
+                                {% set wellness_per_bread = item.quality * 2 %}
+                                <div class="bread-actions">
+                                    <form method="POST" action="{{ url_for('main.eat_bread_action', quality=item.quality, action='one') }}" style="margin: 0;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="bread-btn bread-btn-one w-100"
+                                                {% if current_user.wellness >= current_user.max_wellness or wellness_data.daily_limit_remaining <= 0 or item.quantity == 0 %}disabled{% endif %}>
+                                            🍞 Eat One (+{{ wellness_per_bread }})
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('main.eat_bread_action', quality=item.quality, action='max') }}" style="margin: 0;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="bread-btn bread-btn-max w-100"
+                                                {% if current_user.wellness >= current_user.max_wellness or wellness_data.daily_limit_remaining <= 0 or item.quantity == 0 %}disabled{% endif %}>
+                                            🍞 Eat Max
+                                        </button>
+                                    </form>
+                                    <div class="wellness-info">
+                                        Daily: {{ wellness_data.bread_consumed_today }}/10 breads used
+                                    </div>
+                                    {% if wellness_data.daily_limit_remaining <= 0 %}
+                                        <div class="wellness-limit-badge">
+                                            Daily limit reached
+                                        </div>
+                                    {% elif current_user.wellness >= current_user.max_wellness %}
+                                        <div class="wellness-limit-badge">
+                                            Wellness full
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            {# Add beer drinking buttons if this is beer #}
+                            {% if energy_data and item.resource.id == energy_data.beer_resource_id %}
+                                {% set energy_per_beer = item.quality * 2 %}
+                                <div class="beer-actions">
+                                    <form method="POST" action="{{ url_for('main.drink_beer_action', quality=item.quality, action='one') }}" style="margin: 0;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="beer-btn beer-btn-one w-100"
+                                                {% if current_user.energy >= current_user.max_energy or energy_data.daily_limit_remaining <= 0 or item.quantity == 0 %}disabled{% endif %}>
+                                            🍺 Drink One (+{{ energy_per_beer }})
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('main.drink_beer_action', quality=item.quality, action='max') }}" style="margin: 0;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="beer-btn beer-btn-max w-100"
+                                                {% if current_user.energy >= current_user.max_energy or energy_data.daily_limit_remaining <= 0 or item.quantity == 0 %}disabled{% endif %}>
+                                            🍺 Drink Max
+                                        </button>
+                                    </form>
+                                    <div class="energy-info">
+                                        Daily: {{ energy_data.beer_consumed_today }}/10 beers used
+                                    </div>
+                                    {% if energy_data.daily_limit_remaining <= 0 %}
+                                        <div class="energy-limit-badge">
+                                            Daily limit reached
+                                        </div>
+                                    {% elif current_user.energy >= current_user.max_energy %}
+                                        <div class="energy-limit-badge">
+                                            Energy full
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            {# Add wine drinking buttons if this is wine #}
+                            {% if wine_data and item.resource.id == wine_data.wine_resource_id %}
+                                {% set wellness_per_wine = item.quality * 1 %}
+                                {% set energy_per_wine = item.quality * 1 %}
+                                <div class="wine-actions">
+                                    <form method="POST" action="{{ url_for('main.drink_wine_action', quality=item.quality, action='one') }}" style="margin: 0;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="wine-btn wine-btn-one w-100"
+                                                {% if (current_user.wellness >= current_user.max_wellness and current_user.energy >= current_user.max_energy) or wine_data.daily_limit_remaining <= 0 or item.quantity == 0 %}disabled{% endif %}>
+                                            🍷 Drink One (+{{ wellness_per_wine }} wellness, +{{ energy_per_wine }} energy)
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('main.drink_wine_action', quality=item.quality, action='max') }}" style="margin: 0;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="wine-btn wine-btn-max w-100"
+                                                {% if (current_user.wellness >= current_user.max_wellness and current_user.energy >= current_user.max_energy) or wine_data.daily_limit_remaining <= 0 or item.quantity == 0 %}disabled{% endif %}>
+                                            🍷 Drink Max
+                                        </button>
+                                    </form>
+                                    <div class="wine-info">
+                                        Daily: {{ wine_data.wine_consumed_today }}/10 wines used
+                                    </div>
+                                    {% if wine_data.daily_limit_remaining <= 0 %}
+                                        <div class="wine-limit-badge">
+                                            Daily limit reached
+                                        </div>
+                                    {% elif current_user.wellness >= current_user.max_wellness and current_user.energy >= current_user.max_energy %}
+                                        <div class="wine-limit-badge">
+                                            Wellness & Energy full
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            {# Add house activation button if this is a house #}
+                            {% if item.resource.slug == 'house' %}
+                                {% set wellness_per_restore = item.quality * 2 %}
+                                {% set energy_per_restore = item.quality * 2 %}
+                                <div class="house-actions">
+                                    <form method="POST" action="{{ url_for('main.activate_house', resource_id=item.resource.id, quality=item.quality) }}" style="margin: 0;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="house-btn w-100"
+                                                {% if current_user.active_residence and not current_user.active_residence.is_expired %}disabled{% endif %}>
+                                            <i class="fas fa-home"></i>
+                                            {% if current_user.active_residence and not current_user.active_residence.is_expired %}
+                                                Already Active
+                                            {% else %}
+                                                Activate House
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                    <div class="house-info">
+                                        Restores +{{ wellness_per_restore }} wellness & +{{ energy_per_restore }} energy/15min
+                                    </div>
+                                    {% if current_user.active_residence and not current_user.active_residence.is_expired %}
+                                        <div class="house-info">
+                                            Active residence expires in {{ current_user.active_residence.time_remaining.days }}d
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-box-open fa-2x mb-2"></i><br>
+                No items in your storage yet.
+            </div>
+        {% endif %}
+    </div>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

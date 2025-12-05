@@ -1,0 +1,690 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Vote - {{ party.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    body {
+        background: #0a0e1a;
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem 2rem 1rem;
+    }
+
+    /* Header Section */
+    .vote-header-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .vote-header-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+    }
+
+    .party-name {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 0.5rem;
+    }
+
+    .election-title {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .election-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #000000;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% {
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+        50% {
+            box-shadow: 0 4px 25px rgba(34, 197, 94, 0.6);
+        }
+    }
+
+    /* Stats Grid */
+    .election-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(34, 197, 94, 0.1);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        color: #22c55e;
+        flex-shrink: 0;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    /* Warning Box */
+    .vote-warning-box {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .warning-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #ef4444;
+        flex-shrink: 0;
+    }
+
+    .warning-content {
+        flex: 1;
+    }
+
+    .warning-title {
+        color: #ef4444;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .warning-text {
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.6;
+    }
+
+    /* Candidates Section */
+    .candidates-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+        font-size: 1.25rem;
+    }
+
+    .section-title {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    /* Candidate Cards */
+    .candidate-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .candidate-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .candidate-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        background: rgba(34, 197, 94, 0.05);
+        transform: translateX(4px);
+    }
+
+    .candidate-card:hover::before {
+        left: 100%;
+    }
+
+    .candidate-card.selected {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .candidate-card.selected::after {
+        content: '✓ SELECTED';
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #22c55e;
+        color: #000;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .candidate-radio {
+        display: none;
+    }
+
+    .candidate-content {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .candidate-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #000;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .candidate-details {
+        flex: 1;
+    }
+
+    .candidate-name-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .candidate-name {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .president-badge {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: #000;
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+    }
+
+    .candidate-stats-row {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .candidate-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+    }
+
+    .candidate-stat i {
+        color: #22c55e;
+        width: 20px;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1rem;
+        margin-top: 2.5rem;
+    }
+
+    .btn-cancel {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-2px);
+        color: #ffffff;
+    }
+
+    .btn-vote {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        color: #000;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-vote:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.6);
+    }
+
+    .btn-vote:disabled {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.3);
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    @media (max-width: 768px) {
+        .election-title {
+            font-size: 1.75rem;
+        }
+
+        .candidate-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .candidate-stats-row {
+            justify-content: center;
+        }
+
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Header Section -->
+        <div class="vote-header-section">
+            <div class="party-name">{{ party.name }}</div>
+            <h1 class="election-title">
+                <i class="fas fa-vote-yea"></i> Party President Election
+            </h1>
+            <span class="election-status-badge">
+                <i class="fas fa-circle" style="font-size: 0.5rem; animation: blink 1s ease-in-out infinite;"></i>
+                <span>Voting in Progress</span>
+            </span>
+        </div>
+
+        <!-- Election Stats -->
+        <div class="election-stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Election Ends</div>
+                    <div class="stat-value">{{ election.end_time.strftime('%B %d, %Y at %I:%M %p UTC') }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Registered Voters</div>
+                    <div class="stat-value">{{ party.member_count }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Candidates</div>
+                    <div class="stat-value">{{ candidates|length }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning Box -->
+        <div class="vote-warning-box">
+            <div class="warning-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="warning-content">
+                <div class="warning-title">Important Notice</div>
+                <div class="warning-text">
+                    You can only vote once in this election. Your vote cannot be changed or withdrawn after submission.
+                    Please review all candidates carefully before making your decision.
+                </div>
+            </div>
+        </div>
+
+        <!-- Candidates Section -->
+        <div class="candidates-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="fas fa-list"></i>
+                </div>
+                <h2 class="section-title">Select Your Candidate</h2>
+            </div>
+
+            <form method="POST" action="{{ url_for('party.vote', party_id=party.id) }}" id="vote-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form.hidden_tag() }}
+
+                {% for candidate in candidates %}
+                <label class="candidate-card" for="candidate-{{ candidate.user_id }}">
+                    <input
+                        type="radio"
+                        class="candidate-radio"
+                        name="candidate_id"
+                        id="candidate-{{ candidate.user_id }}"
+                        value="{{ candidate.user_id }}"
+                        {% if form.candidate_id.data == candidate.user_id %}checked{% endif %}
+                    >
+                    <div class="candidate-content">
+                        <div class="candidate-avatar">
+                            {{ candidate.user.username[0]|upper }}
+                        </div>
+                        <div class="candidate-details">
+                            <div class="candidate-name-row">
+                                <h3 class="candidate-name">{{ candidate.user.username }}</h3>
+                                {% if candidate.user_id == party.president_id %}
+                                    <span class="president-badge">
+                                        <i class="fas fa-crown"></i>
+                                        <span>Current President</span>
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="candidate-stats-row">
+                                <div class="candidate-stat">
+                                    <i class="fas fa-level-up-alt"></i>
+                                    <span>Level {{ candidate.user.level }}</span>
+                                </div>
+                                <div class="candidate-stat">
+                                    <i class="fas fa-star"></i>
+                                    <span>{{ candidate.user.experience|int }} XP</span>
+                                </div>
+                                <div class="candidate-stat">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Joined {{ candidate.announced_at.strftime('%b %d, %Y') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                {% endfor %}
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{{ url_for('party.detail', party_id=party.id) }}" class="btn-cancel">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel</span>
+                    </a>
+                    <button type="submit" class="btn-vote" id="submit-vote-btn" disabled>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Cast Vote</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal - No Candidate Selected -->
+<div class="modal fade" id="voteErrorModal" tabindex="-1" aria-labelledby="voteErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1a1f2e; border: 2px solid rgba(239, 68, 68, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.2);">
+                <h5 class="modal-title text-white" id="voteErrorModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>No Candidate Selected
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem; text-align: center;">
+                <div style="width: 80px; height: 80px; background: rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 2.5rem; color: #ef4444;"></i>
+                </div>
+                <p class="text-white mb-0">Please select a candidate before voting.</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(239, 68, 68, 0.2);">
+                <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal">
+                    <i class="fas fa-check me-2"></i>OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="voteConfirmModal" tabindex="-1" aria-labelledby="voteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1a1f2e; border: 2px solid rgba(34, 197, 94, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(34, 197, 94, 0.2);">
+                <h5 class="modal-title text-white" id="voteConfirmModalLabel">
+                    <i class="fas fa-vote-yea me-2" style="color: #22c55e;"></i>Confirm Your Vote
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <div class="text-center mb-3">
+                    <div style="width: 80px; height: 80px; background: rgba(34, 197, 94, 0.1); border: 2px solid rgba(34, 197, 94, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i class="fas fa-question-circle" style="font-size: 2.5rem; color: #22c55e;"></i>
+                    </div>
+                    <h5 class="text-white mb-3">Are you sure you want to vote for <span id="selectedCandidateName" style="color: #22c55e; font-weight: 700;"></span>?</h5>
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 1rem; margin-top: 1.5rem;">
+                        <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>
+                        <span style="color: rgba(255, 255, 255, 0.9); font-weight: 600;">This action cannot be undone!</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(34, 197, 94, 0.2); gap: 1rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="flex: 1;">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success" id="confirmVoteBtn" style="flex: 1; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border: none; font-weight: 700;">
+                    <i class="fas fa-check me-2"></i>Confirm Vote
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('vote-form');
+        const submitBtn = document.getElementById('submit-vote-btn');
+        const radioButtons = document.querySelectorAll('.candidate-radio');
+        const candidateCards = document.querySelectorAll('.candidate-card');
+
+        // Update submit button state and visual selection
+        function updateSelection() {
+            const isSelected = Array.from(radioButtons).some(radio => radio.checked);
+            submitBtn.disabled = !isSelected;
+
+            // Update visual selection
+            candidateCards.forEach(card => {
+                const radio = card.querySelector('.candidate-radio');
+                if (radio && radio.checked) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+
+        // Add event listeners
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', updateSelection);
+        });
+
+        // Initialize
+        updateSelection();
+
+        // Show confirmation modal before submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Always prevent default first
+
+            const selectedRadio = Array.from(radioButtons).find(radio => radio.checked);
+            if (!selectedRadio) {
+                // Show error modal instead of alert
+                const errorModal = new bootstrap.Modal(document.getElementById('voteErrorModal'));
+                errorModal.show();
+                return;
+            }
+
+            // Get candidate name and show in modal
+            const candidateName = selectedRadio.closest('.candidate-card').querySelector('.candidate-name').textContent.trim();
+            document.getElementById('selectedCandidateName').textContent = candidateName;
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('voteConfirmModal'));
+            modal.show();
+        });
+
+        // Handle confirm button in modal
+        document.getElementById('confirmVoteBtn').addEventListener('click', function() {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('voteConfirmModal'));
+            modal.hide();
+
+            // Submit form
+            form.submit();
+        });
+    });
+</script>
+{% endblock %}

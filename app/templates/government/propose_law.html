@@ -1,0 +1,1621 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Laws - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .laws-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        color: #22c55e;
+        font-size: 1.75rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .role-badge.president {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .role-badge.minister {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .role-badge.congress {
+        background: rgba(168, 85, 247, 0.15);
+        color: #a855f7;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #22c55e;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .action-link:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    /* Grid Layout */
+    .grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 1000px) {
+        .grid-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Treasury Info */
+    .treasury-card {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .treasury-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: rgba(251, 191, 36, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .treasury-info {
+        flex: 1;
+    }
+
+    .treasury-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .treasury-value {
+        color: #fbbf24;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    /* Main Form Section */
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1.1rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Law Type Cards */
+    .law-type-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .law-type-card {
+        background: rgba(26, 31, 46, 0.6);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .law-type-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        background: rgba(26, 31, 46, 0.9);
+    }
+
+    .law-type-card.selected {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .law-type-card input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .law-type-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .law-type-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .law-type-icon.war { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .law-type-icon.military { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+    .law-type-icon.currency { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .law-type-icon.tax { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+    .law-type-icon.impeachment { background: rgba(251, 146, 60, 0.2); color: #fb923c; }
+    .law-type-icon.embargo { background: rgba(220, 38, 38, 0.2); color: #dc2626; }
+    .law-type-icon.remove-embargo { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+
+    .law-type-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .law-type-desc {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .law-type-card.selected .law-type-name {
+        color: #22c55e;
+    }
+
+    /* Form Fields */
+    .form-section {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .form-section.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+        display: block;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(15, 20, 25, 0.8);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .form-select option {
+        background: #0f1419;
+        color: #fff;
+    }
+
+    .form-hint {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin-top: 0.35rem;
+    }
+
+    /* Info/Warning Boxes */
+    .info-box {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+    }
+
+    .info-box.warning {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .info-box.info {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .info-box-icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .info-box.warning .info-box-icon { color: #ef4444; }
+    .info-box.info .info-box-icon { color: #3b82f6; }
+
+    .info-box-content {
+        flex: 1;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .info-box-content strong {
+        color: #fff;
+    }
+
+    .info-box.warning .info-box-content { color: rgba(239, 68, 68, 0.9); }
+    .info-box.info .info-box-content { color: rgba(59, 130, 246, 0.9); }
+
+    /* Currency Preview */
+    .currency-preview {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .currency-preview-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .currency-preview-value {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    /* Tax Rate Slider */
+    .tax-slider-container {
+        margin-top: 1rem;
+    }
+
+    .tax-slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(59, 130, 246, 0.2);
+        outline: none;
+    }
+
+    .tax-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #3b82f6;
+        cursor: pointer;
+        border: 3px solid #1a1f2e;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .tax-value-display {
+        text-align: center;
+        margin-top: 0.75rem;
+    }
+
+    .tax-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #3b82f6;
+    }
+
+    .tax-value-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+
+    /* Voting Info */
+    .voting-info {
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .voting-info-icon {
+        font-size: 1.5rem;
+        color: #fbbf24;
+    }
+
+    .voting-info-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* Submit Button */
+    .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.3);
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.75rem;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        text-decoration: none;
+        margin-top: 0.75rem;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Active Voting Laws */
+    .voting-law-card {
+        background: rgba(26, 31, 46, 0.6);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+
+    .voting-law-card:hover {
+        border-color: rgba(251, 191, 36, 0.5);
+        background: rgba(26, 31, 46, 0.8);
+    }
+
+    .voting-law-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .voting-law-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .voting-law-type-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .voting-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .voting-law-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+
+    .voting-law-proposer {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .voting-law-countdown {
+        color: #fbbf24;
+        font-weight: 500;
+    }
+
+    .voting-law-votes {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .vote-count {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.85rem;
+    }
+
+    .vote-count.yes { color: #22c55e; }
+    .vote-count.no { color: #ef4444; }
+
+    .view-law-link {
+        display: inline-block;
+        margin-top: 0.5rem;
+        color: #22c55e;
+        font-size: 0.8rem;
+        text-decoration: none;
+    }
+
+    .view-law-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Law History */
+    .law-history-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(26, 31, 46, 0.4);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .law-history-item:hover {
+        background: rgba(26, 31, 46, 0.7);
+    }
+
+    .law-history-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .law-history-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .law-history-type {
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .law-history-date {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+    }
+
+    .law-history-status {
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .law-history-status.passed {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .law-history-status.rejected {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .law-history-status.expired {
+        background: rgba(107, 114, 128, 0.15);
+        color: #6b7280;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        padding: 2rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    /* Autocomplete Styles */
+    .autocomplete-container {
+        position: relative;
+    }
+
+    .autocomplete-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #1a1f2e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 250px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+
+    .autocomplete-results.show {
+        display: block;
+    }
+
+    .autocomplete-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .autocomplete-item:hover {
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .autocomplete-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+        font-size: 0.9rem;
+    }
+
+    .autocomplete-username {
+        color: #fff;
+        font-weight: 500;
+    }
+
+    .autocomplete-no-results {
+        padding: 1rem;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.9rem;
+    }
+
+    .selected-user {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        margin-top: 0.5rem;
+    }
+
+    .selected-user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #22c55e;
+    }
+
+    .selected-user-info {
+        flex: 1;
+    }
+
+    .selected-user-name {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .selected-user-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .selected-user-remove {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .selected-user-remove:hover {
+        background: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Current President Info */
+    .current-president-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .current-president-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef4444;
+        font-size: 1.25rem;
+    }
+
+    .current-president-details {
+        flex: 1;
+    }
+
+    .current-president-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+    }
+
+    .current-president-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    /* Currency Type Selector */
+    .currency-type-selector {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .currency-type-option {
+        flex: 1;
+        cursor: pointer;
+    }
+
+    .currency-type-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .currency-type-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 1rem;
+        background: rgba(26, 31, 46, 0.6);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        transition: all 0.2s;
+    }
+
+    .currency-type-option:hover .currency-type-card {
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .currency-type-option input:checked + .currency-type-card {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .currency-type-icon {
+        font-size: 1.5rem;
+    }
+
+    .currency-type-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .currency-type-available {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .currency-type-option input:checked + .currency-type-card .currency-type-name {
+        color: #22c55e;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="laws-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <span>&#9878;</span>
+                Laws
+            </h1>
+            <div style="margin-top: 0.5rem;">
+                {% if user_role == 'president' %}
+                <span class="role-badge president">President</span>
+                {% elif user_role == 'minister_defence' %}
+                <span class="role-badge minister">Minister of Defence</span>
+                {% elif user_role == 'minister_finance' %}
+                <span class="role-badge minister">Minister of Finance</span>
+                {% elif user_role == 'congress_member' %}
+                <span class="role-badge congress">Congress Member</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{{ url_for('government.president', country_id=current_user.citizenship_id) }}" class="action-link">
+            Back to Government
+        </a>
+    </div>
+
+    <div class="grid-layout">
+        <!-- Main Content - Propose Law Form -->
+        <div>
+            <!-- Treasury Info -->
+            <div class="treasury-card">
+                <div class="treasury-icon">&#128176;</div>
+                <div class="treasury-info">
+                    <div class="treasury-label">Available Treasury</div>
+                    <div class="treasury-value">{{ "{:,.0f}".format(available_gold) }} Gold</div>
+                </div>
+            </div>
+
+            <form method="POST" id="proposeLawForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="law_type" id="law_type_input" value="">
+
+                <!-- Step 1: Select Law Type -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <i class="fas fa-plus-circle"></i>
+                        Propose New Law
+                    </h2>
+
+                    <div class="law-type-grid">
+                        {% if 'DECLARE_WAR' in available_law_types %}
+                        <label class="law-type-card" data-law-type="DECLARE_WAR">
+                            <input type="radio" name="law_type_radio" value="DECLARE_WAR">
+                            <div class="law-type-header">
+                                <div class="law-type-icon war">&#9876;</div>
+                                <div class="law-type-name">Declare War</div>
+                            </div>
+                            <div class="law-type-desc">Initiate military conflict with another country</div>
+                        </label>
+                        {% endif %}
+
+                        {% if 'MILITARY_BUDGET' in available_law_types %}
+                        <label class="law-type-card" data-law-type="MILITARY_BUDGET">
+                            <input type="radio" name="law_type_radio" value="MILITARY_BUDGET">
+                            <div class="law-type-header">
+                                <div class="law-type-icon military">&#127919;</div>
+                                <div class="law-type-name">Military Budget</div>
+                            </div>
+                            <div class="law-type-desc">Allocate gold from treasury to defence</div>
+                        </label>
+                        {% endif %}
+
+                        {% if 'PRINT_CURRENCY' in available_law_types %}
+                        <label class="law-type-card" data-law-type="PRINT_CURRENCY">
+                            <input type="radio" name="law_type_radio" value="PRINT_CURRENCY">
+                            <div class="law-type-header">
+                                <div class="law-type-icon currency">&#128181;</div>
+                                <div class="law-type-name">Print Currency</div>
+                            </div>
+                            <div class="law-type-desc">Convert gold to local currency (1:200 ratio)</div>
+                        </label>
+                        {% endif %}
+
+                        {% if 'IMPORT_TAX' in available_law_types %}
+                        <label class="law-type-card" data-law-type="IMPORT_TAX">
+                            <input type="radio" name="law_type_radio" value="IMPORT_TAX">
+                            <div class="law-type-header">
+                                <div class="law-type-icon tax">&#128230;</div>
+                                <div class="law-type-name">Import Tax</div>
+                            </div>
+                            <div class="law-type-desc">Tax on foreign sellers in your market</div>
+                        </label>
+                        {% endif %}
+
+                        {% if 'SALARY_TAX' in available_law_types %}
+                        <label class="law-type-card" data-law-type="SALARY_TAX">
+                            <input type="radio" name="law_type_radio" value="SALARY_TAX">
+                            <div class="law-type-header">
+                                <div class="law-type-icon tax">&#128188;</div>
+                                <div class="law-type-name">Salary Tax</div>
+                            </div>
+                            <div class="law-type-desc">Tax deducted from worker salaries</div>
+                        </label>
+                        {% endif %}
+
+                        {% if 'INCOME_TAX' in available_law_types %}
+                        <label class="law-type-card" data-law-type="INCOME_TAX">
+                            <input type="radio" name="law_type_radio" value="INCOME_TAX">
+                            <div class="law-type-header">
+                                <div class="law-type-icon tax">&#128178;</div>
+                                <div class="law-type-name">Income Tax</div>
+                            </div>
+                            <div class="law-type-desc">Tax on gold withdrawn from companies</div>
+                        </label>
+                        {% endif %}
+
+                        {% if 'IMPEACHMENT' in available_law_types %}
+                        <label class="law-type-card" data-law-type="IMPEACHMENT">
+                            <input type="radio" name="law_type_radio" value="IMPEACHMENT">
+                            <div class="law-type-header">
+                                <div class="law-type-icon impeachment"><i class="fas fa-user-slash"></i></div>
+                                <div class="law-type-name">Impeachment</div>
+                            </div>
+                            <div class="law-type-desc">Remove current president and appoint replacement</div>
+                        </label>
+                        {% endif %}
+
+                        {% if 'EMBARGO' in available_law_types %}
+                        <label class="law-type-card" data-law-type="EMBARGO">
+                            <input type="radio" name="law_type_radio" value="EMBARGO">
+                            <div class="law-type-header">
+                                <div class="law-type-icon embargo"><i class="fas fa-ban"></i></div>
+                                <div class="law-type-name">Trade Embargo</div>
+                            </div>
+                            <div class="law-type-desc">Block all trade with another country</div>
+                        </label>
+                        {% endif %}
+
+                        {% if 'REMOVE_EMBARGO' in available_law_types %}
+                        <label class="law-type-card" data-law-type="REMOVE_EMBARGO">
+                            <input type="radio" name="law_type_radio" value="REMOVE_EMBARGO">
+                            <div class="law-type-header">
+                                <div class="law-type-icon remove-embargo"><i class="fas fa-handshake"></i></div>
+                                <div class="law-type-name">Lift Embargo</div>
+                            </div>
+                            <div class="law-type-desc">Remove an existing trade embargo</div>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Step 2: Law Details (shown based on selection) -->
+                <div class="section" id="law-details-section" style="display: none;">
+                    <h2 class="section-title">Law Details</h2>
+
+                    <!-- Declare War Fields -->
+                    <div class="form-section" id="DECLARE_WAR_fields">
+                        <div class="info-box warning">
+                            <div class="info-box-icon">&#9888;</div>
+                            <div class="info-box-content">
+                                <strong>Warning:</strong> Declaring war will enable military conflicts with the target country. This action cannot be easily reversed.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Target Country</label>
+                            <select name="target_country_id" class="form-select war-target-select">
+                                <option value="">Select a country...</option>
+                                {% for country in countries %}
+                                {% if country.id != current_user.citizenship_id %}
+                                <option value="{{ country.id }}">{{ country.name }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            <div class="form-hint">Choose the country you wish to declare war against</div>
+                        </div>
+                    </div>
+
+                    <!-- Military Budget Fields -->
+                    <div class="form-section" id="MILITARY_BUDGET_fields">
+                        <div class="info-box info">
+                            <div class="info-box-icon">&#8505;</div>
+                            <div class="info-box-content">
+                                Allocate funds from the national treasury to the military budget. These funds will be reserved during voting and transferred to the defense budget if the law passes.
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Currency Type</label>
+                            <div class="currency-type-selector">
+                                <label class="currency-type-option">
+                                    <input type="radio" name="budget_currency_type" value="gold" checked>
+                                    <div class="currency-type-card">
+                                        <span class="currency-type-icon">&#128176;</span>
+                                        <span class="currency-type-name">Gold</span>
+                                        <span class="currency-type-available">{{ "{:,.0f}".format(available_gold) }} available</span>
+                                    </div>
+                                </label>
+                                <label class="currency-type-option">
+                                    <input type="radio" name="budget_currency_type" value="currency">
+                                    <div class="currency-type-card">
+                                        <span class="currency-type-icon">&#128181;</span>
+                                        <span class="currency-type-name">{{ current_user.citizenship.currency_code }}</span>
+                                        <span class="currency-type-available">{{ "{:,.0f}".format(available_currency) }} available</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Amount</label>
+                            <input type="number" name="budget_amount" id="budget_amount" class="form-control" step="1" min="1" placeholder="Enter amount">
+                            <div class="form-hint" id="budget_max_hint">Maximum available: {{ "{:,.0f}".format(available_gold) }} Gold</div>
+                        </div>
+                    </div>
+
+                    <!-- Print Currency Fields -->
+                    <div class="form-section" id="PRINT_CURRENCY_fields">
+                        <div class="info-box info">
+                            <div class="info-box-icon">&#8505;</div>
+                            <div class="info-box-content">
+                                Convert gold from the treasury to local currency at a fixed rate of <strong>1 Gold = 200 {{ current_user.citizenship.currency_code }}</strong>. The gold will be reserved during voting.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gold Amount to Convert</label>
+                            <input type="number" name="gold_amount" id="gold_amount" class="form-control" step="1" min="1" max="{{ available_gold|int }}" placeholder="Enter gold amount">
+                            <div class="form-hint">Maximum available: {{ "{:,.0f}".format(available_gold) }} Gold</div>
+                        </div>
+                        <div class="currency-preview">
+                            <div class="currency-preview-label">You will receive</div>
+                            <div class="currency-preview-value"><span id="currency_preview">0</span> {{ current_user.citizenship.currency_code }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Import Tax Fields -->
+                    <div class="form-section" id="IMPORT_TAX_fields">
+                        <div class="info-box info">
+                            <div class="info-box-icon">&#8505;</div>
+                            <div class="info-box-content">
+                                Import tax is applied when foreign citizens or companies sell products in your country's marketplace. The tax goes to the national treasury.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tax Rate</label>
+                            <div class="tax-slider-container">
+                                <input type="range" class="tax-slider" name="rate" id="import_tax_rate" min="0" max="100" value="0">
+                                <div class="tax-value-display">
+                                    <div class="tax-value"><span id="import_tax_value">0</span>%</div>
+                                    <div class="tax-value-label">of sale price</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Salary Tax Fields -->
+                    <div class="form-section" id="SALARY_TAX_fields">
+                        <div class="info-box info">
+                            <div class="info-box-icon">&#8505;</div>
+                            <div class="info-box-content">
+                                Salary tax is deducted from worker salaries each time they get paid. The tax goes to the national treasury.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tax Rate</label>
+                            <div class="tax-slider-container">
+                                <input type="range" class="tax-slider" name="rate" id="salary_tax_rate" min="0" max="100" value="0">
+                                <div class="tax-value-display">
+                                    <div class="tax-value"><span id="salary_tax_value">0</span>%</div>
+                                    <div class="tax-value-label">of salary</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Income Tax Fields -->
+                    <div class="form-section" id="INCOME_TAX_fields">
+                        <div class="info-box info">
+                            <div class="info-box-icon">&#8505;</div>
+                            <div class="info-box-content">
+                                Income tax is applied when company owners withdraw gold from their companies. The tax goes to the national treasury.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tax Rate</label>
+                            <div class="tax-slider-container">
+                                <input type="range" class="tax-slider" name="rate" id="income_tax_rate" min="0" max="100" value="0">
+                                <div class="tax-value-display">
+                                    <div class="tax-value"><span id="income_tax_value">0</span>%</div>
+                                    <div class="tax-value-label">of withdrawal</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impeachment Fields -->
+                    <div class="form-section" id="IMPEACHMENT_fields">
+                        <div class="info-box warning">
+                            <div class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="info-box-content">
+                                <strong>Impeachment</strong> will immediately remove the current president from office and replace them with your chosen successor. This is a serious action that requires congressional approval.
+                            </div>
+                        </div>
+
+                        {% if current_president %}
+                        <div class="current-president-info">
+                            <div class="current-president-avatar">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="current-president-details">
+                                <div class="current-president-label">Current President</div>
+                                <div class="current-president-name">{{ current_president.user.username }}</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="info-box warning">
+                            <div class="info-box-icon"><i class="fas fa-info-circle"></i></div>
+                            <div class="info-box-content">
+                                There is no current president to impeach.
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label class="form-label">Replacement President</label>
+                            <div class="autocomplete-container">
+                                <input type="text" id="replacement_search" class="form-control" placeholder="Search for a citizen..." autocomplete="off">
+                                <input type="hidden" name="replacement_user_id" id="replacement_user_id">
+                                <div class="autocomplete-results" id="replacement_results"></div>
+                            </div>
+                            <div class="form-hint">Search for a citizen of this country to become the new president</div>
+
+                            <div id="selected_replacement" class="selected-user" style="display: none;">
+                                <div class="selected-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="selected-user-info">
+                                    <div class="selected-user-name" id="selected_replacement_name"></div>
+                                    <div class="selected-user-label">Will become President if passed</div>
+                                </div>
+                                <button type="button" class="selected-user-remove" id="remove_replacement">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Embargo Fields -->
+                    <div class="form-section" id="EMBARGO_fields">
+                        <div class="info-box warning">
+                            <div class="info-box-icon"><i class="fas fa-ban"></i></div>
+                            <div class="info-box-content">
+                                <strong>Trade Embargo</strong> will block all trade between your country and the target country. Citizens and companies from either country will not be able to buy or sell goods on each other's markets. This is a two-way restriction.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Target Country</label>
+                            <select name="embargo_target_country_id" class="form-select embargo-target-select">
+                                <option value="">Select a country...</option>
+                                {% for country in countries %}
+                                {% if country.id != current_user.citizenship_id %}
+                                <option value="{{ country.id }}">{{ country.name }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            <div class="form-hint">Choose the country to impose a trade embargo on</div>
+                        </div>
+                    </div>
+
+                    <!-- Remove Embargo Fields -->
+                    <div class="form-section" id="REMOVE_EMBARGO_fields">
+                        <div class="info-box info">
+                            <div class="info-box-icon"><i class="fas fa-handshake"></i></div>
+                            <div class="info-box-content">
+                                <strong>Lift Embargo</strong> will remove the trade restrictions with the selected country, allowing normal trade to resume between both nations.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Select Embargo to Lift</label>
+                            <select name="embargo_id" class="form-select">
+                                <option value="">Select an active embargo...</option>
+                                {% for embargo in active_embargoes %}
+                                <option value="{{ embargo.id }}">Embargo on {{ embargo.target_country.name }} (since {{ embargo.started_at.strftime('%b %d, %Y') }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-hint">Choose which embargo to remove</div>
+                        </div>
+                        {% if not active_embargoes %}
+                        <div class="info-box warning">
+                            <div class="info-box-icon"><i class="fas fa-info-circle"></i></div>
+                            <div class="info-box-content">
+                                Your country has no active embargoes to lift.
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Voting Info & Submit -->
+                <div class="voting-info">
+                    <div class="voting-info-icon">&#9200;</div>
+                    <div class="voting-info-text">
+                        After submission, the law will be open for voting by the <strong>President and Congress</strong> for <strong>24 hours</strong>. A majority vote is required to pass (ties are rejected).
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submit-btn" disabled>
+                    <span>&#128220;</span>
+                    Submit Law Proposal
+                </button>
+
+                <a href="{{ url_for('government.president', country_id=current_user.citizenship_id) }}" class="btn-cancel">
+                    Cancel
+                </a>
+            </form>
+        </div>
+
+        <!-- Sidebar - Active Votes & History -->
+        <div>
+            <!-- Active Votes Section -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-hourglass-half"></i>
+                    Active Votes
+                </h2>
+
+                {% if voting_laws %}
+                    {% for law in voting_laws %}
+                    <div class="voting-law-card">
+                        <div class="voting-law-header">
+                            <div class="voting-law-type">
+                                <div class="voting-law-type-icon law-type-icon {% if law.law_type.name == 'DECLARE_WAR' %}war{% elif law.law_type.name == 'MILITARY_BUDGET' %}military{% elif law.law_type.name == 'PRINT_CURRENCY' %}currency{% else %}tax{% endif %}">
+                                    {% if law.law_type.name == 'DECLARE_WAR' %}&#9876;{% elif law.law_type.name == 'MILITARY_BUDGET' %}&#127919;{% elif law.law_type.name == 'PRINT_CURRENCY' %}&#128181;{% else %}&#128178;{% endif %}
+                                </div>
+                                {{ law.law_type.name.replace('_', ' ').title() }}
+                            </div>
+                            <span class="voting-badge">
+                                <i class="fas fa-vote-yea"></i> Voting
+                            </span>
+                        </div>
+
+                        <div class="voting-law-meta">
+                            <span class="voting-law-proposer">by {{ law.proposed_by.username }}</span>
+                            <span class="voting-law-countdown" data-ends="{{ law.voting_end.isoformat() }}">
+                                {% set remaining = (law.voting_end - now()).total_seconds() %}
+                                {% if remaining > 0 %}
+                                    {{ (remaining // 3600)|int }}h {{ ((remaining % 3600) // 60)|int }}m left
+                                {% else %}
+                                    Ending...
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <div class="voting-law-votes">
+                            <span class="vote-count yes">
+                                <i class="fas fa-check"></i> {{ law.votes_for }}
+                            </span>
+                            <span class="vote-count no">
+                                <i class="fas fa-times"></i> {{ law.votes_against }}
+                            </span>
+                        </div>
+
+                        <a href="{{ url_for('government.view_law', law_id=law.id) }}" class="view-law-link">
+                            View Details & Vote <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        No active votes at this time
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Law History Section -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-history"></i>
+                    Recent Laws (30 days)
+                </h2>
+
+                {% if law_history %}
+                    {% for law in law_history %}
+                    <a href="{{ url_for('government.view_law', law_id=law.id) }}" class="law-history-item" style="text-decoration: none;">
+                        <div class="law-history-icon law-type-icon {% if law.law_type.name == 'DECLARE_WAR' %}war{% elif law.law_type.name == 'MILITARY_BUDGET' %}military{% elif law.law_type.name == 'PRINT_CURRENCY' %}currency{% else %}tax{% endif %}">
+                            {% if law.law_type.name == 'DECLARE_WAR' %}&#9876;{% elif law.law_type.name == 'MILITARY_BUDGET' %}&#127919;{% elif law.law_type.name == 'PRINT_CURRENCY' %}&#128181;{% else %}&#128178;{% endif %}
+                        </div>
+                        <div class="law-history-info">
+                            <div class="law-history-type">{{ law.law_type.name.replace('_', ' ').title() }}</div>
+                            <div class="law-history-date">{{ law.created_at.strftime('%b %d, %Y') }}</div>
+                        </div>
+                        <span class="law-history-status {% if law.status.name == 'PASSED' %}passed{% elif law.status.name == 'REJECTED' %}rejected{% else %}expired{% endif %}">
+                            {{ law.status.name.title() }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-scroll"></i>
+                        No laws in the past 30 days
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lawTypeCards = document.querySelectorAll('.law-type-card');
+    const lawTypeInput = document.getElementById('law_type_input');
+    const lawDetailsSection = document.getElementById('law-details-section');
+    const formSections = document.querySelectorAll('.form-section');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Law type selection
+    lawTypeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            lawTypeCards.forEach(c => c.classList.remove('selected'));
+
+            // Add selected class to clicked card
+            this.classList.add('selected');
+
+            // Update hidden input
+            const lawType = this.dataset.lawType;
+            lawTypeInput.value = lawType;
+
+            // Show law details section
+            lawDetailsSection.style.display = 'block';
+
+            // Hide all form sections, show relevant one
+            formSections.forEach(section => section.classList.remove('active'));
+            const activeSection = document.getElementById(lawType + '_fields');
+            if (activeSection) {
+                activeSection.classList.add('active');
+            }
+
+            // Enable submit button
+            submitBtn.disabled = false;
+
+            // Scroll to details section
+            lawDetailsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    // Currency printing calculator
+    const goldAmountInput = document.getElementById('gold_amount');
+    const currencyPreview = document.getElementById('currency_preview');
+
+    if (goldAmountInput && currencyPreview) {
+        goldAmountInput.addEventListener('input', function() {
+            const goldAmount = parseInt(this.value) || 0;
+            const currencyAmount = goldAmount * 200;
+            currencyPreview.textContent = currencyAmount.toLocaleString();
+        });
+    }
+
+    // Military Budget currency type selector
+    const budgetCurrencyRadios = document.querySelectorAll('input[name="budget_currency_type"]');
+    const budgetAmountInput = document.getElementById('budget_amount');
+    const budgetMaxHint = document.getElementById('budget_max_hint');
+    const availableGold = {{ available_gold|int }};
+    const availableCurrency = {{ available_currency|int }};
+    const currencyCode = '{{ current_user.citizenship.currency_code }}';
+
+    budgetCurrencyRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'gold') {
+                budgetAmountInput.max = availableGold;
+                budgetMaxHint.textContent = `Maximum available: ${availableGold.toLocaleString()} Gold`;
+            } else {
+                budgetAmountInput.max = availableCurrency;
+                budgetMaxHint.textContent = `Maximum available: ${availableCurrency.toLocaleString()} ${currencyCode}`;
+            }
+            budgetAmountInput.value = '';
+        });
+    });
+
+    // Tax sliders
+    const taxSliders = [
+        { slider: 'import_tax_rate', display: 'import_tax_value' },
+        { slider: 'salary_tax_rate', display: 'salary_tax_value' },
+        { slider: 'income_tax_rate', display: 'income_tax_value' }
+    ];
+
+    taxSliders.forEach(({ slider, display }) => {
+        const sliderEl = document.getElementById(slider);
+        const displayEl = document.getElementById(display);
+
+        if (sliderEl && displayEl) {
+            sliderEl.addEventListener('input', function() {
+                displayEl.textContent = this.value;
+            });
+        }
+    });
+
+    // Form validation
+    document.getElementById('proposeLawForm').addEventListener('submit', function(e) {
+        const lawType = lawTypeInput.value;
+
+        if (!lawType) {
+            e.preventDefault();
+            showError('Please select a law type.');
+            return;
+        }
+
+        // Validate based on law type
+        if (lawType === 'DECLARE_WAR') {
+            const targetCountry = document.querySelector('.war-target-select').value;
+            if (!targetCountry) {
+                e.preventDefault();
+                showError('Please select a target country.');
+                return;
+            }
+        }
+
+        if (lawType === 'MILITARY_BUDGET') {
+            const amount = document.getElementById('budget_amount').value;
+            const currencyType = document.querySelector('input[name="budget_currency_type"]:checked');
+            if (!currencyType) {
+                e.preventDefault();
+                showError('Please select a currency type.');
+                return;
+            }
+            if (!amount || amount <= 0) {
+                e.preventDefault();
+                showError('Please enter a valid budget amount.');
+                return;
+            }
+        }
+
+        if (lawType === 'PRINT_CURRENCY') {
+            const goldAmount = document.getElementById('gold_amount').value;
+            if (!goldAmount || goldAmount <= 0) {
+                e.preventDefault();
+                showError('Please enter a valid gold amount.');
+                return;
+            }
+        }
+
+        if (lawType === 'IMPEACHMENT') {
+            const replacementUserId = document.getElementById('replacement_user_id').value;
+            if (!replacementUserId) {
+                e.preventDefault();
+                showError('Please select a replacement president.');
+                return;
+            }
+        }
+
+        if (lawType === 'EMBARGO') {
+            const embargoTarget = document.querySelector('.embargo-target-select').value;
+            if (!embargoTarget) {
+                e.preventDefault();
+                showError('Please select a target country for the embargo.');
+                return;
+            }
+        }
+
+        if (lawType === 'REMOVE_EMBARGO') {
+            const embargoId = document.querySelector('select[name="embargo_id"]').value;
+            if (!embargoId) {
+                e.preventDefault();
+                showError('Please select an embargo to lift.');
+                return;
+            }
+        }
+    });
+
+    // Impeachment autocomplete
+    const replacementSearch = document.getElementById('replacement_search');
+    const replacementResults = document.getElementById('replacement_results');
+    const replacementUserId = document.getElementById('replacement_user_id');
+    const selectedReplacement = document.getElementById('selected_replacement');
+    const selectedReplacementName = document.getElementById('selected_replacement_name');
+    const removeReplacement = document.getElementById('remove_replacement');
+
+    let searchTimeout = null;
+
+    if (replacementSearch) {
+        replacementSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            // Clear previous timeout
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (query.length < 2) {
+                replacementResults.classList.remove('show');
+                replacementResults.innerHTML = '';
+                return;
+            }
+
+            // Debounce the search
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`{{ url_for('government.search_citizens') }}?q=${encodeURIComponent(query)}`);
+                    const users = await response.json();
+
+                    if (users.length === 0) {
+                        replacementResults.innerHTML = '<div class="autocomplete-no-results">No citizens found</div>';
+                    } else {
+                        replacementResults.innerHTML = users.map(user => `
+                            <div class="autocomplete-item" data-id="${user.id}" data-username="${user.username}">
+                                <div class="autocomplete-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="autocomplete-username">${user.username}</span>
+                            </div>
+                        `).join('');
+
+                        // Add click handlers to results
+                        replacementResults.querySelectorAll('.autocomplete-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                const userId = this.dataset.id;
+                                const username = this.dataset.username;
+
+                                // Set the hidden input
+                                replacementUserId.value = userId;
+
+                                // Show selected user
+                                selectedReplacementName.textContent = username;
+                                selectedReplacement.style.display = 'flex';
+
+                                // Hide search and results
+                                replacementSearch.value = '';
+                                replacementResults.classList.remove('show');
+                            });
+                        });
+                    }
+
+                    replacementResults.classList.add('show');
+                } catch (error) {
+                    console.error('Search error:', error);
+                    replacementResults.innerHTML = '<div class="autocomplete-no-results">Error searching</div>';
+                    replacementResults.classList.add('show');
+                }
+            }, 300);
+        });
+
+        // Hide results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!replacementSearch.contains(e.target) && !replacementResults.contains(e.target)) {
+                replacementResults.classList.remove('show');
+            }
+        });
+    }
+
+    if (removeReplacement) {
+        removeReplacement.addEventListener('click', function() {
+            replacementUserId.value = '';
+            selectedReplacement.style.display = 'none';
+            selectedReplacementName.textContent = '';
+        });
+    }
+});
+</script>
+{% include '_dashboard_wrapper_end.html' %}
+{% endblock main_layout %}

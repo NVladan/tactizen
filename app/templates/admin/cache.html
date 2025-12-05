@@ -1,0 +1,160 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-tachometer-alt"></i> Cache Management</h2>
+            <p class="text-muted">Monitor and manage application cache</p>
+            <hr>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5><i class="fas fa-info-circle"></i> Cache Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <tr>
+                                    <th>Cache Type:</th>
+                                    <td>{{ stats.cache_type }}</td>
+                                </tr>
+                                {% if stats.hits is defined %}
+                                <tr>
+                                    <th>Cache Hits:</th>
+                                    <td class="text-success">{{ stats.hits }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Cache Misses:</th>
+                                    <td class="text-danger">{{ stats.misses }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Hit Rate:</th>
+                                    <td>
+                                        <span class="{% if stats.hit_rate > 75 %}text-success{% elif stats.hit_rate > 50 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ "%.2f"|format(stats.hit_rate) }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Total Keys:</th>
+                                    <td>{{ stats.keys }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-muted">
+                                        <em>Statistics not available for {{ stats.cache_type }}. Use RedisCache in production for detailed stats.</em>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if stats.error %}
+                                <tr>
+                                    <td colspan="2" class="text-danger">
+                                        <strong>Error:</strong> {{ stats.error }}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5><i class="fas fa-tools"></i> Cache Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6>Clear All Caches</h6>
+                                <p class="text-muted small">Removes all cached data. Use during deployments or major data changes.</p>
+                                <form method="POST" action="{{ url_for('admin.clear_cache') }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to clear ALL caches? This may temporarily slow down the application.')">
+                                        <i class="fas fa-trash"></i> Clear All Caches
+                                    </button>
+                                </form>
+                            </div>
+
+                            <hr>
+
+                            <div class="mb-3">
+                                <h6>Warm Cache</h6>
+                                <p class="text-muted small">Pre-populate cache with frequently accessed data for better performance.</p>
+                                <form method="POST" action="{{ url_for('admin.warm_cache_route') }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-fire"></i> Warm Cache
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5><i class="fas fa-book"></i> Cached Data Types</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Data Type</th>
+                                        <th>Cache Duration</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Resources</strong></td>
+                                        <td>Indefinite</td>
+                                        <td>Resource lists and mappings (invalidated on changes)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Countries</strong></td>
+                                        <td>1 hour</td>
+                                        <td>Country query for forms</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Country Pages</strong></td>
+                                        <td>5 minutes</td>
+                                        <td>Country statistics and information</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Market Data</strong></td>
+                                        <td>1 minute</td>
+                                        <td>Market prices and levels (frequently changing)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <h6><i class="fas fa-lightbulb"></i> Production Recommendations:</h6>
+                <ul class="mb-0">
+                    <li>Use Redis for caching instead of SimpleCache</li>
+                    <li>Monitor cache hit rate (aim for >80%)</li>
+                    <li>Warm cache after deployments</li>
+                    <li>Set up automated cache clearing if needed</li>
+                    <li>Adjust cache timeouts based on data change frequency</li>
+                </ul>
+            </div>
+
+            <div class="mt-4">
+                <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,347 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Military Units - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-header h2 {
+        color: #22c55e;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .unit-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .unit-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .unit-card.my-unit {
+        border-color: rgba(34, 197, 94, 0.5);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, #0f1419 100%);
+    }
+
+    .unit-info {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .unit-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .unit-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .unit-details {
+        flex: 1;
+    }
+
+    .unit-name {
+        color: #22c55e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .my-unit-badge {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #000;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .unit-country {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0.5rem;
+    }
+
+    .unit-country img {
+        width: 18px;
+        height: 12px;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+
+    .unit-meta {
+        display: flex;
+        gap: 2rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        flex-wrap: wrap;
+    }
+
+    .unit-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .unit-stat i {
+        color: #22c55e;
+    }
+
+    .unit-stats-sidebar {
+        text-align: right;
+        min-width: 150px;
+    }
+
+    .unit-damage {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #22c55e;
+    }
+
+    .unit-damage-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+    }
+
+    .unit-rating {
+        margin-top: 0.5rem;
+        color: #fbbf24;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255, 255, 255, 0.6);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #22c55e;
+        opacity: 0.5;
+    }
+
+    .empty-state h4 {
+        color: #22c55e;
+    }
+
+    .rank-badge {
+        display: inline-block;
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        padding: 0.15rem 0.5rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <div class="page-header">
+            <h2><i class="fas fa-shield-alt me-2"></i>Military Units</h2>
+            <p class="mb-0">Join a military unit to fight alongside others and earn bounties as mercenaries</p>
+        </div>
+
+        <div class="action-buttons">
+            {% if not user_unit %}
+            <a href="{{ url_for('military_unit.create') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle me-2"></i>Create Unit (20 Gold)
+            </a>
+            {% else %}
+            <a href="{{ url_for('military_unit.detail', unit_id=user_unit.id) }}" class="btn btn-success btn-lg">
+                <i class="fas fa-shield-alt me-2"></i>My Unit: {{ user_unit.name }}
+            </a>
+            {% endif %}
+            <a href="{{ url_for('main.leaderboards', tab='military_units') }}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-trophy me-2"></i>Leaderboards
+            </a>
+            <a href="{{ url_for('military_unit.bounties') }}" class="btn btn-outline-warning btn-lg">
+                <i class="fas fa-coins me-2"></i>Bounties
+            </a>
+        </div>
+
+        {% if units.items %}
+            {% for unit in units.items %}
+            <div class="unit-card {% if user_unit and user_unit.id == unit.id %}my-unit{% endif %}" onclick="window.location='{{ url_for('military_unit.detail', unit_id=unit.id) }}'">
+                <div class="unit-info">
+                    {% if unit.avatar %}
+                        <img src="{{ url_for('static', filename='avatars/units/unit_' + unit.id|string + '.png') }}" alt="{{ unit.name }}" class="unit-avatar">
+                    {% else %}
+                        <div class="unit-avatar-placeholder">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                    {% endif %}
+
+                    <div class="unit-details">
+                        <div class="unit-name">
+                            {{ unit.name }}
+                            {% if user_unit and user_unit.id == unit.id %}
+                            <span class="my-unit-badge">My Unit</span>
+                            {% endif %}
+                        </div>
+                        <div class="unit-country">
+                            {% if unit.country and unit.country.flag_code %}
+                            <img src="{{ url_for('static', filename='images/country-flags/' + unit.country.flag_code + '.png') }}" alt="{{ unit.country.name }}">
+                            {% endif %}
+                            {{ unit.country.name if unit.country else 'Unknown' }}
+                        </div>
+                        <div class="unit-meta">
+                            <div class="unit-stat">
+                                <i class="fas fa-users"></i>
+                                <span>{{ unit.member_count }}/50 members</span>
+                            </div>
+                            <div class="unit-stat">
+                                <i class="fas fa-crown"></i>
+                                <span>{{ unit.commander.username if unit.commander else 'Unknown' }}</span>
+                            </div>
+                            <div class="unit-stat">
+                                <i class="fas fa-file-contract"></i>
+                                <span>{{ unit.contracts_completed }} contracts</span>
+                            </div>
+                            <div class="unit-stat">
+                                <i class="fas fa-trophy"></i>
+                                <span>{{ unit.battles_won }} wins</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="unit-stats-sidebar">
+                        <div class="unit-damage">{{ "{:,.0f}".format(unit.total_damage) }}</div>
+                        <div class="unit-damage-label">Total Damage</div>
+                        {% if unit.review_count > 0 %}
+                        <div class="unit-rating">
+                            {% for i in range(5) %}
+                                {% if i < (unit.average_rating|int if unit.average_rating else 0) %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span style="color: rgba(255,255,255,0.5); font-size: 0.75rem;">({{ unit.review_count }})</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if units.pages > 1 %}
+            <div class="pagination-wrapper">
+                <nav aria-label="Unit pagination">
+                    <ul class="pagination">
+                        {% if units.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('military_unit.browse', page=units.prev_num) }}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        {% for page_num in units.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                            {% if page_num %}
+                                {% if page_num == units.page %}
+                                <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                                {% else %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('military_unit.browse', page=page_num) }}">{{ page_num }}</a></li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if units.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('military_unit.browse', page=units.next_num) }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-shield-alt"></i>
+                <h4>No Military Units Yet</h4>
+                <p>Be the first to create a military unit!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

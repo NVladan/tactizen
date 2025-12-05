@@ -1,0 +1,382 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ title }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+<style>
+    body {
+        background: #0a0e1a;
+    }
+
+    .dashboard-container {
+        padding: 2rem;
+        background: #0a0e1a;
+        min-height: calc(100vh - 60px);
+        margin-top: -1rem;
+    }
+
+    .main-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .thread-header {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .partner-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .partner-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        object-fit: cover;
+    }
+
+    .partner-name {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .thread-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .messages-container {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        max-height: 600px;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .message-item {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        align-items: flex-start;
+    }
+
+    .message-item.sent {
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .message-content-wrapper {
+        flex-grow: 1;
+        max-width: 70%;
+    }
+
+    .message-bubble {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        color: #ffffff;
+    }
+
+    .message-item.sent .message-bubble {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .message-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .message-sender {
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .message-time {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .message-text {
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.6;
+        word-wrap: break-word;
+    }
+
+    .reply-form {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        color: #ffffff;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(34, 197, 94, 0.5);
+        box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.15);
+        color: #ffffff;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        transition: all 0.3s ease;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #16a34a 0%, #15803d 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-outline-secondary {
+        color: rgba(255, 255, 255, 0.7);
+        border-color: rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.4);
+        color: #ffffff;
+    }
+
+    .btn-outline-danger {
+        color: #ef4444;
+        border-color: rgba(239, 68, 68, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-danger:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.5);
+        color: #ef4444;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    /* Custom scrollbar for messages container */
+    .messages-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .messages-container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb {
+        background: rgba(34, 197, 94, 0.3);
+        border-radius: 4px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(34, 197, 94, 0.5);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<div class="dashboard-container">
+    <div class="main-container">
+        <!-- Thread Header -->
+        <div class="thread-header">
+            <div class="partner-info">
+                <img src="{{ url_for('static', filename='uploads/avatars/' + partner.id|string + '.png') if partner.avatar else url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                     alt="{{ partner.username }}" class="partner-avatar">
+                <div>
+                    <h2 class="partner-name">{{ partner.username }}</h2>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-comments me-1"></i>Conversation
+                    </p>
+                </div>
+            </div>
+            <div class="thread-actions">
+                <a href="{{ url_for('main.messages') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Messages
+                </a>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteConversationModal">
+                    <i class="fas fa-trash me-2"></i>Delete Conversation
+                </button>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#blockUserModal">
+                    <i class="fas fa-ban me-2"></i>Block User
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="messages-container" id="messagesContainer">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="message-item {% if message.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+                    <img src="{{ url_for('static', filename='uploads/avatars/' + message.sender.id|string + '.png') if message.sender.avatar else url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                         alt="{{ message.sender.username }}" class="message-avatar">
+                    <div class="message-content-wrapper">
+                        <div class="message-meta">
+                            <span class="message-sender">{{ message.sender.username }}</span>
+                            <span class="message-time">
+                                <i class="fas fa-clock me-1"></i>{{ message.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                            </span>
+                        </div>
+                        <div class="message-bubble">
+                            <p class="message-text mb-0">{{ message.content }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-comments"></i>
+                    <h4 class="text-white mt-3">No Messages Yet</h4>
+                    <p>Start the conversation by sending a message below.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Reply Form -->
+        <div class="reply-form">
+            <h4 class="text-white mb-3">
+                <i class="fas fa-reply me-2"></i>Send Message
+            </h4>
+            <form method="POST" action="{{ url_for('main.send_message', recipient_id=partner.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <textarea class="form-control" name="content" rows="4"
+                              placeholder="Type your message here..." required></textarea>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Conversation Modal -->
+<div class="modal fade" id="deleteConversationModal" tabindex="-1" aria-labelledby="deleteConversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(34, 197, 94, 0.2);">
+                <h5 class="modal-title text-white" id="deleteConversationModalLabel">
+                    <i class="fas fa-trash me-2"></i>Delete Conversation
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <p class="mb-0">Are you sure you want to delete this conversation? This will hide all messages between you and this user.</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('main.delete_message_thread', partner_id=partner.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Conversation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-scroll to bottom of messages container
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.getElementById('messagesContainer');
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+});
+
+// Prevent body scroll when modal is closed
+document.getElementById('deleteConversationModal').addEventListener('hidden.bs.modal', function () {
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+});
+</script>
+
+{# Block User Confirmation Modal #}
+<div class="modal fade" id="blockUserModal" tabindex="-1" aria-labelledby="blockUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-danger">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-white" id="blockUserModalLabel">
+                    <i class="fas fa-ban me-2 text-danger"></i>Confirm Block User
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <p class="mb-0">Are you sure you want to block <strong class="text-danger">{{ partner.username }}</strong>?</p>
+                <p class="text-muted small mt-2 mb-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>They will not be able to send you messages or friend requests.
+                </p>
+            </div>
+            <div class="modal-footer border-danger">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('main.block_user', user_id=partner.id) }}" style="margin: 0; display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-ban me-1"></i>Block User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock main_layout %}

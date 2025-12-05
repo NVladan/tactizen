@@ -1,0 +1,1014 @@
+{% extends "layouts/base.html" %}
+{# No longer using WTForms quick_form for buy/sell, so remove wtf import #}
+{# {% import 'bootstrap_wtf.html' as wtf %} #}
+
+{% block title %}Marketplace - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .marketplace-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.7), rgba(15, 20, 25, 0.7)), url('{{ url_for("static", filename="images/buildings/marketplace.png") }}');
+        background-size: cover;
+        background-position: center;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .dropdown-select-wrapper {
+        position: relative;
+    }
+    .custom-dropdown-select {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        color: #fff;
+        border: 1.5px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        padding-right: 2.5rem;
+        font-size: 1.1rem;
+        min-height: 48px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .custom-dropdown-select:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 0.1rem #22c55e, 0 0 20px rgba(34, 197, 94, 0.4);
+    }
+    .dropdown-chevron {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #22c55e;
+        font-size: 1.2rem;
+    }
+    .market-item-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 18px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        margin-top: 1.5rem;
+    }
+    .market-resource-icon img, .market-resource-icon .resource-placeholder-icon {
+        display: block;
+        margin: 0 auto;
+    }
+    .market-resource-icon {
+        margin-bottom: 1rem;
+    }
+    .market-item-card .form-control-lg {
+        background: #0f1419;
+        color: #fff;
+        border: 1.5px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        font-size: 1.15rem;
+        min-height: 48px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .market-item-card .form-control-lg:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 0.1rem #22c55e, 0 0 20px rgba(34, 197, 94, 0.4);
+    }
+    .market-item-card .btn-lg {
+        font-size: 1.1rem;
+        border-radius: 8px;
+    }
+    .market-item-card .btn-success {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border-color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+    .market-item-card .btn-success:hover {
+        background: linear-gradient(90deg, #16a34a 0%, #15803d 100%);
+        box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+    }
+    .market-item-card .btn-warning {
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+    }
+    .market-item-card .btn-warning:hover {
+        box-shadow: 0 0 25px rgba(251, 191, 36, 0.5);
+    }
+
+    /* Category Tabs */
+    .category-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .category-tab {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1.5px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    .category-tab:hover {
+        background: rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.4);
+        color: #22c55e;
+    }
+    .category-tab.active {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        border-color: #22c55e;
+        color: #fff;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+    }
+
+    /* Resource Grid */
+    .resource-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .resource-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1.5px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .resource-card:hover {
+        border-color: #22c55e;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        transform: translateY(-2px);
+    }
+    .resource-card.selected {
+        border-color: #22c55e;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    }
+    .resource-card img {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #23283a;
+        border: 1px solid #3b4257;
+    }
+    .resource-card .resource-placeholder-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #23283a;
+        border-radius: 8px;
+        border: 1px solid #3b4257;
+        color: #aaa;
+        font-size: 1.5rem;
+    }
+    .resource-card .resource-name {
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 500;
+        word-wrap: break-word;
+        max-width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <!-- Tab Navigation Header -->
+        <ul class="nav nav-tabs mb-4" id="marketTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" href="#"><i class="fas fa-store me-1"></i>Marketplace</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('company.job_market') }}"><i class="fas fa-briefcase me-1"></i>Job Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.currency_market', country_slug=country.slug) }}"><i class="fas fa-money-bill-wave me-1"></i>Currency Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.zen_market') }}"><i class="fas fa-coins me-1"></i>Zen Market</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('marketplace.marketplace_page') }}"><i class="fas fa-gem me-1"></i>NFT Market</a>
+          </li>
+        </ul>
+        <!-- Marketplace Header -->
+        <div class="marketplace-header">
+            <div class="text-center">
+                <h2 class="mb-3">Marketplace</h2>
+                <p class="text-muted mb-2">Buy and sell goods, find jobs, and invest in the economy.</p>
+                {% set storage_count = current_user.get_total_inventory_count() %}
+                {% set storage_limit = current_user.USER_STORAGE_LIMIT %}
+                {% set storage_pct = (storage_count / storage_limit * 100) if storage_limit > 0 else 0 %}
+                <div class="storage-indicator mx-auto" style="max-width: 400px;">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span style="color: {% if storage_pct >= 90 %}#ef4444{% elif storage_pct >= 75 %}#fbbf24{% else %}#10b981{% endif %};">
+                            <i class="fas fa-box me-1"></i>Storage: {{ storage_count }} / {{ storage_limit }}
+                        </span>
+                        <span class="text-muted">{{ "%.0f"|format(storage_pct) }}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px; background-color: rgba(255,255,255,0.1);">
+                        <div class="progress-bar" role="progressbar"
+                             style="width: {{ storage_pct }}%; background-color: {% if storage_pct >= 90 %}#ef4444{% elif storage_pct >= 75 %}#fbbf24{% else %}#10b981{% endif %};"
+                             aria-valuenow="{{ storage_count }}" aria-valuemin="0" aria-valuemax="{{ storage_limit }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Market Selector Form and Market Item Display (NEW) -->
+        <div class="market-selector-area mt-4">
+            <!-- Market Selector Form -->
+            <div class="training-header" style="margin-bottom: 1.5rem;">
+                <form method="GET" id="marketSelectorForm" class="p-3" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border-radius: 16px; border: 1px solid rgba(34, 197, 94, 0.2); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
+                {% if selected_market_item %}
+                    <!-- Selected Resource View - Horizontal Layout -->
+                    <div class="d-flex align-items-center justify-content-between gap-3" style="padding: 1rem 0;">
+                        <!-- Resource Display with Back Button -->
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: rgba(34, 197, 94, 0.1); border: 2px solid rgba(34, 197, 94, 0.3); border-radius: 12px;">
+                                {% if selected_market_item.resource.icon_path %}
+                                    <img src="{{ url_for('static', filename=selected_market_item.resource.icon_path) }}" alt="{{ selected_market_item.resource.name }}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px;">
+                                {% else %}
+                                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: #23283a; border-radius: 8px; color: #aaa; font-size: 1.5rem;">?</div>
+                                {% endif %}
+                                <span style="color: #22c55e; font-size: 1.2rem; font-weight: 600;">{{ selected_market_item.resource.name }}</span>
+                            </div>
+                            <a href="{{ url_for('main.marketplace', country_slug=country.slug) }}" class="btn btn-secondary" style="height: 48px; display: flex; align-items: center; white-space: nowrap;">
+                                <i class="fas fa-arrow-left me-2"></i>Change
+                            </a>
+                        </div>
+
+                        <!-- Filters -->
+                        <div class="d-flex align-items-center gap-3">
+                            <div id="countryFilterContainer" style="min-width: 250px;">
+                                <label for="countrySelectorMarket" class="form-label" style="margin-bottom: 0.25rem; font-size: 0.875rem; color: rgba(255,255,255,0.7);">Country</label>
+                                <div class="dropdown-select-wrapper position-relative">
+                                    <select name="country_select_dummy" id="countrySelectorMarket" class="form-select custom-dropdown-select" style="min-height: 48px;">
+                                        {% for c in all_countries %}
+                                            <option value="{{ c.slug }}" {% if c.slug == country.slug %}selected{% endif %}>{{ c.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <span class="dropdown-chevron"><i class="fas fa-chevron-down"></i></span>
+                                </div>
+                            </div>
+                            {% if show_quality_filter %}
+                            <div id="qualityFilterContainer" style="min-width: 180px;">
+                                <label for="qualitySelectorMarket" class="form-label" style="margin-bottom: 0.25rem; font-size: 0.875rem; color: rgba(255,255,255,0.7);">Quality</label>
+                                <div class="dropdown-select-wrapper position-relative">
+                                    <select name="quality_select" id="qualitySelectorMarket" class="form-select custom-dropdown-select" style="min-height: 48px;">
+                                        <option value="">All</option>
+                                        <option value="1" {% if selected_quality == 1 %}selected{% endif %}>★</option>
+                                        <option value="2" {% if selected_quality == 2 %}selected{% endif %}>★★</option>
+                                        <option value="3" {% if selected_quality == 3 %}selected{% endif %}>★★★</option>
+                                        <option value="4" {% if selected_quality == 4 %}selected{% endif %}>★★★★</option>
+                                        <option value="5" {% if selected_quality == 5 %}selected{% endif %}>★★★★★</option>
+                                    </select>
+                                    <span class="dropdown-chevron"><i class="fas fa-chevron-down"></i></span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Resource Selection View -->
+                    <div class="row g-3">
+                        <div class="col-md-12" id="resourceSelectorContainer">
+                            <!-- Resource Selection Interface -->
+                            <label class="form-label">Resource Category & Selection</label>
+
+                            <!-- Category Tabs -->
+                            <div class="category-tabs">
+                                <div class="category-tab" data-category="ALL">All Resources</div>
+                                {% for category, choices in grouped_resource_choices %}
+                                    <div class="category-tab" data-category="{{ category }}">{{ category }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Resource Grid -->
+                            <div class="resource-grid" id="resourceGrid">
+                                {% for category, choices in grouped_resource_choices %}
+                                    {% for r_id, r_name, r_icon in choices %}
+                                        {% set r_slug = resource_slugs.get(r_id, '') %}
+                                        <div class="resource-card"
+                                             data-resource-slug="{{ r_slug }}"
+                                             data-category="{{ category }}"
+                                             title="{{ r_name }}">
+                                            {% if r_icon %}
+                                                <img src="{{ url_for('static', filename=r_icon) }}" alt="{{ r_name }}">
+                                            {% else %}
+                                                <div class="resource-placeholder-icon">?</div>
+                                            {% endif %}
+                                            <div class="resource-name">{{ r_name }}</div>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+            </div>
+            <hr class="bg-secondary">
+
+            <!-- Market Item Display -->
+            {% if selected_market_item %}
+                {% set item = selected_market_item %}
+                <div class="row g-4">
+                    <!-- Left Column: Market Item Card -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 shadow-lg border-0 market-item-card">
+                            <div class="card-body d-flex flex-column align-items-center p-4">
+                                <div class="market-resource-icon mb-3">
+                                    {% if item.resource.icon_path %}
+                                        <img src="{{ url_for('static', filename=item.resource.icon_path) }}" alt="{{ item.resource.name }}" style="width: 80px; height: 80px; object-fit: contain; border-radius: 16px; background: #23283a; border: 2px solid #3b4257; box-shadow: 0 2px 12px #0002;">
+                                    {% else %}
+                                        <span class="resource-placeholder-icon" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: #23283a; border-radius: 16px; border: 2px solid #3b4257; font-size: 2.5rem; color: #aaa;">?</span>
+                                    {% endif %}
+                                </div>
+                                <div class="w-100 d-flex align-items-center justify-content-between mb-2">
+                                    <h4 class="card-title mb-0 flex-grow-1 text-white">{{ item.resource.name }}</h4>
+                                    <span class="badge bg-info ms-2" title="Price Level">Lvl: {{ item.price_level|default(0)|int }}</span>
+                                </div>
+                                <div class="w-100 d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fs-5">Buy: <strong class="text-danger">{{ "%.2f"|format(item.buy_price) }}</strong> {{ country.currency_code }}</span>
+                                    {% if price_change %}
+                                    <span class="fs-6 {% if price_change.direction == 'up' %}text-success{% elif price_change.direction == 'down' %}text-danger{% else %}text-muted{% endif %}">
+                                        {% if price_change.direction == 'up' %}
+                                            <i class="fas fa-arrow-up"></i>
+                                        {% elif price_change.direction == 'down' %}
+                                            <i class="fas fa-arrow-down"></i>
+                                        {% else %}
+                                            <i class="fas fa-minus"></i>
+                                        {% endif %}
+                                        {{ "%.2f"|format(price_change.percent|abs) }}%
+                                    </span>
+                                    {% endif %}
+                                    <span class="fs-5">Sell: <strong class="text-success">{{ "%.2f"|format(item.sell_price) }}</strong> {{ country.currency_code }}</span>
+                                </div>
+                                {% set vol_per_level = item.volume_per_level|int or 200 %}
+                                {% set progress = item.progress_within_level|int or 0 %}
+                                {% set price_level = item.price_level|int or 0 %}
+                                {% set progress_percent = 0.0 %}
+                                {% set bar_color = 'bg-secondary' %}
+                                {% if vol_per_level > 0 %}
+                                    {% set progress_raw = (progress * 100.0 / vol_per_level) %}
+                                    {% set progress_clamped_list = [0.0, progress_raw, 100.0]|sort %}
+                                    {% set progress_percent = progress_clamped_list[1]|round(1) %}
+                                {% endif %}
+                                {% if price_level < 0 %}{% set bar_color = 'bg-success' %}{% elif price_level > 0 %}{% set bar_color = 'bg-danger' %}{% else %}{% set bar_color = 'bg-primary' %}{% endif %}
+                                <div class="progress mb-2 w-100" style="height: 10px; background: #23283a;">
+                                    <div class="progress-bar {{ bar_color }}" role="progressbar" style="width: {{ progress_percent }}%;" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <p class="text-muted small text-center mb-3 w-100">
+                                    {% set purchases_needed = item.volume_to_next_level|int %}
+                                    {% set current_progress_int = item.progress_within_level|int %}
+                                    {% set sales_needed = current_progress_int + 1 %}
+                                    {% set sales_needed = 1 if sales_needed < 1 else sales_needed %}
+                                    {% set sales_needed_text = sales_needed ~ " sales until price decreases" %}
+                                    {{ purchases_needed }} purchases until price increases / {{ sales_needed_text }}.
+                                </p>
+                                <div class="w-100 d-flex flex-column flex-md-row gap-2 mt-2">
+                                    <form action="{{ url_for('main.market_buy', slug=country.slug, resource_id=item.resource_id) }}" method="POST" class="flex-grow-1 d-flex gap-2" novalidate>
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {{ buy_form.hidden_tag() }}
+                                        <input type="hidden" name="quality" value="{{ item.quality }}">
+                                        <input type="number" name="quantity" class="form-control form-control-lg" placeholder="Qty to Buy" step="1" min="1" required aria-label="Quantity to buy">
+                                        <button type="submit" name="submit" class="btn btn-success btn-lg px-4">Buy</button>
+                                    </form>
+                                    <form action="{{ url_for('main.market_sell', slug=country.slug, resource_id=item.resource_id) }}" method="POST" class="flex-grow-1 d-flex gap-2" novalidate>
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {{ sell_form.hidden_tag() }}
+                                        <input type="hidden" name="quality" value="{{ item.quality }}">
+                                        <input type="number" name="quantity" class="form-control form-control-lg" placeholder="Qty to Sell" step="1" min="1" required aria-label="Quantity to sell">
+                                        <button type="submit" name="submit" class="btn btn-warning btn-lg px-4">Sell</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Price History Graph -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 shadow-lg border-0 market-item-card">
+                            <div class="card-body p-4">
+                                <h5 class="text-white mb-3">30-Day Price History</h5>
+                                <canvas id="priceHistoryChart" style="max-height: 400px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                {% if country %}
+                    <p class="text-center text-muted mt-4">Please select a resource to view market details.</p>
+                {% else %}
+                    <p class="text-center text-muted mt-4">Please select a country.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+        <!-- End Market Selector Area -->
+
+        {# --- Modal for Buy/Sell Feedback --- #}
+        {% if message %}
+        <div class="modal fade" id="marketMessageModal" tabindex="-1" aria-labelledby="marketMessageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-white border-0 shadow">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title" id="marketMessageModalLabel">
+                            <i class="fas fa-info-circle me-2"></i>Market Notification
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">{{ message }}</p>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Buy Confirmation Modal -->
+<div class="modal fade" id="buyConfirmModal" tabindex="-1" aria-labelledby="buyConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-gray-200" id="buyConfirmModalLabel">
+                    <i class="fas fa-shopping-cart me-2"></i>Confirm Purchase
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="buyBreakdown"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-success" id="confirmBuyBtn">Confirm Purchase</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sell Confirmation Modal -->
+<div class="modal fade" id="sellConfirmModal" tabindex="-1" aria-labelledby="sellConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-gray-200" id="sellConfirmModalLabel">
+                    <i class="fas fa-coins me-2"></i>Confirm Sale
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="sellBreakdown"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-warning" id="confirmSellBtn">Confirm Sale</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="background: #1f2937;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger" id="errorModalLabel">
+                    <i class="fas fa-exclamation-circle me-2"></i>Error
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-gray-200 mb-0" id="errorMessage"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} {# Include scripts from base.html #}
+{# Add Chart.js and chartjs-chart-financial for candlestick #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.0/dist/chartjs-chart-financial.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Helper function to show error modal
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        errorModal.show();
+    }
+
+    const countrySelect = document.getElementById('countrySelectorMarket');
+    const qualitySelect = document.getElementById('qualitySelectorMarket');
+    const resourceGrid = document.getElementById('resourceGrid');
+    const categoryTabs = document.querySelectorAll('.category-tab');
+    const resourceCards = document.querySelectorAll('.resource-card');
+
+    console.log('Resource cards found:', resourceCards.length);
+    console.log('Category tabs found:', categoryTabs.length);
+
+    // Store initial values to check if they actually changed
+    const initialCountrySlug = countrySelect ? countrySelect.value : '{{ country.slug }}';
+    {% if current_user.current_region and current_user.current_region.original_owner %}
+    const userLocationSlug = '{{ current_user.current_region.original_owner.slug }}';
+    {% else %}
+    const userLocationSlug = initialCountrySlug;
+    {% endif %}
+    let initialResourceSlug = '{{ resource_slug if resource_slug else "" }}';
+    const initialQuality = qualitySelect ? qualitySelect.value : '';
+    let currentCategory = 'ALL';
+
+    // Find initial selected resource and category
+    {% if selected_market_item %}
+        // Already have a selected resource from server
+        const selectedCard = document.querySelector('.resource-card[data-resource-slug="{{ resource_slug }}"]');
+        if (selectedCard) {
+            currentCategory = selectedCard.dataset.category;
+        }
+    {% endif %}
+
+    // Set initial active category tab
+    categoryTabs.forEach(function(tab) {
+        if (tab.dataset.category === currentCategory) {
+            tab.classList.add('active');
+        }
+    });
+
+    // If no resource selected, show all by default
+    if (!initialResourceSlug && categoryTabs.length > 0) {
+        categoryTabs[0].classList.add('active');
+    }
+
+    // Filter resources by category
+    function filterResourcesByCategory(category) {
+        resourceCards.forEach(function(card) {
+            if (category === 'ALL' || card.dataset.category === category) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // Category tab click handler
+    if (categoryTabs && categoryTabs.length > 0) {
+        categoryTabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const category = this.dataset.category;
+                currentCategory = category;
+
+                // Update active tab
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Filter resources
+                filterResourcesByCategory(category);
+            });
+        });
+    }
+
+    // Resource card click handler
+    if (resourceCards && resourceCards.length > 0) {
+        console.log('Attaching click handlers to', resourceCards.length, 'resource cards');
+        resourceCards.forEach(function(card) {
+            card.addEventListener('click', function(e) {
+                console.log('Resource card clicked:', this.dataset.resourceSlug);
+                const resourceSlug = this.dataset.resourceSlug;
+
+                // Update selected state
+                resourceCards.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+
+                // Determine which country to use
+                let targetCountrySlug = initialCountrySlug;
+
+                // If no resource was previously selected, use user's current location
+                if (!initialResourceSlug && userLocationSlug) {
+                    targetCountrySlug = userLocationSlug;
+                }
+
+                console.log('Navigating to:', targetCountrySlug, resourceSlug);
+
+                // Navigate to market
+                navigateToMarket(resourceSlug, targetCountrySlug);
+            });
+        });
+    } else {
+        console.log('No resource cards found!');
+    }
+
+    // Initialize filter based on current category
+    if (resourceGrid && resourceCards.length > 0) {
+        filterResourcesByCategory(currentCategory);
+    }
+
+    function navigateToMarket(resourceSlugOverride, countrySlugOverride) {
+        let selectedCountrySlug = countrySlugOverride || (countrySelect ? countrySelect.value : initialCountrySlug);
+        const selectedResourceSlug = resourceSlugOverride !== undefined ? resourceSlugOverride : initialResourceSlug;
+        const selectedQuality = qualitySelect && qualitySelect.value ? qualitySelect.value : '';
+
+        // Prevent navigation if nothing actually changed (skip quality check if selector doesn't exist)
+        const qualityChanged = qualitySelect ? selectedQuality !== initialQuality : false;
+        if (selectedCountrySlug === initialCountrySlug && selectedResourceSlug === initialResourceSlug && !qualityChanged) {
+            return;
+        }
+
+        // Navigate only if country is selected
+        if (selectedCountrySlug) {
+            let url = `/market/${selectedCountrySlug}`;
+            // Append resource slug only if it's selected (not empty)
+            if (selectedResourceSlug) {
+                url += `/${selectedResourceSlug}`;
+            }
+            // Add quality as query parameter if selected and selector exists
+            if (selectedQuality && qualitySelect) {
+                url += `?quality=${selectedQuality}`;
+            }
+            window.location.href = url;
+        }
+    }
+
+    if (countrySelect) {
+        countrySelect.addEventListener('change', function() { navigateToMarket(); });
+     }
+    if (qualitySelect) {
+         qualitySelect.addEventListener('change', function() { navigateToMarket(); });
+     }
+    // --- Show modal if message is present ---
+    var marketMessageModal = document.getElementById('marketMessageModal');
+    if (marketMessageModal) {
+        var modal = new bootstrap.Modal(marketMessageModal);
+        modal.show();
+     }
+
+    // --- Handle Buy/Sell Confirmation ---
+    let pendingBuyData = null;
+    let pendingSellData = null;
+    let isConfirming = false; // Flag to bypass event listener when confirming
+
+    // Intercept buy form submission
+    document.querySelectorAll('form[action*="/buy/"]').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            // Allow submission if confirming
+            if (isConfirming) {
+                isConfirming = false; // Reset flag
+                return; // Don't prevent default, let form submit
+            }
+
+            e.preventDefault();
+            const formData = new FormData(form);
+            const quantity = parseInt(formData.get('quantity'));
+
+            if (!quantity || quantity <= 0) {
+                showError('Please enter a valid quantity');
+                return;
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                pendingBuyData = {form: form, data: data};
+
+                let breakdownHTML = `<h6 class="text-white mb-3">Purchase ${data.quantity} ${data.resource_name}</h6><div class="mb-3">`;
+
+                if (data.breakdown.length === 1) {
+                    const [qty, price] = data.breakdown[0];
+                    breakdownHTML += `<p class="text-gray-300">${qty} units at ${price.toFixed(2)} ${data.currency_code} each = <strong>${(qty * price).toFixed(2)} ${data.currency_code}</strong></p>`;
+                } else {
+                    breakdownHTML += `<p class="text-warning mb-2"><i class="fas fa-info-circle"></i> Purchase spans multiple price levels:</p>`;
+                    data.breakdown.forEach((item) => {
+                        const [qty, price] = item;
+                        breakdownHTML += `<p class="text-gray-300 mb-1">• ${qty} units at ${price.toFixed(2)} ${data.currency_code} = ${(qty * price).toFixed(2)} ${data.currency_code}</p>`;
+                    });
+                }
+
+                breakdownHTML += `</div><div class="border-top border-secondary pt-3 mt-3"><h5 class="text-success">Total: ${data.total_cost.toFixed(2)} ${data.currency_code}</h5></div>`;
+                document.getElementById('buyBreakdown').innerHTML = breakdownHTML;
+
+                const modal = new bootstrap.Modal(document.getElementById('buyConfirmModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('An error occurred. Please try again.');
+            });
+        });
+    });
+
+    // Intercept sell form submission
+    document.querySelectorAll('form[action*="/sell/"]').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            // Allow submission if confirming
+            if (isConfirming) {
+                isConfirming = false; // Reset flag
+                return; // Don't prevent default, let form submit
+            }
+
+            e.preventDefault();
+            const formData = new FormData(form);
+            const quantity = parseInt(formData.get('quantity'));
+
+            if (!quantity || quantity <= 0) {
+                showError('Please enter a valid quantity');
+                return;
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                pendingSellData = {form: form, data: data};
+
+                let breakdownHTML = `<h6 class="text-white mb-3">Sell ${data.quantity} ${data.resource_name}</h6><div class="mb-3">`;
+
+                if (data.breakdown.length === 1) {
+                    const [qty, price] = data.breakdown[0];
+                    breakdownHTML += `<p class="text-gray-300">${qty} units at ${price.toFixed(2)} ${data.currency_code} each = <strong>${(qty * price).toFixed(2)} ${data.currency_code}</strong></p>`;
+                } else {
+                    breakdownHTML += `<p class="text-warning mb-2"><i class="fas fa-info-circle"></i> Sale spans multiple price levels:</p>`;
+                    data.breakdown.forEach((item) => {
+                        const [qty, price] = item;
+                        breakdownHTML += `<p class="text-gray-300 mb-1">• ${qty} units at ${price.toFixed(2)} ${data.currency_code} = ${(qty * price).toFixed(2)} ${data.currency_code}</p>`;
+                    });
+                }
+
+                breakdownHTML += `</div><div class="border-top border-secondary pt-3 mt-3"><h5 class="text-success">Total: ${data.total_proceeds.toFixed(2)} ${data.currency_code}</h5></div>`;
+                document.getElementById('sellBreakdown').innerHTML = breakdownHTML;
+
+                const modal = new bootstrap.Modal(document.getElementById('sellConfirmModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('An error occurred. Please try again.');
+            });
+        });
+    });
+
+    // Confirm buy button
+    document.getElementById('confirmBuyBtn').addEventListener('click', function() {
+        if (!pendingBuyData) return;
+
+        const {form, data} = pendingBuyData;
+
+        // Add hidden inputs for confirmation
+        const confirmedInput = document.createElement('input');
+        confirmedInput.type = 'hidden';
+        confirmedInput.name = 'confirmed';
+        confirmedInput.value = 'true';
+        form.appendChild(confirmedInput);
+
+        const priceLevelInput = document.createElement('input');
+        priceLevelInput.type = 'hidden';
+        priceLevelInput.name = 'expected_price_level';
+        priceLevelInput.value = data.current_price_level;
+        form.appendChild(priceLevelInput);
+
+        // Set flag to bypass event listener
+        isConfirming = true;
+
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('buyConfirmModal'));
+        if (modal) modal.hide();
+
+        // Submit the form using requestSubmit which triggers the submit event
+        if (form.requestSubmit) {
+            form.requestSubmit();
+        } else {
+            // Fallback for older browsers
+            form.submit();
+        }
+    });
+
+    // Confirm sell button
+    document.getElementById('confirmSellBtn').addEventListener('click', function() {
+        if (!pendingSellData) return;
+
+        const {form, data} = pendingSellData;
+
+        // Add hidden inputs for confirmation
+        const confirmedInput = document.createElement('input');
+        confirmedInput.type = 'hidden';
+        confirmedInput.name = 'confirmed';
+        confirmedInput.value = 'true';
+        form.appendChild(confirmedInput);
+
+        const priceLevelInput = document.createElement('input');
+        priceLevelInput.type = 'hidden';
+        priceLevelInput.name = 'expected_price_level';
+        priceLevelInput.value = data.current_price_level;
+        form.appendChild(priceLevelInput);
+
+        // Set flag to bypass event listener
+        isConfirming = true;
+
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('sellConfirmModal'));
+        if (modal) modal.hide();
+
+        // Submit the form using requestSubmit which triggers the submit event
+        if (form.requestSubmit) {
+            form.requestSubmit();
+        } else {
+            // Fallback for older browsers
+            form.submit();
+        }
+    });
+
+    // Price History Chart (Candlestick chart with OHLC data)
+    {% if selected_market_item and price_history_data %}
+    const ctx = document.getElementById('priceHistoryChart');
+    if (ctx) {
+        const rawCandleData = {{ price_history_data.candlestick | tojson }};
+        console.log('Raw price history data:', rawCandleData);
+        console.log('Data points:', rawCandleData.length);
+
+        // Convert data to proper format for candlestick chart
+        const candleData = rawCandleData.map(d => ({
+            x: d.x,
+            o: parseFloat(d.o),
+            h: parseFloat(d.h),
+            l: parseFloat(d.l),
+            c: parseFloat(d.c)
+        }));
+
+        console.log('Converted candle data:', candleData);
+        console.log('Chart.js version:', Chart.version);
+
+        try {
+            // Create OHLC bar chart (like candlestick but with bars)
+            const barData = candleData.map(d => {
+                return {
+                    x: d.x,
+                    y: [d.o, d.h, d.l, d.c]  // [open, high, low, close]
+                };
+            });
+
+            console.log('Bar chart data:', barData);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    datasets: [
+                        {
+                            label: 'High',
+                            data: candleData.map(d => ({x: d.x, y: d.h})),
+                            backgroundColor: 'rgba(34, 197, 94, 0.3)',
+                            borderColor: '#22c55e',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        },
+                        {
+                            label: 'Low',
+                            data: candleData.map(d => ({x: d.x, y: d.l})),
+                            backgroundColor: 'rgba(239, 68, 68, 0.3)',
+                            borderColor: '#ef4444',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        },
+                        {
+                            label: 'Close',
+                            data: candleData.map(d => ({x: d.x, y: d.c})),
+                            backgroundColor: 'rgba(107, 114, 128, 0.3)',
+                            borderColor: '#6b7280',
+                            borderWidth: 1,
+                            barPercentage: 0.8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#9ca3af'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#22c55e',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const candle = candleData[dataIndex];
+                                    if (!candle) return '';
+
+                                    return [
+                                        'Open: ' + candle.o.toFixed(2) + ' {{ country.currency_code }}',
+                                        'High: ' + candle.h.toFixed(2) + ' {{ country.currency_code }}',
+                                        'Low: ' + candle.l.toFixed(2) + ' {{ country.currency_code }}',
+                                        'Close: ' + candle.c.toFixed(2) + ' {{ country.currency_code }}'
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            ticks: {
+                                color: '#9ca3af',
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    return value.toFixed(2) + ' {{ country.currency_code }}';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error creating price history chart:', error);
+            console.error('Error details:', error.message, error.stack);
+
+            // Show error message to user
+            const chartContainer = ctx.parentElement;
+            if (chartContainer) {
+                chartContainer.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 2rem;">Error loading price chart. Please refresh the page.</p>';
+            }
+        }
+    } else {
+        console.error('Canvas element not found!');
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

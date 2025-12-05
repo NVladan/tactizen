@@ -1,0 +1,781 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Ministry of Finance - {{ country.name }} - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .finance-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .page-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(251, 191, 36, 0.15);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fbbf24;
+        font-size: 1.25rem;
+    }
+
+    .page-title {
+        color: #fbbf24;
+        font-size: 1.5rem;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    .page-subtitle img {
+        height: 14px;
+        border-radius: 2px;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .action-btn-primary {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: #000;
+    }
+
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: #000;
+        transform: translateY(-1px);
+    }
+
+    .action-btn-secondary {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+    }
+
+    .action-btn-secondary:hover {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-box {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-box.gold { border-color: rgba(251, 191, 36, 0.3); }
+    .stat-box.currency { border-color: rgba(34, 197, 94, 0.3); }
+    .stat-box.military { border-color: rgba(239, 68, 68, 0.3); }
+    .stat-box.pending { border-color: rgba(59, 130, 246, 0.3); }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.gold { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+    .stat-icon.currency { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .stat-icon.military { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .stat-icon.pending { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+    .stat-content { flex: 1; min-width: 0; }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .content-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Section Cards */
+    .section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #fbbf24;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+    }
+
+    .section-title i { font-size: 0.9rem; }
+
+    /* Tax Card */
+    .tax-card {
+        background: rgba(251, 191, 36, 0.05);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .tax-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .tax-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(251, 191, 36, 0.15);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fbbf24;
+    }
+
+    .tax-name {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .tax-description {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+    }
+
+    .tax-rate {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fbbf24;
+    }
+
+    /* Treasury Card */
+    .treasury-card {
+        background: rgba(34, 197, 94, 0.05);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .treasury-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+    }
+
+    .treasury-row:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .treasury-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    .treasury-value {
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .treasury-value.gold {
+        color: #fbbf24;
+    }
+
+    .treasury-value.currency {
+        color: #22c55e;
+    }
+
+    .treasury-value.reserved {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Minister Card */
+    .minister-card {
+        background: rgba(251, 191, 36, 0.05);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .minister-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        border: 2px solid rgba(251, 191, 36, 0.3);
+        object-fit: cover;
+    }
+
+    .minister-info {
+        flex: 1;
+    }
+
+    .minister-name {
+        font-weight: 600;
+        color: #fff;
+        font-size: 1rem;
+    }
+
+    .minister-name a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .minister-name a:hover {
+        color: #fbbf24;
+    }
+
+    .minister-role {
+        color: #fbbf24;
+        font-size: 0.8rem;
+    }
+
+    .minister-empty {
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+    }
+
+    /* Law Card */
+    .law-card {
+        background: rgba(59, 130, 246, 0.05);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .law-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .law-type {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .law-badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .law-badge.voting {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .law-badge.passed {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .law-detail {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .law-votes {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .vote-count {
+        font-size: 0.8rem;
+    }
+
+    .vote-count.yes {
+        color: #22c55e;
+    }
+
+    .vote-count.no {
+        color: #ef4444;
+    }
+
+    .law-proposer {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        opacity: 0.3;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Powers List */
+    .powers-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .powers-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(251, 191, 36, 0.05);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+    }
+
+    .powers-list li i {
+        color: #fbbf24;
+        width: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="finance-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-title-group">
+            <div class="page-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div>
+                <h1 class="page-title">Ministry of Finance</h1>
+                <div class="page-subtitle">
+                    {% if country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' + country.flag_code + '.png') }}" alt="{{ country.name }}">
+                    {% endif %}
+                    {{ country.name }}
+                </div>
+            </div>
+        </div>
+        {% if is_president or is_finance_minister %}
+        <div class="header-actions">
+            <a href="{{ url_for('government.propose_law') }}" class="action-btn action-btn-primary">
+                <i class="fas fa-plus"></i> Propose Law
+            </a>
+            <a href="{{ url_for('main.country', slug=country.slug) }}" class="action-btn action-btn-secondary">
+                <i class="fas fa-landmark"></i> Country Overview
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-box gold">
+            <div class="stat-icon gold">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ "%.2f"|format(treasury_gold) }}</div>
+                <div class="stat-label">Treasury Gold</div>
+            </div>
+        </div>
+        <div class="stat-box currency">
+            <div class="stat-icon currency">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ "%.2f"|format(treasury_currency) }}</div>
+                <div class="stat-label">Treasury {{ country.currency_code }}</div>
+            </div>
+        </div>
+        <div class="stat-box military">
+            <div class="stat-icon military">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ "%.2f"|format(military_budget_currency) }}</div>
+                <div class="stat-label">Military Budget</div>
+            </div>
+        </div>
+        <div class="stat-box pending">
+            <div class="stat-icon pending">
+                <i class="fas fa-gavel"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ pending_laws|length }}</div>
+                <div class="stat-label">Pending Laws</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Current Tax Rates -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-percentage"></i>
+                    Current Tax Rates
+                </div>
+
+                <div class="tax-card">
+                    <div class="tax-info">
+                        <div class="tax-icon">
+                            <i class="fas fa-ship"></i>
+                        </div>
+                        <div>
+                            <div class="tax-name">Import Tax</div>
+                            <div class="tax-description">Tax on imported goods from other countries</div>
+                        </div>
+                    </div>
+                    <div class="tax-rate">{{ "%.1f"|format(tax_rates.import_tax|float) }}%</div>
+                </div>
+
+                <div class="tax-card">
+                    <div class="tax-info">
+                        <div class="tax-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div>
+                            <div class="tax-name">VAT Tax</div>
+                            <div class="tax-description">Value-added tax on goods and services</div>
+                        </div>
+                    </div>
+                    <div class="tax-rate">{{ "%.1f"|format(tax_rates.vat_tax|float) }}%</div>
+                </div>
+
+                <div class="tax-card">
+                    <div class="tax-info">
+                        <div class="tax-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div>
+                            <div class="tax-name">Work Tax</div>
+                            <div class="tax-description">Tax on wages from employment</div>
+                        </div>
+                    </div>
+                    <div class="tax-rate">{{ "%.1f"|format(tax_rates.work_tax|float) }}%</div>
+                </div>
+            </div>
+
+            <!-- Treasury Details -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-vault"></i>
+                    Treasury Details
+                </div>
+
+                <div class="treasury-card">
+                    <div class="treasury-row">
+                        <span class="treasury-label"><i class="fas fa-coins me-2" style="color: #fbbf24;"></i>Total Gold</span>
+                        <span class="treasury-value gold">{{ "%.2f"|format(treasury_gold) }} Gold</span>
+                    </div>
+                    <div class="treasury-row">
+                        <span class="treasury-label"><i class="fas fa-lock me-2" style="color: rgba(255,255,255,0.4);"></i>Reserved Gold</span>
+                        <span class="treasury-value reserved">{{ "%.2f"|format(reserved_gold) }} Gold</span>
+                    </div>
+                    <div class="treasury-row">
+                        <span class="treasury-label"><i class="fas fa-check-circle me-2" style="color: #22c55e;"></i>Available Gold</span>
+                        <span class="treasury-value gold">{{ "%.2f"|format(available_gold) }} Gold</span>
+                    </div>
+                </div>
+
+                <div class="treasury-card">
+                    <div class="treasury-row">
+                        <span class="treasury-label"><i class="fas fa-money-bill-wave me-2" style="color: #22c55e;"></i>Total {{ country.currency_code }}</span>
+                        <span class="treasury-value currency">{{ "%.2f"|format(treasury_currency) }} {{ country.currency_code }}</span>
+                    </div>
+                    <div class="treasury-row">
+                        <span class="treasury-label"><i class="fas fa-lock me-2" style="color: rgba(255,255,255,0.4);"></i>Reserved {{ country.currency_code }}</span>
+                        <span class="treasury-value reserved">{{ "%.2f"|format(reserved_currency) }} {{ country.currency_code }}</span>
+                    </div>
+                    <div class="treasury-row">
+                        <span class="treasury-label"><i class="fas fa-check-circle me-2" style="color: #22c55e;"></i>Available {{ country.currency_code }}</span>
+                        <span class="treasury-value currency">{{ "%.2f"|format(available_currency) }} {{ country.currency_code }}</span>
+                    </div>
+                </div>
+
+                <div class="treasury-card" style="border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05);">
+                    <div class="treasury-row">
+                        <span class="treasury-label"><i class="fas fa-shield-alt me-2" style="color: #ef4444;"></i>Military Budget</span>
+                        <span class="treasury-value" style="color: #ef4444;">{{ "%.2f"|format(military_budget_currency) }} {{ country.currency_code }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Laws -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-gavel"></i>
+                    Pending Finance Laws
+                </div>
+
+                {% if pending_laws %}
+                    {% for law in pending_laws %}
+                    <div class="law-card">
+                        <div class="law-header">
+                            <span class="law-type">{{ law.law_type.value.replace('_', ' ').title() }}</span>
+                            <span class="law-badge voting">Voting</span>
+                        </div>
+                        {% if law.law_details %}
+                        <div class="law-detail">
+                            {% if law.law_type.value in ['import_tax', 'salary_tax', 'income_tax'] %}
+                            New Rate: {{ "%.1f"|format(law.law_details.get('new_rate', 0)|float) }}%
+                            {% elif law.law_type.value == 'print_currency' %}
+                            Amount: {{ "%.2f"|format(law.law_details.get('amount', 0)|float) }} {{ country.currency_code }}
+                            {% elif law.law_type.value == 'military_budget' %}
+                            Amount: {{ "%.2f"|format(law.law_details.get('amount', 0)|float) }} {{ country.currency_code }}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="law-votes">
+                            <span class="vote-count yes"><i class="fas fa-check me-1"></i>{{ law.yes_votes }}</span>
+                            <span class="vote-count no"><i class="fas fa-times me-1"></i>{{ law.no_votes }}</span>
+                        </div>
+                        <div class="law-proposer">Proposed by {{ law.proposed_by.username if law.proposed_by else 'Unknown' }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <p>No pending finance laws</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Laws -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-history"></i>
+                    Recent Finance Laws (Last 90 Days)
+                </div>
+
+                {% if recent_laws %}
+                    {% for law in recent_laws %}
+                    <div class="law-card">
+                        <div class="law-header">
+                            <span class="law-type">{{ law.law_type.value.replace('_', ' ').title() }}</span>
+                            <span class="law-badge passed">Passed</span>
+                        </div>
+                        {% if law.law_details %}
+                        <div class="law-detail">
+                            {% if law.law_type.value in ['import_tax', 'salary_tax', 'income_tax'] %}
+                            Rate Set: {{ "%.1f"|format(law.law_details.get('new_rate', 0)|float) }}%
+                            {% elif law.law_type.value == 'print_currency' %}
+                            Amount: {{ "%.2f"|format(law.law_details.get('amount', 0)|float) }} {{ country.currency_code }}
+                            {% elif law.law_type.value == 'military_budget' %}
+                            Amount: {{ "%.2f"|format(law.law_details.get('amount', 0)|float) }} {{ country.currency_code }}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="law-proposer">Passed on {{ law.created_at.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-scroll"></i>
+                        <p>No recent finance laws</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Minister Card -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-user-tie"></i>
+                    Minister of Finance
+                </div>
+
+                {% if finance_minister %}
+                <div class="minister-card">
+                    {% if finance_minister.user.avatar %}
+                    <img src="{{ url_for('static', filename='uploads/avatars/' + finance_minister.user.id|string + '.png') }}"
+                         alt="{{ finance_minister.user.username }}" class="minister-avatar">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                         alt="{{ finance_minister.user.username }}" class="minister-avatar">
+                    {% endif %}
+                    <div class="minister-info">
+                        <div class="minister-name">
+                            <a href="{{ url_for('main.view_profile', username=finance_minister.user.username) }}">
+                                {{ finance_minister.user.username }}
+                            </a>
+                        </div>
+                        <div class="minister-role">Minister of Finance</div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="minister-card">
+                    <div class="minister-empty">
+                        <i class="fas fa-user-slash me-2"></i>Position Vacant
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Minister Powers -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-bolt"></i>
+                    Minister Powers
+                </div>
+
+                <ul class="powers-list">
+                    <li>
+                        <i class="fas fa-percentage"></i>
+                        Propose Import Tax changes
+                    </li>
+                    <li>
+                        <i class="fas fa-briefcase"></i>
+                        Propose Salary Tax changes
+                    </li>
+                    <li>
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Propose Income Tax changes
+                    </li>
+                    <li>
+                        <i class="fas fa-print"></i>
+                        Propose Currency Printing
+                    </li>
+                    <li>
+                        <i class="fas fa-shield-alt"></i>
+                        Propose Military Budget allocation
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Quick Actions -->
+            {% if is_president or is_finance_minister %}
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-bolt"></i>
+                    Quick Actions
+                </div>
+
+                <a href="{{ url_for('government.propose_law') }}" class="action-btn action-btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.5rem;">
+                    <i class="fas fa-plus"></i> Propose New Law
+                </a>
+                <a href="{{ url_for('government.ministry_of_defense') }}" class="action-btn action-btn-secondary" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-shield-alt"></i> Ministry of Defense
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock main_layout %}

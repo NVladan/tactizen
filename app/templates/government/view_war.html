@@ -1,0 +1,204 @@
+{% extends "layouts/base.html" %}
+
+{% block main_layout %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            {# War Status Card #}
+            <div class="card border-danger mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-bomb me-2"></i>War #{{ war.id }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-5">
+                            <h4 class="text-danger">
+                                <i class="fas fa-flag me-2"></i>
+                                <a href="{{ url_for('main.country', slug=war.attacker_country.slug) }}">
+                                    {{ war.attacker_country.name }}
+                                </a>
+                            </h4>
+                            <p class="text-muted">Attacker</p>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <h2 class="text-danger"><i class="fas fa-crosshairs"></i></h2>
+                            <p class="text-muted">VS</p>
+                        </div>
+                        <div class="col-md-5 text-end">
+                            <h4 class="text-info">
+                                <a href="{{ url_for('main.country', slug=war.defender_country.slug) }}">
+                                    {{ war.defender_country.name }}
+                                </a>
+                                <i class="fas fa-flag ms-2"></i>
+                            </h4>
+                            <p class="text-muted">Defender</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong>
+                                {% if war.status.name == 'ACTIVE' %}
+                                    <span class="badge bg-danger">Active</span>
+                                {% elif war.status.name == 'PEACE_PROPOSED' %}
+                                    <span class="badge bg-warning">Peace Proposed</span>
+                                {% elif war.status.name == 'ENDED_PEACE' %}
+                                    <span class="badge bg-success">Ended - Peace Treaty</span>
+                                {% elif war.status.name == 'ENDED_EXPIRED' %}
+                                    <span class="badge bg-secondary">Ended - Expired</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Started:</strong> {{ war.started_at.strftime('%Y-%m-%d %H:%M UTC') }}</p>
+                            {% if war.status.name in ['ACTIVE', 'PEACE_PROPOSED'] %}
+                                <p><strong>Scheduled End:</strong> {{ war.scheduled_end_at.strftime('%Y-%m-%d %H:%M UTC') }}</p>
+                                <p class="text-muted small">
+                                    <i class="fas fa-clock me-1"></i>
+                                    War will auto-expire after 30 days
+                                </p>
+                            {% endif %}
+                            {% if war.ended_at %}
+                                <p><strong>Ended:</strong> {{ war.ended_at.strftime('%Y-%m-%d %H:%M UTC') }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if war.status.name == 'PEACE_PROPOSED' %}
+                                <p><strong>Peace Proposed:</strong> {{ war.peace_proposed_at.strftime('%Y-%m-%d %H:%M UTC') }}</p>
+                                <p><strong>Proposed By:</strong>
+                                    {% if war.peace_proposed_by_country_id == war.attacker_country_id %}
+                                        {{ war.attacker_country.name }}
+                                    {% else %}
+                                        {{ war.defender_country.name }}
+                                    {% endif %}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Peace Voting Section #}
+            {% if war.status.name == 'PEACE_PROPOSED' %}
+            <div class="card border-warning mb-4">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0">
+                        <i class="fas fa-dove me-2"></i>Peace Treaty Vote
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>{{ war.attacker_country.name }}</h5>
+                            <div class="progress mb-2" style="height: 25px;">
+                                {% set attacker_total = war.attacker_peace_votes_for + war.attacker_peace_votes_against %}
+                                {% if attacker_total > 0 %}
+                                    {% set attacker_for_percent = (war.attacker_peace_votes_for / attacker_total * 100)|round|int %}
+                                    <div class="progress-bar bg-success" style="width: {{ attacker_for_percent }}%">
+                                        {{ war.attacker_peace_votes_for }} For
+                                    </div>
+                                    <div class="progress-bar bg-danger" style="width: {{ 100 - attacker_for_percent }}%">
+                                        {{ war.attacker_peace_votes_against }} Against
+                                    </div>
+                                {% else %}
+                                    <div class="progress-bar bg-secondary" style="width: 100%">
+                                        No votes yet
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted small">
+                                Votes: {{ war.attacker_peace_votes_for }} for, {{ war.attacker_peace_votes_against }} against
+                                ({{ attacker_total }} / 21 total)
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{{ war.defender_country.name }}</h5>
+                            <div class="progress mb-2" style="height: 25px;">
+                                {% set defender_total = war.defender_peace_votes_for + war.defender_peace_votes_against %}
+                                {% if defender_total > 0 %}
+                                    {% set defender_for_percent = (war.defender_peace_votes_for / defender_total * 100)|round|int %}
+                                    <div class="progress-bar bg-success" style="width: {{ defender_for_percent }}%">
+                                        {{ war.defender_peace_votes_for }} For
+                                    </div>
+                                    <div class="progress-bar bg-danger" style="width: {{ 100 - defender_for_percent }}%">
+                                        {{ war.defender_peace_votes_against }} Against
+                                    </div>
+                                {% else %}
+                                    <div class="progress-bar bg-secondary" style="width: 100%">
+                                        No votes yet
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted small">
+                                Votes: {{ war.defender_peace_votes_for }} for, {{ war.defender_peace_votes_against }} against
+                                ({{ defender_total }} / 21 total)
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="alert alert-info">
+                        <strong>Info:</strong> Both countries' congresses must approve peace by majority vote for the war to end.
+                    </div>
+
+                    {% if can_vote_peace %}
+                        {% if user_peace_vote %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                You voted <strong>{{ 'for' if user_peace_vote.vote else 'against' }}</strong> this peace treaty.
+                            </div>
+                        {% else %}
+                            <form method="POST" action="{{ url_for('government.vote_peace', war_id=war.id) }}">
+                                {{ form.hidden_tag() if form else '' }}
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <h5 class="mb-3">Cast Your Vote</h5>
+                                <div class="btn-group" role="group">
+                                    <button type="submit" name="vote" value="for" class="btn btn-success btn-lg">
+                                        <i class="fas fa-thumbs-up me-2"></i>Vote For Peace
+                                    </button>
+                                    <button type="submit" name="vote" value="against" class="btn btn-danger btn-lg">
+                                        <i class="fas fa-thumbs-down me-2"></i>Vote Against Peace
+                                    </button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# Propose Peace Section #}
+            {% if can_propose_peace %}
+            <div class="card border-success mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-handshake me-2"></i>Propose Peace Treaty
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p>As Minister of Foreign Affairs, you can propose a peace treaty to end this war.</p>
+                    <p class="text-muted small">Both countries' congresses will need to vote to approve the peace treaty.</p>
+                    <form method="POST" action="{{ url_for('government.propose_peace', war_id=war.id) }}">
+                        {{ form.hidden_tag() if form else '' }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-dove me-2"></i>Propose Peace Treaty
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            {# Back Button #}
+            <div class="text-center">
+                <a href="{{ url_for('main.country', slug=current_user.citizenship.slug) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Country Page
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}User History: {{ viewed_user.username }}{% endblock %}
+
+{% block app_content %}
+<div class="container py-4">
+    <!-- User Info Header -->
+    <div class="card mb-4" style="background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%); border: 1px solid rgba(34, 197, 94, 0.3);">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    {% if viewed_user.avatar and viewed_user.avatar is string %}
+                    <img src="{{ url_for('static', filename='avatars/' + viewed_user.avatar) }}"
+                         alt="Avatar" class="rounded-circle" style="width: 64px; height: 64px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                         style="width: 64px; height: 64px;">
+                        <i class="fas fa-user fa-2x text-muted"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col">
+                    <h3 class="text-white mb-1">{{ viewed_user.username }}</h3>
+                    <div>
+                        <span class="badge bg-secondary">Level {{ viewed_user.level }}</span>
+                        {% if viewed_user.is_admin %}
+                        <span class="badge bg-danger">Admin</span>
+                        {% endif %}
+                        {% if viewed_user.is_banned %}
+                        <span class="badge bg-danger">Banned</span>
+                        {% endif %}
+                        {% if viewed_user.is_muted %}
+                        <span class="badge bg-warning text-dark">Muted</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <a href="{{ url_for('main.view_profile', username=viewed_user.username) }}"
+                       class="btn btn-outline-info">
+                        <i class="fas fa-user me-1"></i> View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tickets Submitted -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100" style="background: #1a1f2e; border: 1px solid rgba(34, 197, 94, 0.3);">
+                <div class="card-header" style="background: rgba(34, 197, 94, 0.1);">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-ticket-alt me-2"></i>Tickets Submitted ({{ tickets|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if tickets %}
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        {% for ticket in tickets %}
+                        <a href="{{ url_for('support.view_ticket', ticket_id=ticket.id) }}"
+                           class="d-block px-3 py-2 border-bottom text-decoration-none"
+                           style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-success">{{ ticket.ticket_number }}</span>
+                                <span class="badge bg-{{ 'primary' if ticket.status.value == 'open' else 'success' if ticket.status.value == 'resolved' else 'secondary' }}">
+                                    {{ ticket.status.value.replace('_', ' ').title() }}
+                                </span>
+                            </div>
+                            <small class="text-white">{{ ticket.subject[:50] }}{% if ticket.subject|length > 50 %}...{% endif %}</small>
+                            <small class="text-muted d-block">{{ ticket.created_at.strftime('%b %d, %Y') }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">No tickets submitted</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Against User -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100" style="background: #1a1f2e; border: 1px solid rgba(239, 68, 68, 0.3);">
+                <div class="card-header" style="background: rgba(239, 68, 68, 0.1);">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-flag me-2"></i>Reports Against User ({{ reports_against|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if reports_against %}
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        {% for report in reports_against %}
+                        <a href="{{ url_for('support.view_report', report_id=report.id) }}"
+                           class="d-block px-3 py-2 border-bottom text-decoration-none"
+                           style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-danger">{{ report.report_number }}</span>
+                                <span class="badge bg-{{ 'warning text-dark' if report.status.value == 'pending' else 'success' if report.status.value == 'resolved' else 'secondary' }}">
+                                    {{ report.status.value.title() }}
+                                </span>
+                            </div>
+                            <small class="text-muted">
+                                {{ report.report_type.value.replace('_', ' ').title() }} -
+                                {{ report.reason.value.replace('_', ' ').title() }}
+                            </small>
+                            <small class="text-muted d-block">
+                                Reported by {{ report.reporter.username }} - {{ report.created_at.strftime('%b %d, %Y') }}
+                            </small>
+                            {% if report.action_taken %}
+                            <small class="text-warning d-block">
+                                Action: {{ report.action_taken.value.replace('_', ' ').title() }}
+                            </small>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">No reports against this user</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Reports Submitted By User -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100" style="background: #1a1f2e; border: 1px solid rgba(59, 130, 246, 0.3);">
+                <div class="card-header" style="background: rgba(59, 130, 246, 0.1);">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-paper-plane me-2"></i>Reports Submitted ({{ reports_submitted|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if reports_submitted %}
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for report in reports_submitted %}
+                        <a href="{{ url_for('support.view_report', report_id=report.id) }}"
+                           class="d-block px-3 py-2 border-bottom text-decoration-none"
+                           style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-info">{{ report.report_number }}</span>
+                                <span class="badge bg-{{ 'success' if report.status.value == 'resolved' else 'secondary' }}">
+                                    {{ report.status.value.title() }}
+                                </span>
+                            </div>
+                            <small class="text-muted">Against: {{ report.reported_user.username if report.reported_user else 'N/A' }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">No reports submitted by this user</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mute History -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100" style="background: #1a1f2e; border: 1px solid rgba(255, 193, 7, 0.3);">
+                <div class="card-header" style="background: rgba(255, 193, 7, 0.1);">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-volume-mute me-2"></i>Mute History ({{ mute_history|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if mute_history %}
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for mute in mute_history %}
+                        <div class="px-3 py-2 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div class="d-flex justify-content-between">
+                                <span class="{% if mute.is_currently_active() %}text-warning{% else %}text-muted{% endif %}">
+                                    {{ mute.started_at.strftime('%b %d, %Y %H:%M') }}
+                                </span>
+                                {% if mute.is_currently_active() %}
+                                <span class="badge bg-warning text-dark">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Expired</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                Until {{ mute.expires_at.strftime('%b %d, %Y %H:%M') }}
+                            </small>
+                            <small class="text-muted d-block">
+                                By: {{ mute.muted_by.username if mute.muted_by else 'System' }}
+                            </small>
+                            {% if mute.reason %}
+                            <small class="text-warning d-block">{{ mute.reason }}</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">No mute history</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <a href="{{ url_for('support.admin_tickets') }}" class="btn btn-outline-success me-2">
+            <i class="fas fa-ticket-alt me-1"></i> Back to Tickets
+        </a>
+        <a href="{{ url_for('support.admin_reports') }}" class="btn btn-outline-danger">
+            <i class="fas fa-flag me-1"></i> Back to Reports
+        </a>
+    </div>
+</div>
+{% endblock %}

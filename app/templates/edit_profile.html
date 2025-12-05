@@ -1,0 +1,234 @@
+{% extends "layouts/base.html" %}
+{% import 'bootstrap_wtf.html' as wtf %} {# Import wtf macros for form rendering #}
+
+{% block title %}Edit Your Profile - Tactizen{% endblock %}
+
+{% block head_extra %}
+<style>
+    body {
+        background: #0a0e1a;
+    }
+
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .profile-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .profile-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-header h2 {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 60px;
+        object-fit: cover;
+        border: 3px solid rgba(34, 197, 94, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(34, 197, 94, 0.2);
+        background: #0f1419;
+        margin-bottom: 1rem;
+    }
+
+    .profile-level {
+        background: rgba(34, 197, 94, 0.2);
+        color: #ffffff;
+        padding: 0.35rem 1rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+        margin-bottom: 1rem;
+    }
+
+    .profile-stats {
+        background: rgba(34, 197, 94, 0.05);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    .stat-value {
+        color: #22c55e;
+        font-weight: 600;
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    .progress {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .progress-bar-xp {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    .progress-bar-wellness {
+        background: linear-gradient(90deg, #fbbf24 0%, #d97706 100%);
+    }
+
+    .form-section {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        padding: 2rem;
+    }
+
+    .form-section h4 {
+        color: #22c55e;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .country-flag {
+        width: 40px;
+        height: 27px;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        margin-bottom: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<div class="profile-container">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="profile-card">
+                <div class="text-center">
+                    {% if current_user.citizenship %}
+                        <img src="{{ url_for('static', filename='images/country-flags/' + current_user.citizenship.flag_code + '.png') }}"
+                             alt="{{ current_user.citizenship.name }} Flag" class="country-flag">
+                    {% endif %}
+                    <div>
+                        <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.id|string + '.png') if current_user.avatar else url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                             alt="Avatar" class="profile-avatar">
+                    </div>
+                    <h5 class="text-white mb-2">{{ current_user.username or (current_user.wallet_address[:6] ~ '...' ~ current_user.wallet_address[-4:]) }}</h5>
+                    <span class="profile-level">
+                        <i class="fas fa-star"></i>Level {{ current_user.level }}
+                    </span>
+                </div>
+
+                <div class="profile-stats mt-3">
+                    <div class="stat-item">
+                        <span class="stat-label"><i class="fas fa-chart-line me-2"></i>XP Progress</span>
+                        <span class="stat-value">{{ current_user.xp_progress_in_current_level|int }}/{{ current_user.xp_increment_for_current_level|int }}</span>
+                    </div>
+                    <div>
+                        <div class="progress">
+                            {% set xp_percent = (current_user.xp_progress_in_current_level / current_user.xp_increment_for_current_level * 100) if current_user.xp_increment_for_current_level > 0 else 0 %}
+                            <div class="progress-bar progress-bar-xp" role="progressbar" style="width: {{ xp_percent }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item mt-3">
+                        <span class="stat-label"><i class="fas fa-heart me-2 text-warning"></i>Wellness</span>
+                        <span class="stat-value text-warning">{{ current_user.wellness|round(1) }}/{{ current_user.max_wellness|default(100)|round(0)|int }}</span>
+                    </div>
+                    <div>
+                        <div class="progress">
+                            {% set max_wellness = current_user.max_wellness|default(100) %}
+                            {% set wellness_percent = (current_user.wellness / max_wellness * 100)|round(1) if max_wellness > 0 else 0 %}
+                            <div class="progress-bar progress-bar-wellness" role="progressbar" style="width: {{ wellness_percent }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item mt-3">
+                        <span class="stat-label"><i class="fas fa-coins me-2 text-warning"></i>Gold</span>
+                        <span class="stat-value text-warning">{{ "%.2f"|format(current_user.gold) }}</span>
+                    </div>
+
+                    {% if current_user.citizenship and current_user.citizenship.currency_code %}
+                    <div class="stat-item">
+                        <span class="stat-label"><i class="fas fa-money-bill-wave me-2"></i>{{ current_user.citizenship.currency_code }}</span>
+                        <span class="stat-value">{{ "%.2f"|format(current_user.local_currency) }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="form-section">
+                <h4><i class="fas fa-edit me-2"></i>Edit Your Profile</h4>
+                {{ wtf.quick_form(form, action=url_for('main.edit_profile'), enctype='multipart/form-data', button_map={'submit': 'btn btn-primary w-100'}) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Modal for feedback #}
+{% if message %}
+<div class="modal fade" id="profileMessageModal" tabindex="-1" aria-labelledby="profileMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="profileMessageModalLabel">Profile Update</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ message }}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('profileMessageModal'));
+        modal.show();
+    });
+</script>
+{% endif %}
+{% endblock %}

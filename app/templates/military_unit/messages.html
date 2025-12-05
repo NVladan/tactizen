@@ -1,0 +1,292 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ unit.name }} Messages - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .messages-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .page-header h2 {
+        color: #22c55e;
+        margin: 0;
+    }
+
+    .section-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        background: rgba(34, 197, 94, 0.05);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .section-title {
+        color: #22c55e;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-body {
+        padding: 1.25rem;
+    }
+
+    .message-form {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .message-form textarea {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        resize: none;
+    }
+
+    .message-form textarea:focus {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: #22c55e;
+        box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.25);
+        outline: none;
+    }
+
+    .message-form textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .message-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .message-item {
+        padding: 1.25rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: background 0.2s;
+    }
+
+    .message-item:hover {
+        background: rgba(34, 197, 94, 0.02);
+    }
+
+    .message-item:last-child {
+        border-bottom: none;
+    }
+
+    .message-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .message-author-info {
+        flex: 1;
+    }
+
+    .message-author {
+        color: #22c55e;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .rank-badge {
+        font-size: 0.65rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .rank-badge.commander {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #000;
+    }
+
+    .rank-badge.officer {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+
+    .message-time {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.8rem;
+    }
+
+    .message-content {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="messages-container">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-comments me-2"></i>{{ unit.name }} - Message Board</h2>
+            <a href="{{ url_for('military_unit.detail', unit_id=unit.id) }}" class="text-muted" style="font-size: 0.9rem;">
+                <i class="fas fa-arrow-left me-1"></i>Back to Unit
+            </a>
+        </div>
+    </div>
+
+    <!-- Post New Message -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title"><i class="fas fa-pen"></i> Post Message</h3>
+        </div>
+        <div class="section-body">
+            <form method="POST" action="{{ url_for('military_unit.post_message', unit_id=unit.id) }}" class="message-form">
+                {{ form.hidden_tag() }}
+                {{ form.content(class="form-control", rows="3", placeholder="Write a message to your unit...") }}
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-1"></i>Post
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Messages List -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title"><i class="fas fa-list"></i> Messages</h3>
+        </div>
+        <div class="section-body" style="padding: 0;">
+            {% if messages.items %}
+            <div class="message-list">
+                {% for msg in messages.items %}
+                <div class="message-item">
+                    <div class="message-header">
+                        {% if msg.user.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + msg.user.id|string + '.png') }}" alt="{{ msg.user.username }}" class="message-avatar">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="{{ msg.user.username }}" class="message-avatar">
+                        {% endif %}
+                        <div class="message-author-info">
+                            <div class="message-author">
+                                {{ msg.user.username }}
+                                {% if msg.user_id == unit.commander_id %}
+                                <span class="rank-badge commander">Commander</span>
+                                {% else %}
+                                    {% set membership = unit.get_member(msg.user_id) %}
+                                    {% if membership and membership.rank.value == 'officer' %}
+                                    <span class="rank-badge officer">Officer</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="message-time">{{ msg.created_at.strftime('%B %d, %Y at %H:%M') }}</div>
+                        </div>
+                    </div>
+                    <div class="message-content">{{ msg.content }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h4>No Messages Yet</h4>
+                <p>Be the first to post a message to your unit!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages.pages > 1 %}
+    <div class="pagination-wrapper">
+        <nav aria-label="Message pagination">
+            <ul class="pagination">
+                {% if messages.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('military_unit.messages', unit_id=unit.id, page=messages.prev_num) }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for page_num in messages.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        {% if page_num == messages.page %}
+                        <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                        {% else %}
+                        <li class="page-item"><a class="page-link" href="{{ url_for('military_unit.messages', unit_id=unit.id, page=page_num) }}">{{ page_num }}</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if messages.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('military_unit.messages', unit_id=unit.id, page=messages.next_num) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

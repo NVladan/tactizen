@@ -1,0 +1,743 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Leaderboards - Tactizen{% endblock %}
+
+{% block head_extra %}
+{# Import shared dashboard styles #}
+{% include '_dashboard_styles.html' %}
+<style>
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .leaderboard-header {
+        margin-bottom: 2rem;
+    }
+
+    .leaderboard-title {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .leaderboard-title i {
+        color: #22c55e;
+        filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.5));
+    }
+
+    /* Tabs */
+    .leaderboard-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .leaderboard-tab {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .leaderboard-tab:hover {
+        background: rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    .leaderboard-tab.active {
+        background: rgba(34, 197, 94, 0.3);
+        border-color: #22c55e;
+        color: #ffffff;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    /* Filters */
+    .filters-section {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .filter-select {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        color: #ffffff;
+        padding: 0.5rem 2.5rem 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322c55e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1.25em;
+        min-width: 200px;
+        position: relative;
+        z-index: 100;
+    }
+
+    .filter-select option,
+    .filter-select optgroup {
+        background: #0f1419;
+        color: #ffffff;
+    }
+
+    .filter-select:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    /* User Position Banner */
+    .user-position-banner {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+    }
+
+    .user-position-banner i {
+        color: #22c55e;
+        font-size: 2rem;
+        filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.5));
+    }
+
+    /* Leaderboard Table */
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+    .leaderboard-row {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        transition: all 0.3s ease;
+    }
+
+    .leaderboard-row:hover {
+        transform: translateX(4px);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+    }
+
+    .leaderboard-row.current-user {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .leaderboard-row td {
+        padding: 1.25rem;
+        border-top: 1px solid rgba(34, 197, 94, 0.1);
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .leaderboard-row td:first-child {
+        border-left: 1px solid rgba(34, 197, 94, 0.1);
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
+    }
+
+    .leaderboard-row td:last-child {
+        border-right: 1px solid rgba(34, 197, 94, 0.1);
+        border-top-right-radius: 12px;
+        border-bottom-right-radius: 12px;
+    }
+
+    .rank-cell {
+        width: 80px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .rank-medal {
+        font-size: 2rem;
+    }
+
+    .rank-number {
+        color: #22c55e;
+        font-size: 1.5rem;
+    }
+
+    /* Player Info */
+    .player-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .player-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        object-fit: cover;
+    }
+
+    .player-name {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .player-name:hover {
+        color: #22c55e;
+    }
+
+    .stat-value {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    /* Election Cards */
+    .election-card {
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .election-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .election-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .election-title {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .election-date {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    .winner-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 8px;
+    }
+
+    .winner-badge {
+        background: #22c55e;
+        color: #0a0e1a;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+    <div class="main-container">
+        <div class="leaderboard-header">
+            <h1 class="leaderboard-title">
+                <i class="fas fa-trophy"></i>
+                Leaderboards
+            </h1>
+        </div>
+
+        {# Main Tabs #}
+        <div class="leaderboard-tabs">
+            <a href="{{ url_for('main.leaderboards', tab='players') }}" class="leaderboard-tab {% if tab == 'players' %}active{% endif %}">
+                <i class="fas fa-users"></i> Players
+            </a>
+            <a href="{{ url_for('main.leaderboards', tab='countries') }}" class="leaderboard-tab {% if tab == 'countries' %}active{% endif %}">
+                <i class="fas fa-flag"></i> Countries
+            </a>
+            <a href="{{ url_for('main.leaderboards', tab='parties') }}" class="leaderboard-tab {% if tab == 'parties' %}active{% endif %}">
+                <i class="fas fa-users-cog"></i> Parties
+            </a>
+            <a href="{{ url_for('main.leaderboards', tab='military_units') }}" class="leaderboard-tab {% if tab == 'military_units' %}active{% endif %}">
+                <i class="fas fa-shield-alt"></i> Military Units
+            </a>
+            <a href="{{ url_for('main.leaderboards', tab='elections') }}" class="leaderboard-tab {% if tab == 'elections' %}active{% endif %}">
+                <i class="fas fa-vote-yea"></i> Election History
+            </a>
+        </div>
+
+        {# PLAYERS TAB #}
+        {% if tab == 'players' %}
+            {# Filters #}
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label class="filter-label">Scope</label>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ url_for('main.leaderboards', tab='players', scope='country', sort_by=sort_by) }}" {% if scope == 'country' %}selected{% endif %}>My Country</option>
+                        <option value="{{ url_for('main.leaderboards', tab='players', scope='international', sort_by=sort_by) }}" {% if scope == 'international' %}selected{% endif %}>International</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='experience') }}" {% if sort_by == 'experience' %}selected{% endif %}>Experience</option>
+                        <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='military_rank') }}" {% if sort_by == 'military_rank' %}selected{% endif %}>Military Rank</option>
+                        <optgroup label="Military Skills">
+                            <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='skill_infantry') }}" {% if sort_by == 'skill_infantry' %}selected{% endif %}>Infantry</option>
+                            <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='skill_armoured') }}" {% if sort_by == 'skill_armoured' %}selected{% endif %}>Armoured</option>
+                            <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='skill_aviation') }}" {% if sort_by == 'skill_aviation' %}selected{% endif %}>Aviation</option>
+                        </optgroup>
+                        <optgroup label="Work Skills">
+                            <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='skill_resource_extraction') }}" {% if sort_by == 'skill_resource_extraction' %}selected{% endif %}>Resource Extraction</option>
+                            <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='skill_manufacture') }}" {% if sort_by == 'skill_manufacture' %}selected{% endif %}>Manufacture</option>
+                            <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='skill_construction') }}" {% if sort_by == 'skill_construction' %}selected{% endif %}>Construction</option>
+                        </optgroup>
+                        <option value="{{ url_for('main.leaderboards', tab='players', scope=scope, sort_by='newspaper_subscribers') }}" {% if sort_by == 'newspaper_subscribers' %}selected{% endif %}>Newspaper Subscribers</option>
+                    </select>
+                </div>
+            </div>
+
+            {# User Position Banner #}
+            {% if user_position %}
+            <div class="user-position-banner">
+                <i class="fas fa-medal"></i>
+                <div>
+                    <div style="font-weight: 600; font-size: 1.1rem;">Your Rank: #{{ user_position }}</div>
+                    <div style="color: rgba(255, 255, 255, 0.7); font-size: 0.875rem;">Out of {{ total_count }} players</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {# Players Leaderboard Table #}
+            <table class="leaderboard-table">
+                {% for item in leaderboard_data %}
+                {% set player = item.player if sort_by == 'newspaper_subscribers' else item %}
+                <tr class="leaderboard-row {% if player.id == current_user.id %}current-user{% endif %}">
+                    <td class="rank-cell">
+                        {% set rank = ((page - 1) * per_page) + loop.index %}
+                        {% if rank == 1 %}
+                            <span class="rank-medal rank-1">🥇</span>
+                        {% elif rank == 2 %}
+                            <span class="rank-medal rank-2">🥈</span>
+                        {% elif rank == 3 %}
+                            <span class="rank-medal rank-3">🥉</span>
+                        {% else %}
+                            <span class="rank-number">#{{ rank }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="width: 300px;">
+                        <div class="player-info">
+                            {% if player.avatar %}
+                                <img src="{{ url_for('static', filename='uploads/avatars/' + player.id|string + '.png') }}" class="player-avatar" alt="{{ player.username }}">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" class="player-avatar" alt="{{ player.username }}">
+                            {% endif %}
+                            <div>
+                                <a href="{{ url_for('main.view_profile', username=player.username) }}" class="player-name">{{ player.username }}</a>
+                                <div class="stat-label">Level {{ player.level }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        {% if sort_by == 'experience' %}
+                            <div class="stat-value">{{ player.experience|int }} XP</div>
+                        {# Military Rank #}
+                        {% elif sort_by == 'military_rank' %}
+                            <div class="stat-value">{{ player.rank.name }}</div>
+                            <div class="stat-label">Rank {{ player.rank.id }} | +{{ player.rank.damage_bonus }}% Damage</div>
+                        {# Military Skills #}
+                        {% elif sort_by == 'skill_infantry' %}
+                            <div class="stat-value">{{ player.skill_infantry|round(1) }}</div>
+                            <div class="stat-label">Infantry</div>
+                        {% elif sort_by == 'skill_armoured' %}
+                            <div class="stat-value">{{ player.skill_armoured|round(1) }}</div>
+                            <div class="stat-label">Armoured</div>
+                        {% elif sort_by == 'skill_aviation' %}
+                            <div class="stat-value">{{ player.skill_aviation|round(1) }}</div>
+                            <div class="stat-label">Aviation</div>
+                        {# Work Skills #}
+                        {% elif sort_by == 'skill_resource_extraction' %}
+                            <div class="stat-value">{{ player.skill_resource_extraction|round(1) }}</div>
+                            <div class="stat-label">Resource Extraction</div>
+                        {% elif sort_by == 'skill_manufacture' %}
+                            <div class="stat-value">{{ player.skill_manufacture|round(1) }}</div>
+                            <div class="stat-label">Manufacture</div>
+                        {% elif sort_by == 'skill_construction' %}
+                            <div class="stat-value">{{ player.skill_construction|round(1) }}</div>
+                            <div class="stat-label">Construction</div>
+                        {% elif sort_by == 'newspaper_subscribers' %}
+                            <div class="stat-value">{{ item.subscriber_count }}</div>
+                            <div class="stat-label">Subscribers</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.5);">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <div>No players found</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+
+        {# COUNTRIES TAB #}
+        {% if tab == 'countries' %}
+            {# Filters #}
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ url_for('main.leaderboards', tab='countries', sort_by='population') }}" {% if sort_by == 'population' %}selected{% endif %}>Population</option>
+                        <option value="{{ url_for('main.leaderboards', tab='countries', sort_by='territories') }}" {% if sort_by == 'territories' %}selected{% endif %}>Territories</option>
+                    </select>
+                </div>
+            </div>
+
+            {# Countries Leaderboard Table #}
+            <table class="leaderboard-table">
+                {% for item in leaderboard_data %}
+                <tr class="leaderboard-row {% if current_user.citizenship_id == item.country.id %}current-user{% endif %}">
+                    <td class="rank-cell">
+                        {% set rank = ((page - 1) * per_page) + loop.index %}
+                        {% if rank == 1 %}
+                            <span class="rank-medal rank-1">🥇</span>
+                        {% elif rank == 2 %}
+                            <span class="rank-medal rank-2">🥈</span>
+                        {% elif rank == 3 %}
+                            <span class="rank-medal rank-3">🥉</span>
+                        {% else %}
+                            <span class="rank-number">#{{ rank }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="width: 400px;">
+                        <div style="font-weight: 600; font-size: 1.2rem; color: #ffffff;">
+                            <i class="fas fa-flag me-2" style="color: #22c55e;"></i>{{ item.country.name }}
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        {% if sort_by == 'population' %}
+                            <div class="stat-value">{{ item.citizen_count }} citizens</div>
+                        {% elif sort_by == 'territories' %}
+                            <div class="stat-value">{{ item.territory_count }} regions</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.5);">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <div>No countries found</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+
+        {# PARTIES TAB #}
+        {% if tab == 'parties' %}
+            {# Filters #}
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label class="filter-label">Scope</label>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ url_for('main.leaderboards', tab='parties', scope='country', sort_by=sort_by) }}" {% if scope == 'country' %}selected{% endif %}>My Country</option>
+                        <option value="{{ url_for('main.leaderboards', tab='parties', scope='international', sort_by=sort_by) }}" {% if scope == 'international' %}selected{% endif %}>International</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ url_for('main.leaderboards', tab='parties', scope=scope, sort_by='members') }}" {% if sort_by == 'members' %}selected{% endif %}>Member Count</option>
+                        <option value="{{ url_for('main.leaderboards', tab='parties', scope=scope, sort_by='avg_xp') }}" {% if sort_by == 'avg_xp' %}selected{% endif %}>Average Member XP</option>
+                        <option value="{{ url_for('main.leaderboards', tab='parties', scope=scope, sort_by='president_wins') }}" {% if sort_by == 'president_wins' %}selected{% endif %}>President Elections Won</option>
+                    </select>
+                </div>
+            </div>
+
+            {# Parties Leaderboard Table #}
+            <table class="leaderboard-table">
+                {% for item in leaderboard_data %}
+                <tr class="leaderboard-row {% if current_user.party_id == item.party.id %}current-user{% endif %}">
+                    <td class="rank-cell">
+                        {% set rank = ((page - 1) * per_page) + loop.index %}
+                        {% if rank == 1 %}
+                            <span class="rank-medal rank-1">🥇</span>
+                        {% elif rank == 2 %}
+                            <span class="rank-medal rank-2">🥈</span>
+                        {% elif rank == 3 %}
+                            <span class="rank-medal rank-3">🥉</span>
+                        {% else %}
+                            <span class="rank-number">#{{ rank }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="width: 400px;">
+                        <div>
+                            <a href="{{ url_for('party.detail', party_id=item.party.id) }}" class="player-name" style="font-size: 1.2rem;">{{ item.party.name }}</a>
+                            <div class="stat-label">{{ item.party.country.name if item.party.country else 'Unknown' }}</div>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        {% if sort_by == 'members' or not sort_by %}
+                            <div class="stat-value">{{ item.member_count }} members</div>
+                        {% elif sort_by == 'avg_xp' %}
+                            <div class="stat-value">{{ item.avg_xp|int }} avg XP</div>
+                        {% elif sort_by == 'president_wins' %}
+                            <div class="stat-value">{{ item.president_wins }} president wins</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.5);">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <div>No parties found</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+
+        {# MILITARY UNITS TAB #}
+        {% if tab == 'military_units' %}
+            {# Filters #}
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label class="filter-label">Scope</label>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ url_for('main.leaderboards', tab='military_units', scope='international', sort_by=sort_by) }}" {% if scope == 'international' %}selected{% endif %}>International</option>
+                        <option value="{{ url_for('main.leaderboards', tab='military_units', scope='country', sort_by=sort_by) }}" {% if scope == 'country' %}selected{% endif %}>My Country</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ url_for('main.leaderboards', tab='military_units', scope=scope, sort_by='damage') }}" {% if sort_by == 'damage' %}selected{% endif %}>Total Damage</option>
+                        <option value="{{ url_for('main.leaderboards', tab='military_units', scope=scope, sort_by='battles') }}" {% if sort_by == 'battles' %}selected{% endif %}>Battles Won</option>
+                        <option value="{{ url_for('main.leaderboards', tab='military_units', scope=scope, sort_by='contracts') }}" {% if sort_by == 'contracts' %}selected{% endif %}>Contracts Completed</option>
+                        <option value="{{ url_for('main.leaderboards', tab='military_units', scope=scope, sort_by='rating') }}" {% if sort_by == 'rating' %}selected{% endif %}>Average Rating</option>
+                    </select>
+                </div>
+            </div>
+
+            {# Military Units Leaderboard Table #}
+            <table class="leaderboard-table">
+                {% for unit in leaderboard_data %}
+                <tr class="leaderboard-row" style="cursor: pointer;" onclick="window.location.href='{{ url_for('military_unit.detail', unit_id=unit.id) }}'">
+                    <td class="rank-cell">
+                        {% set rank = ((page - 1) * per_page) + loop.index %}
+                        {% if rank == 1 %}
+                            <span class="rank-medal rank-1">🥇</span>
+                        {% elif rank == 2 %}
+                            <span class="rank-medal rank-2">🥈</span>
+                        {% elif rank == 3 %}
+                            <span class="rank-medal rank-3">🥉</span>
+                        {% else %}
+                            <span class="rank-number">#{{ rank }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="player-info">
+                            <div style="width: 50px; height: 50px; border-radius: 10px; background: rgba(34, 197, 94, 0.1); border: 2px solid rgba(34, 197, 94, 0.3); display: flex; align-items: center; justify-content: center; color: #22c55e;">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('military_unit.detail', unit_id=unit.id) }}" class="player-name">{{ unit.name }}</a>
+                                <div class="stat-label">
+                                    {% if unit.country and unit.country.flag_code %}
+                                    <img src="{{ url_for('static', filename='images/country-flags/' + unit.country.flag_code + '.png') }}" alt="" style="height: 12px; margin-right: 4px; vertical-align: middle;">
+                                    {% endif %}
+                                    {{ unit.country.name if unit.country else 'Unknown' }} &bull; {{ unit.member_count }} members
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        {% if sort_by == 'damage' %}
+                        <div class="stat-value" style="color: #ef4444;">{{ "{:,.0f}".format(unit.total_damage) }}</div>
+                        <div class="stat-label">Total Damage</div>
+                        {% elif sort_by == 'battles' %}
+                        <div class="stat-value" style="color: #fbbf24;">{{ unit.battles_won }}</div>
+                        <div class="stat-label">Battles Won</div>
+                        {% elif sort_by == 'contracts' %}
+                        <div class="stat-value" style="color: #22c55e;">{{ unit.contracts_completed }}</div>
+                        <div class="stat-label">Contracts</div>
+                        {% elif sort_by == 'rating' %}
+                        <div class="stat-value" style="color: #fbbf24;">
+                            {{ "%.1f"|format(unit.average_rating) if unit.average_rating else 'N/A' }}
+                            <i class="fas fa-star" style="font-size: 0.8em;"></i>
+                        </div>
+                        <div class="stat-label">Avg. Rating</div>
+                        {% else %}
+                        <div class="stat-value" style="color: #ef4444;">{{ "{:,.0f}".format(unit.total_damage) }}</div>
+                        <div class="stat-label">Total Damage</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.5);">
+                        <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                        <div>No military units found</div>
+                        <div style="margin-top: 0.5rem; font-size: 0.85rem;">
+                            {% if sort_by == 'damage' %}
+                            No units have dealt damage yet
+                            {% elif sort_by == 'battles' %}
+                            No units have won battles yet
+                            {% elif sort_by == 'contracts' %}
+                            No units have completed contracts yet
+                            {% elif sort_by == 'rating' %}
+                            No units have been rated yet
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+
+        {# ELECTIONS TAB #}
+        {% if tab == 'elections' %}
+            {# Filters #}
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label class="filter-label">Election Type</label>
+                    <select class="filter-select" onchange="window.location.href=this.value">
+                        <option value="{{ url_for('main.leaderboards', tab='elections', election_type='party') }}" {% if request.args.get('election_type', 'party') == 'party' %}selected{% endif %}>Party President</option>
+                        <option value="{{ url_for('main.leaderboards', tab='elections', election_type='presidential') }}" {% if request.args.get('election_type') == 'presidential' %}selected{% endif %}>Country President</option>
+                        <option value="{{ url_for('main.leaderboards', tab='elections', election_type='congressional') }}" {% if request.args.get('election_type') == 'congressional' %}selected{% endif %}>Congressional</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Month (Optional)</label>
+                    <input type="month" class="filter-select" value="{{ request.args.get('month', '') }}" onchange="window.location.href='{{ url_for('main.leaderboards', tab='elections', election_type=request.args.get('election_type', 'party')) }}&month=' + this.value">
+                </div>
+            </div>
+
+            {# Election Results #}
+            {% for election in leaderboard_data %}
+                <div class="election-card">
+                    {% if request.args.get('election_type', 'party') == 'party' %}
+                        <div class="election-header">
+                            <div class="election-title">
+                                <i class="fas fa-users-cog me-2" style="color: #22c55e;"></i>
+                                {{ election.party.name }} - Party President Election
+                            </div>
+                            <div class="election-date">
+                                <i class="fas fa-calendar me-1"></i>
+                                Ended: {{ election.end_time.strftime('%B %d, %Y') }}
+                            </div>
+                        </div>
+                        {% if election.winner %}
+                        <div class="winner-info">
+                            <span class="winner-badge">WINNER</span>
+                            <div>
+                                <a href="{{ url_for('main.view_profile', username=election.winner.username) }}" class="player-name">{{ election.winner.username }}</a>
+                                <div class="stat-label">{{ election.winner.level }} votes received</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="election-header">
+                            <div class="election-title">
+                                <i class="fas fa-landmark me-2" style="color: #22c55e;"></i>
+                                {{ election.country.name }} - {% if request.args.get('election_type') == 'presidential' %}Presidential{% else %}Congressional{% endif %} Election
+                            </div>
+                            <div class="election-date">
+                                <i class="fas fa-calendar me-1"></i>
+                                Ended: {{ election.voting_end.strftime('%B %d, %Y') }}
+                            </div>
+                        </div>
+                        {% if election.candidates %}
+                        <div>
+                            <strong style="color: #22c55e;">Winners:</strong>
+                            <ul style="list-style: none; padding-left: 0; margin-top: 0.5rem;">
+                            {% for candidate in election.candidates[:5] %}
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(34, 197, 94, 0.1);">
+                                    <a href="{{ url_for('main.view_profile', username=candidate.user.username) }}" class="player-name">{{ candidate.user.username }}</a>
+                                    <span class="stat-label"> - {{ candidate.vote_count }} votes</span>
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.5);">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <div>No election history found</div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {# Results Info #}
+        <div style="text-align: center; margin-top: 2rem; color: rgba(255, 255, 255, 0.5); font-size: 0.875rem;">
+            Showing {{ ((page - 1) * per_page) + 1 }} - {{ [page * per_page, total_count]|min }} of {{ total_count }} results
+        </div>
+    </div>
+</div>
+{% endblock main_layout %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

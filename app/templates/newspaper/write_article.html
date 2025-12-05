@@ -1,0 +1,194 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Write Article - {{ newspaper.name }}{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<style>
+    .note-editor.note-frame {
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        background: #0f1419;
+    }
+    .note-editing-area .note-editable {
+        background: #0f1419;
+        color: #ffffff;
+        min-height: 600px;
+    }
+    .note-toolbar {
+        background: #1a1f2e;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+    .note-btn {
+        background: transparent;
+        color: #ffffff;
+    }
+    .note-btn:hover {
+        background: rgba(34, 197, 94, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="write-article-container" style="max-width: 900px; margin: 0 auto; padding: 2rem;">
+    <div class="card bg-dark border-success">
+        <div class="card-header bg-gradient text-white">
+            <h3><i class="fas fa-pen"></i> Write New Article for {{ newspaper.name }}</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.write_article', newspaper_id=newspaper.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ form.title.label(class="form-label text-white") }}
+                    {{ form.title(class="form-control bg-dark text-white border-success") }}
+                    {% if form.title.errors %}
+                        <div class="text-danger">{{ form.title.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.content.label(class="form-label text-white") }}
+                    {{ form.content(id="summernote", class="form-control") }}
+                    {% if form.content.errors %}
+                        <div class="text-danger">{{ form.content.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid">
+                    {{ form.submit(class="btn btn-success w-100") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock main_layout %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<script>
+console.log('Scripts loading...');
+console.log('jQuery version:', $.fn.jquery);
+console.log('Summernote available:', typeof $.fn.summernote);
+
+$(document).ready(function() {
+    console.log('Document ready');
+    console.log('Element exists:', $('#summernote').length);
+
+    var isPasting = false;
+
+    try {
+        $('#summernote').summernote({
+            placeholder: 'Start writing your article here...',
+            height: 600,
+            minHeight: 600,
+            focus: true,
+            dialogsInBody: true,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            callbacks: {
+                onImageUpload: function(files) {
+                    console.log('onImageUpload triggered, isPasting:', isPasting);
+                    // Don't handle if this is from a paste event
+                    if (isPasting) {
+                        console.log('Skipping onImageUpload because paste is handling it');
+                        return;
+                    }
+                    console.log('Image upload triggered:', files);
+                    for (let i = 0; i < files.length; i++) {
+                        uploadImage(files[i]);
+                    }
+                },
+                onPaste: function(e) {
+                    console.log('Paste event triggered');
+                    const clipboardData = e.originalEvent.clipboardData;
+                    if (clipboardData && clipboardData.items) {
+                        const items = clipboardData.items;
+                        let hasImage = false;
+                        for (let i = 0; i < items.length; i++) {
+                            if (items[i].type.indexOf('image') !== -1) {
+                                console.log('Image found in clipboard');
+                                hasImage = true;
+                                isPasting = true;
+                                const blob = items[i].getAsFile();
+                                uploadImage(blob);
+                                // Reset flag after a short delay
+                                setTimeout(function() {
+                                    isPasting = false;
+                                }, 100);
+                            }
+                        }
+                        // Prevent default paste behavior if we found an image
+                        if (hasImage) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return false;
+                        }
+                    }
+                },
+                onInit: function() {
+                    console.log('Summernote initialized successfully!');
+                }
+            }
+        });
+        console.log('Summernote setup complete');
+    } catch(e) {
+        console.error('Summernote error:', e);
+    }
+
+    function uploadImage(file) {
+        console.log('Uploading image:', file.name, file.type, file.size);
+
+        var data = new FormData();
+        data.append("file", file);
+        data.append("csrf_token", $('input[name="csrf_token"]').val());
+
+        $.ajax({
+            url: "{{ url_for('main.upload_article_image') }}",
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: data,
+            type: "POST",
+            success: function(response) {
+                console.log('Upload response:', response);
+                if (response.success) {
+                    $('#summernote').summernote('insertImage', response.url);
+                    console.log('Image inserted:', response.url);
+                } else {
+                    console.error('Upload failed:', response.error);
+                    showError(response.error || 'Error uploading image.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Upload error:', xhr.responseText, status, error);
+                let errorMsg = 'Server error while uploading image.';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.error) {
+                        errorMsg = response.error;
+                    }
+                } catch(e) {
+                    console.error('Could not parse error response');
+                }
+                showError(errorMsg);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
