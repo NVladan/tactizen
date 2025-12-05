@@ -208,6 +208,13 @@ class SkillService:
         except Exception as e:
             logger.error(f"Error tracking training achievement for user {user.id}: {e}")
 
+        # Track mission progress for training
+        from app.services.mission_service import MissionService
+        try:
+            MissionService.track_progress(user, 'train', 1)
+        except Exception as e:
+            logger.error(f"Error tracking train mission for user {user.id}: {e}")
+
         message = f"Trained {skill_type} for {hours} hours. Gained {skill_gain:.2f} skill and {xp_gain} XP. Energy: -{energy_cost}"
 
         return True, message, skill_gain, energy_cost, leveled_up, new_level
@@ -276,6 +283,13 @@ class SkillService:
                 logger.info(f"User {user.id} unlocked study-related achievement with {current_streak}-day streak")
         except Exception as e:
             logger.error(f"Error tracking study achievement for user {user.id}: {e}")
+
+        # Track mission progress for studying
+        from app.services.mission_service import MissionService
+        try:
+            MissionService.track_progress(user, 'study', 1)
+        except Exception as e:
+            logger.error(f"Error tracking study mission for user {user.id}: {e}")
 
         message = f"Studied {skill_type.replace('_', ' ')} for {hours} hours. Gained {skill_gain:.2f} skill and {xp_gain} XP. Energy: -{energy_cost}"
 

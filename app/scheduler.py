@@ -158,6 +158,16 @@ def init_scheduler(app):
         replace_existing=True
     )
 
+    # Mission system: Expire old missions every hour
+    scheduler.add_job(
+        func=lambda: expire_old_missions(app),
+        trigger="interval",
+        hours=1,
+        id='expire_old_missions',
+        name='Expire old unclaimed missions',
+        replace_existing=True
+    )
+
     scheduler.start()
     logger.info("Election scheduler started successfully")
 
@@ -1599,3 +1609,19 @@ def check_and_expire_war_initiatives(app):
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error expiring war initiatives: {e}", exc_info=True)
+
+
+def expire_old_missions(app):
+    """Expire old unclaimed missions (daily/weekly that have passed their deadline)."""
+    with app.app_context():
+        from app.services.mission_service import MissionService
+        from app.extensions import db
+
+        try:
+            count = MissionService.expire_old_missions()
+            if count > 0:
+                db.session.commit()
+                logger.info(f"Expired {count} unclaimed missions")
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error expiring old missions: {e}", exc_info=True)

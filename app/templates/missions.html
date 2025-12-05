@@ -1,0 +1,652 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Missions{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+.missions-header {
+    background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.missions-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    pointer-events: none;
+}
+
+.mission-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.mission-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0;
+}
+
+.mission-tab {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.mission-tab:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.mission-tab.active {
+    color: #3b82f6;
+}
+
+.mission-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #3b82f6;
+}
+
+.mission-tab .badge {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.mission-section {
+    display: none;
+}
+
+.mission-section.active {
+    display: block;
+}
+
+.missions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+.mission-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.mission-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mission-card.completed {
+    border-color: rgba(34, 197, 94, 0.4);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+}
+
+.mission-card.completed::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 40px 40px 0;
+    border-color: transparent #22c55e transparent transparent;
+}
+
+.mission-card.completed::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: #1a1f2e;
+    font-size: 0.75rem;
+}
+
+.mission-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.mission-icon {
+    font-size: 2rem;
+    color: #3b82f6;
+    min-width: 45px;
+    text-align: center;
+}
+
+.mission-card.completed .mission-icon {
+    color: #22c55e;
+}
+
+.mission-info {
+    flex: 1;
+}
+
+.mission-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.25rem;
+}
+
+.mission-description {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.mission-type-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.mission-type-badge.daily {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.mission-type-badge.weekly {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+}
+
+.mission-type-badge.tutorial {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.mission-rewards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.mission-reward {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(255, 215, 0, 0.15);
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: #ffd700;
+    font-weight: 600;
+}
+
+.mission-reward.xp {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+}
+
+.mission-reward.item {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.mission-progress {
+    margin-top: 1rem;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.progress-bar-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.mission-card.completed .progress-bar-fill {
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+}
+
+.mission-expiry {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.mission-expiry.urgent {
+    color: #ef4444;
+}
+
+.claim-btn {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.6rem;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.claim-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.claim-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.completed-banner {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.completed-banner i {
+    font-size: 1.5rem;
+    color: #22c55e;
+}
+
+.completed-banner-text {
+    flex: 1;
+}
+
+.completed-banner-text h4 {
+    color: #22c55e;
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+}
+
+.completed-banner-text p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+{% include '_dashboard_wrapper_end.html' %}
+
+<div class="missions-content-container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+    <div class="missions-header">
+        <h1 class="mb-0" style="position: relative; z-index: 1;">
+            <i class="fas fa-tasks"></i> Missions
+        </h1>
+
+        <div class="mission-stats">
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.daily_completed_today }}/{{ stats.daily_total }}</div>
+                <div class="stat-label">Daily</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.weekly_completed }}/{{ stats.weekly_total }}</div>
+                <div class="stat-label">Weekly</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.tutorial_completed }}/{{ stats.tutorial_total }}</div>
+                <div class="stat-label">Tutorial</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.total_completed }}</div>
+                <div class="stat-label">Total Done</div>
+            </div>
+        </div>
+    </div>
+
+    {% if completed_unclaimed %}
+    <div class="completed-banner">
+        <i class="fas fa-gift"></i>
+        <div class="completed-banner-text">
+            <h4>{{ completed_unclaimed|length }} Mission{% if completed_unclaimed|length > 1 %}s{% endif %} Completed!</h4>
+            <p>You have unclaimed rewards waiting. Claim them before they expire!</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mission-tabs">
+        <button class="mission-tab active" data-tab="daily">
+            <i class="fas fa-calendar-day"></i> Daily
+            <span class="badge bg-primary">{{ daily_missions|length }}</span>
+        </button>
+        <button class="mission-tab" data-tab="weekly">
+            <i class="fas fa-calendar-week"></i> Weekly
+            <span class="badge bg-purple">{{ weekly_missions|length }}</span>
+        </button>
+        <button class="mission-tab" data-tab="tutorial">
+            <i class="fas fa-graduation-cap"></i> Tutorial
+            <span class="badge bg-success">{{ tutorial_missions|selectattr('is_completed', 'equalto', false)|list|length }}</span>
+        </button>
+    </div>
+
+    <!-- Daily Missions -->
+    <div class="mission-section active" id="daily-section">
+        {% if daily_missions %}
+        <div class="missions-grid">
+            {% for um in daily_missions %}
+            <div class="mission-card {% if um.is_completed %}completed{% endif %}">
+                <div class="mission-header">
+                    <div class="mission-icon">
+                        <i class="fas {{ um.mission.icon or 'fa-tasks' }}"></i>
+                    </div>
+                    <div class="mission-info">
+                        <span class="mission-type-badge daily">Daily</span>
+                        <div class="mission-name">{{ um.mission.name }}</div>
+                        <div class="mission-description">{{ um.mission.description }}</div>
+                        <div class="mission-rewards">
+                            {% if um.mission.gold_reward and um.mission.gold_reward > 0 %}
+                            <span class="mission-reward">
+                                <i class="fas fa-coins"></i> {{ "%.2f"|format(um.mission.gold_reward|float) }}
+                            </span>
+                            {% endif %}
+                            {% if um.mission.xp_reward and um.mission.xp_reward > 0 %}
+                            <span class="mission-reward xp">
+                                <i class="fas fa-star"></i> {{ um.mission.xp_reward }} XP
+                            </span>
+                            {% endif %}
+                            {% if um.mission.resource_reward %}
+                            <span class="mission-reward item">
+                                <i class="fas fa-box"></i> {{ um.mission.resource_reward_quantity }}x {{ um.mission.resource_reward.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mission-progress">
+                    <div class="progress-label">
+                        <span>Progress</span>
+                        <span>{{ um.current_progress }} / {{ um.mission.requirement_count }}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: {{ um.progress_percent }}%"></div>
+                    </div>
+                </div>
+
+                {% if um.expires_at %}
+                <div class="mission-expiry">
+                    <i class="fas fa-clock"></i>
+                    Resets at game day change
+                </div>
+                {% endif %}
+
+                {% if um.is_completed and not um.is_claimed %}
+                <form action="{{ url_for('main.claim_mission', user_mission_id=um.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="claim-btn">
+                        <i class="fas fa-gift"></i> Claim Reward
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-check"></i>
+            <p>No daily missions available. Check back later!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Weekly Missions -->
+    <div class="mission-section" id="weekly-section">
+        {% if weekly_missions %}
+        <div class="missions-grid">
+            {% for um in weekly_missions %}
+            <div class="mission-card {% if um.is_completed %}completed{% endif %}">
+                <div class="mission-header">
+                    <div class="mission-icon">
+                        <i class="fas {{ um.mission.icon or 'fa-tasks' }}"></i>
+                    </div>
+                    <div class="mission-info">
+                        <span class="mission-type-badge weekly">Weekly</span>
+                        <div class="mission-name">{{ um.mission.name }}</div>
+                        <div class="mission-description">{{ um.mission.description }}</div>
+                        <div class="mission-rewards">
+                            {% if um.mission.gold_reward and um.mission.gold_reward > 0 %}
+                            <span class="mission-reward">
+                                <i class="fas fa-coins"></i> {{ "%.2f"|format(um.mission.gold_reward|float) }}
+                            </span>
+                            {% endif %}
+                            {% if um.mission.xp_reward and um.mission.xp_reward > 0 %}
+                            <span class="mission-reward xp">
+                                <i class="fas fa-star"></i> {{ um.mission.xp_reward }} XP
+                            </span>
+                            {% endif %}
+                            {% if um.mission.resource_reward %}
+                            <span class="mission-reward item">
+                                <i class="fas fa-box"></i> {{ um.mission.resource_reward_quantity }}x {{ um.mission.resource_reward.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mission-progress">
+                    <div class="progress-label">
+                        <span>Progress</span>
+                        <span>{{ um.current_progress }} / {{ um.mission.requirement_count }}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: {{ um.progress_percent }}%"></div>
+                    </div>
+                </div>
+
+                {% if um.expires_at %}
+                <div class="mission-expiry">
+                    <i class="fas fa-clock"></i>
+                    Resets on Monday
+                </div>
+                {% endif %}
+
+                {% if um.is_completed and not um.is_claimed %}
+                <form action="{{ url_for('main.claim_mission', user_mission_id=um.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="claim-btn">
+                        <i class="fas fa-gift"></i> Claim Reward
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-week"></i>
+            <p>No weekly missions available. Check back later!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tutorial Missions -->
+    <div class="mission-section" id="tutorial-section">
+        {% if tutorial_missions %}
+        <div class="missions-grid">
+            {% for um in tutorial_missions %}
+            <div class="mission-card {% if um.is_completed %}completed{% endif %} {% if um.is_claimed %}opacity-50{% endif %}">
+                <div class="mission-header">
+                    <div class="mission-icon">
+                        <i class="fas {{ um.mission.icon or 'fa-graduation-cap' }}"></i>
+                    </div>
+                    <div class="mission-info">
+                        <span class="mission-type-badge tutorial">Tutorial {% if um.mission.tutorial_order %}#{{ um.mission.tutorial_order }}{% endif %}</span>
+                        <div class="mission-name">{{ um.mission.name }}</div>
+                        <div class="mission-description">{{ um.mission.description }}</div>
+                        <div class="mission-rewards">
+                            {% if um.mission.gold_reward and um.mission.gold_reward > 0 %}
+                            <span class="mission-reward">
+                                <i class="fas fa-coins"></i> {{ "%.2f"|format(um.mission.gold_reward|float) }}
+                            </span>
+                            {% endif %}
+                            {% if um.mission.xp_reward and um.mission.xp_reward > 0 %}
+                            <span class="mission-reward xp">
+                                <i class="fas fa-star"></i> {{ um.mission.xp_reward }} XP
+                            </span>
+                            {% endif %}
+                            {% if um.mission.resource_reward %}
+                            <span class="mission-reward item">
+                                <i class="fas fa-box"></i> {{ um.mission.resource_reward_quantity }}x {{ um.mission.resource_reward.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if not um.is_claimed %}
+                <div class="mission-progress">
+                    <div class="progress-label">
+                        <span>Progress</span>
+                        <span>{{ um.current_progress }} / {{ um.mission.requirement_count }}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: {{ um.progress_percent }}%"></div>
+                    </div>
+                </div>
+
+                {% if um.is_completed and not um.is_claimed %}
+                <form action="{{ url_for('main.claim_mission', user_mission_id=um.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="claim-btn">
+                        <i class="fas fa-gift"></i> Claim Reward
+                    </button>
+                </form>
+                {% endif %}
+                {% else %}
+                <div class="mission-expiry" style="color: #22c55e;">
+                    <i class="fas fa-check-circle"></i>
+                    Completed & Claimed
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-graduation-cap"></i>
+            <p>No tutorial missions available.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    const tabs = document.querySelectorAll('.mission-tab');
+    const sections = document.querySelectorAll('.mission-section');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetTab = this.dataset.tab;
+
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            // Show corresponding section
+            sections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === targetTab + '-section') {
+                    section.classList.add('active');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock main_layout %}

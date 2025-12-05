@@ -12,6 +12,7 @@ from .employment_service import EmploymentService
 from .wellness_service import WellnessService
 from .social_service import SocialService
 from .battle_service import BattleService
+from .mission_service import MissionService
 
 __all__ = [
     'InventoryService',
@@ -21,4 +22,5 @@ __all__ = [
     'WellnessService',
     'SocialService',
     'BattleService',
+    'MissionService',
 ]

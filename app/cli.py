@@ -301,3 +301,13 @@ def register_cli_commands(app):
                 attacker = war.attacker_country.name if war else 'Unknown'
                 defender = war.defender_country.name if war else 'Unknown'
                 click.echo(f'ID: {battle.id:4d} | {region_name:25s} | {battle.status.value:15s} | {attacker} vs {defender}')
+
+    @app.cli.command('seed-missions')
+    def seed_missions_command():
+        """Seed initial missions into the database."""
+        from seed_missions import seed_missions as do_seed_missions
+
+        with app.app_context():
+            click.echo('Seeding missions...')
+            created, updated = do_seed_missions()
+            click.echo(f'Done! Created: {created}, Updated: {updated}')

@@ -18,6 +18,7 @@ class AlertType(str, enum.Enum):
     SUPPORT_TICKET = 'support_ticket'
     BOUNTY_COMPLETED = 'bounty_completed'
     ITEMS_RECEIVED = 'items_received'
+    MISSION_COMPLETE = 'mission_complete'
 
 
 class AlertPriority(str, enum.Enum):

@@ -576,6 +576,10 @@ class BattleService:
         # Update bounty contract damage if user's military unit has an active bounty for this battle
         BattleService._update_bounty_damage(user, battle, final_damage, is_attacker)
 
+        # Track mission progress for fighting
+        from app.services.mission_service import MissionService
+        MissionService.track_progress(user, 'fight', 1)
+
         db.session.commit()
 
         damage_info = {

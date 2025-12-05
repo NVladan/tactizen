@@ -158,14 +158,30 @@ class Company(SoftDeleteMixin, db.Model):
         """Required production points to complete current product based on quality."""
         if not self.current_production_resource_id:
             return 0
-        pp_requirements = {
+
+        # Base PP requirements per quality level
+        base_pp_requirements = {
             1: 5,   # Q1
             2: 10,  # Q2
             3: 15,  # Q3
             4: 20,  # Q4
             5: 25,  # Q5
         }
-        return pp_requirements.get(self.quality_level, 5)
+        base_pp = base_pp_requirements.get(self.quality_level, 5)
+
+        # Construction items have higher PP requirements
+        # Need to check what resource is being produced
+        from app.models.resource import Resource
+        resource = db.session.get(Resource, self.current_production_resource_id)
+        if resource:
+            if resource.name == 'House':
+                # House requires 10x PP
+                return base_pp * 10
+            elif resource.name in ['Fort', 'Hospital']:
+                # Fort/Hospital requires 20x PP
+                return base_pp * 20
+
+        return base_pp
 
     @property
     def raw_materials_required(self):

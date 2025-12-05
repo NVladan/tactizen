@@ -8,6 +8,7 @@ from app.extensions import db
 from app.models import PartyElection, ElectionStatus, Referral, ReferralStatus, Country, Region, Article, NewspaperSubscription, ArticleVote, GovernmentElection, GovernmentElectionStatus, ElectionType
 from app.models.government import Law, LawStatus, War, WarStatus
 from app.models.battle import Battle, BattleStatus
+from app.services.mission_service import MissionService
 from datetime import datetime, timedelta
 from sqlalchemy import func
 import json
@@ -336,6 +337,36 @@ def index():
             .limit(10)
         ).all()
 
+        # Fetch active missions for the dashboard widget
+        try:
+            # Ensure missions are assigned (daily/weekly/tutorial)
+            MissionService.ensure_missions_assigned(current_user)
+            db.session.commit()
+
+            missions_data = MissionService.get_active_missions(current_user)
+            # Get a summary of missions for the widget (show up to 3 most relevant)
+            dashboard_missions = []
+            # Priority: unclaimed completed > in-progress daily > in-progress weekly
+            unclaimed = MissionService.get_completed_unclaimed(current_user)
+            if unclaimed:
+                dashboard_missions.extend(unclaimed[:2])
+
+            # Add in-progress missions if space
+            remaining_slots = 3 - len(dashboard_missions)
+            if remaining_slots > 0:
+                for mission in missions_data.get('daily', []):
+                    if not mission.is_completed and len(dashboard_missions) < 3:
+                        dashboard_missions.append(mission)
+            if len(dashboard_missions) < 3:
+                for mission in missions_data.get('weekly', []):
+                    if not mission.is_completed and len(dashboard_missions) < 3:
+                        dashboard_missions.append(mission)
+        except Exception as e:
+            import logging
+            logging.error(f"Error fetching missions for dashboard: {e}")
+            db.session.rollback()
+            dashboard_missions = []
+
         return render_template('dashboard.html',
                              title='Dashboard',
                              active_election=current_election,
@@ -350,7 +381,8 @@ def index():
                              subscribed_articles=subscribed_articles,
                              country_laws=country_laws,
                              country_battles=country_battles,
-                             international_wars=international_wars)
+                             international_wars=international_wars,
+                             dashboard_missions=dashboard_missions)
     else:
         return render_template('index.html', title='Welcome')
 

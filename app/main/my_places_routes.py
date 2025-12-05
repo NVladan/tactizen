@@ -356,6 +356,13 @@ def travel():
                 success, travel_message = current_user.travel_to(destination_region.id, payment_method=payment_method)
                 if success:
                     try:
+                        # Track mission progress for travel
+                        from app.services.mission_service import MissionService
+                        try:
+                            MissionService.track_progress(current_user, 'travel', 1)
+                        except Exception as mission_error:
+                            current_app.logger.error(f"Error tracking travel mission: {mission_error}")
+
                         db.session.commit()
                         # Update current location string after successful travel
                         current_location_str = f"{selected_country.name}, {destination_region.name}"

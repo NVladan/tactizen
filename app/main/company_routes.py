@@ -271,9 +271,11 @@ def get_input_requirements(resource_name, quality_level):
     }
 
     construction_requirements = {
-        'House': {'Bricks': 10, 'Concrete': 10},
-        'Fort': {'Bricks': 10, 'Concrete': 10},
-        'Hospital': {'Bricks': 10, 'Concrete': 10},
+        # House: 10x base materials (100 Bricks + 100 Concrete per quality)
+        'House': {'Bricks': 100, 'Concrete': 100},
+        # Fort/Hospital: 20x base materials (200 Bricks + 200 Concrete per quality)
+        'Fort': {'Bricks': 200, 'Concrete': 200},
+        'Hospital': {'Bricks': 200, 'Concrete': 200},
     }
 
     # Get base requirements

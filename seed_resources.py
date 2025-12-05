@@ -129,9 +129,25 @@ def seed_market_items_for_countries(app, country_names):
                     quality_levels = [0]
 
                 for quality in quality_levels:
-                    # Calculate quality-adjusted price (higher quality = higher price)
-                    quality_multiplier = Decimal('1.0') + (Decimal('0.2') * quality) if quality > 0 else Decimal('1.0')
-                    adjusted_price = initial_price * quality_multiplier
+                    # Calculate quality-adjusted price using EXPONENTIAL scaling
+                    # Q1=base, Q2=2x, Q3=4x, Q4=8x, Q5=16x
+                    if quality > 0:
+                        quality_multiplier = Decimal(2 ** (quality - 1))  # 1, 2, 4, 8, 16
+                    else:
+                        quality_multiplier = Decimal('1.0')
+
+                    # Special pricing for construction items (House, Fort, Hospital)
+                    if resource.name == 'House':
+                        # House: 10x base price (50, 100, 200, 400, 800)
+                        base_construction_price = Decimal('50.00')
+                        adjusted_price = base_construction_price * quality_multiplier
+                    elif resource.name in ['Fort', 'Hospital']:
+                        # Fort/Hospital: 20x base price (100, 200, 400, 800, 1600)
+                        base_construction_price = Decimal('100.00')
+                        adjusted_price = base_construction_price * quality_multiplier
+                    else:
+                        # Regular items: exponential from base 5
+                        adjusted_price = initial_price * quality_multiplier
 
                     market_item = db.session.scalar(
                         db.select(CountryMarketItem).filter_by(

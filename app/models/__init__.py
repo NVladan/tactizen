@@ -79,6 +79,8 @@ from .military_unit import (
 )
 # Import game update models
 from .game_update import GameUpdate, UpdateCategory
+# Import mission models
+from .mission import Mission, UserMission, MissionType, MissionCategory
 
 # Define __all__ to specify what gets imported with 'from app.models import *'
 __all__ = [
@@ -221,4 +223,9 @@ __all__ = [
     # Game Update models
     'GameUpdate',              # Imported from game_update.py
     'UpdateCategory',          # Imported from game_update.py
+    # Mission models
+    'Mission',                 # Imported from mission.py
+    'UserMission',             # Imported from mission.py
+    'MissionType',             # Imported from mission.py
+    'MissionCategory',         # Imported from mission.py
 ]

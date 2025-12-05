@@ -66,3 +66,62 @@ def get_allocation_date():
         return (now - timedelta(days=1)).date()
 
     return now.date()
+
+
+def get_game_day_start():
+    """
+    Get the UTC datetime of the current game day's start (9 AM CET).
+
+    The game day starts at 9 AM CET. This function returns the UTC datetime
+    of when the current game day started.
+
+    Returns:
+        datetime: UTC datetime of game day start
+    """
+    now = get_current_cet_time()
+
+    # Get 9 AM CET for today
+    reset_today = CET.localize(datetime.combine(now.date(), time(RESET_HOUR, 0, 0)))
+
+    # If before 9 AM CET, game day started yesterday at 9 AM
+    if now < reset_today:
+        game_day_start_cet = reset_today - timedelta(days=1)
+    else:
+        game_day_start_cet = reset_today
+
+    # Convert to UTC
+    return game_day_start_cet.astimezone(pytz.UTC).replace(tzinfo=None)
+
+
+def get_week_start():
+    """
+    Get the UTC datetime of the current week's start (Monday 9 AM CET).
+
+    Weekly missions reset on Monday at 9 AM CET.
+
+    Returns:
+        datetime: UTC datetime of week start
+    """
+    now = get_current_cet_time()
+
+    # Get Monday 9 AM CET this week
+    days_since_monday = now.weekday()
+    monday_date = now.date() - timedelta(days=days_since_monday)
+    monday_9am = CET.localize(datetime.combine(monday_date, time(RESET_HOUR, 0, 0)))
+
+    # If we're before this Monday 9 AM, use last week's Monday
+    if now < monday_9am:
+        monday_9am -= timedelta(weeks=1)
+
+    # Convert to UTC
+    return monday_9am.astimezone(pytz.UTC).replace(tzinfo=None)
+
+
+def get_next_week_start():
+    """
+    Get the UTC datetime of the next week's start (Monday 9 AM CET).
+
+    Returns:
+        datetime: UTC datetime of next week start
+    """
+    return get_week_start() + timedelta(weeks=1)

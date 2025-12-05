@@ -479,6 +479,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('main.edit_profile') }}"><i class="fas fa-edit"></i> Edit Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.missions') }}"><i class="fas fa-tasks"></i> Missions</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('main.achievements') }}"><i class="fas fa-trophy"></i> Achievements</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('main.referral') }}"><i class="fas fa-gift"></i> Referral Program</a></li>
                             {% if current_user.is_admin %}

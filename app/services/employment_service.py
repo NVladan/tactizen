@@ -487,6 +487,13 @@ class EmploymentService:
         except Exception as e:
             logger.error(f"Error tracking work achievement for user {user.id}: {e}")
 
+        # Track mission progress for working
+        from app.services.mission_service import MissionService
+        try:
+            MissionService.track_progress(user, 'work', hours)
+        except Exception as e:
+            logger.error(f"Error tracking work mission for user {user.id}: {e}")
+
         # Build success message (worker-friendly: hours, costs, earnings)
         hour_word = "hour" if hours == 1 else "hours"
         message = f"Worked {hours} {hour_word} at {company.name}. Used {energy_cost} energy and {wellness_cost} wellness. Earned {worker_receives:.2f} {company.country.currency_code} (paid {work_tax_amount:.2f} tax)."
