@@ -314,6 +314,10 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
         if self.citizenship_id != party.country_id:
             return False, f"You must be a citizen of {party.country.name} to join this party."
 
+        # Citizens of conquered countries cannot join parties (political rights suspended)
+        if self.is_citizen_of_conquered_country():
+            return False, "Citizens of conquered countries cannot join parties. Political rights are suspended until liberation."
+
         # Cannot join during active elections
         if party.has_active_election():
             return False, "Cannot join party during active elections."
@@ -378,10 +382,15 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
         """
         Check if user can change citizenship.
         Ministers cannot change citizenship until they resign.
+        Citizens of conquered countries cannot change citizenship.
 
         Returns:
             tuple: (can_change: bool, reason: str)
         """
+        # Check if citizen of conquered country
+        if self.is_citizen_of_conquered_country():
+            return False, "Citizens of conquered countries cannot change citizenship until liberation."
+
         minister_position = self.get_active_minister_position()
         if minister_position:
             ministry_names = {
@@ -392,6 +401,45 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
             ministry_name = ministry_names.get(minister_position.ministry_type.name, 'Minister')
             return False, f"You must resign from your position as {ministry_name} before changing citizenship."
 
+        return True, "OK"
+
+    def is_citizen_of_conquered_country(self):
+        """Check if user is citizen of a conquered country."""
+        if not self.citizenship:
+            return False
+        return self.citizenship.is_conquered
+
+    def can_vote(self):
+        """
+        Check if user can vote in elections.
+
+        Returns:
+            tuple: (can_vote: bool, reason: str)
+        """
+        if self.is_citizen_of_conquered_country():
+            return False, "Citizens of conquered countries cannot vote."
+        return True, "OK"
+
+    def can_run_for_office(self):
+        """
+        Check if user can run for government office.
+
+        Returns:
+            tuple: (can_run: bool, reason: str)
+        """
+        if self.is_citizen_of_conquered_country():
+            return False, "Citizens of conquered countries cannot run for office."
+        return True, "OK"
+
+    def can_propose_laws(self):
+        """
+        Check if user can propose laws.
+
+        Returns:
+            tuple: (can_propose: bool, reason: str)
+        """
+        if self.is_citizen_of_conquered_country():
+            return False, "Citizens of conquered countries cannot propose laws."
         return True, "OK"
 
     # --- Methods ---

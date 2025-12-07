@@ -293,13 +293,23 @@ def storage():
             'wine_consumed_today': int(current_user.wine_consumed_today or 0)
         }
 
+    # Get storage limit with NFT bonus
+    from app.services.inventory_service import InventoryService
+    storage_limit = InventoryService.get_storage_limit(current_user)
+    storage_count = InventoryService.get_total_count(current_user)
+    base_storage = InventoryService.BASE_STORAGE_LIMIT
+    storage_bonus = storage_limit - base_storage
+
     return render_template('storage.html',
                            title='My Storage',
                            inventory_items=user_inventory, # Pass the flat list
                            inventory_by_category=inventory_by_category, # Pass the grouped dictionary
                            wellness_data=wellness_data, # Pass wellness restoration data
                            energy_data=energy_data, # Pass energy restoration data
-                           wine_data=wine_data) # Pass wine restoration data
+                           wine_data=wine_data, # Pass wine restoration data
+                           storage_limit=storage_limit,
+                           storage_count=storage_count,
+                           storage_bonus=storage_bonus)
 
 
 # --- Travel Route ---
@@ -382,12 +392,20 @@ def travel():
             message = 'An error occurred while processing your travel request. Please try again.'
             message_type = "danger"
 
+    # Get travel costs with NFT discount applied
+    from app.services.bonus_calculator import BonusCalculator
+    travel_cost_gold, travel_cost_energy = BonusCalculator.get_travel_costs(
+        current_user.id, 1.0, 50  # Base costs: 1 gold, 50 energy
+    )
+
     return render_template('travel.html',
                          title='Travel',
                          form=form,
                          current_location=current_location_str,
                          message=message,
-                         message_type=message_type)
+                         message_type=message_type,
+                         travel_cost_gold=travel_cost_gold,
+                         travel_cost_energy=travel_cost_energy)
 
 
 # --- Residence Page Route ---

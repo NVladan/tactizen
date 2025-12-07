@@ -248,6 +248,8 @@ def verify_zen_payment(tx_hash: str, from_address: str, to_address: str, expecte
         logger.info(f"[Payment Verification] Looking for Transfer events...")
 
         for log in receipt['logs']:
+            if not log.get('topics') or len(log['topics']) < 3:
+                continue
             if log['topics'][0].hex() == transfer_event_signature:
                 # Decode transfer event
                 from_addr = '0x' + log['topics'][1].hex()[-40:]
@@ -751,6 +753,8 @@ def verify_nft_mint_transaction(tx_hash: str, expected_minter: str) -> Optional[
         logger.info(f"[NFT Mint Verification] Looking for NFTMinted events...")
 
         for log in receipt['logs']:
+            if not log.get('topics') or len(log['topics']) < 3:
+                continue
             if log['topics'][0].hex() == nft_minted_event_signature:
                 # Decode NFTMinted event
                 to_addr = '0x' + log['topics'][1].hex()[-40:]
@@ -900,6 +904,8 @@ def verify_nft_upgrade_transaction(tx_hash: str, expected_upgrader: str, expecte
         logger.info(f"[NFT Upgrade Verification] Looking for NFTUpgraded events...")
 
         for log in receipt['logs']:
+            if not log.get('topics') or len(log['topics']) < 2:
+                continue
             if log['topics'][0].hex() == nft_upgraded_event_signature:
                 # Decode NFTUpgraded event
                 upgrader_addr = '0x' + log['topics'][1].hex()[-40:]

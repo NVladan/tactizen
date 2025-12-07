@@ -66,6 +66,11 @@ class Country(SoftDeleteMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+    # Conquest Status
+    is_conquered = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    conquered_by_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=True)
+    conquered_at = db.Column(db.DateTime, nullable=True)
+
     # --- Relationships ---
     # Relationship to Users (Citizens)
     citizens = db.relationship('User', back_populates='citizenship', lazy='dynamic', foreign_keys='User.citizenship_id')
@@ -94,6 +99,9 @@ class Country(SoftDeleteMixin, db.Model):
     # Relationship to Military Inventory (Hospitals, Forts, etc.)
     military_inventory = db.relationship('MilitaryInventory', back_populates='country', lazy='dynamic', cascade="all, delete-orphan")
 
+    # Conquest relationship (self-referential)
+    conquered_by = db.relationship('Country', foreign_keys=[conquered_by_id], remote_side='Country.id')
+
     def __init__(self, name, flag_code=None, currency_name=None, currency_code=None):
         """Initializes a new Country."""
         self.name = name
@@ -105,6 +113,25 @@ class Country(SoftDeleteMixin, db.Model):
     def __repr__(self):
         """String representation of the Country object."""
         return f'<Country {self.name}>'
+
+    @property
+    def region_count(self):
+        """Get the number of regions this country currently controls."""
+        return self.current_regions.count()
+
+    @property
+    def has_starter_protection(self):
+        """
+        Check if country has starter protection.
+        Countries with only 1 region cannot be attacked.
+        This protection is temporary until admin disables it globally.
+        """
+        from app.models.game_settings import GameSettings
+        # Check if starter protection is enabled globally (checks DB then config)
+        if not GameSettings.is_starter_protection_enabled():
+            return False
+        # Country has protection if it has 1 or fewer regions
+        return self.region_count <= 1
 
 
 class Region(SoftDeleteMixin, db.Model):

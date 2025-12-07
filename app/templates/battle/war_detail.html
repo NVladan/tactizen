@@ -305,6 +305,362 @@
     .join-battle-btn:hover {
         transform: translateY(-2px);
     }
+
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - War Detail Page
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        .war-container {
+            padding: 0.75rem;
+        }
+
+        /* War Header */
+        .war-header {
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        /* Country Battle - Stack vertically */
+        .country-battle {
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .country-info {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.75rem;
+            text-align: left;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .country-flag {
+            font-size: 2rem;
+            margin-bottom: 0;
+        }
+
+        .country-flag img {
+            width: 48px;
+            height: 36px;
+        }
+
+        .country-name {
+            font-size: 1.15rem;
+        }
+
+        .country-role {
+            font-size: 0.7rem;
+        }
+
+        .vs-badge {
+            padding: 0.35rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* War Stats - Horizontal scroll or wrap */
+        .war-stats {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem 0;
+            margin-top: 0.75rem;
+        }
+
+        .war-stat {
+            flex: 1;
+            min-width: 80px;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .war-stat .value {
+            font-size: 1rem;
+        }
+
+        .war-stat .label {
+            font-size: 0.65rem;
+        }
+
+        /* Initiative Banner */
+        .initiative-banner {
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 10px;
+        }
+
+        .initiative-header {
+            margin-bottom: 0.5rem;
+        }
+
+        .initiative-header i {
+            font-size: 1.25rem;
+        }
+
+        .initiative-title {
+            font-size: 0.95rem;
+        }
+
+        .initiative-holder {
+            margin-bottom: 0.75rem;
+        }
+
+        .initiative-holder .holder-name {
+            font-size: 1.1rem;
+        }
+
+        .initiative-timer {
+            gap: 0.5rem;
+        }
+
+        .timer-segment {
+            padding: 0.4rem 0.6rem;
+            min-width: 55px;
+        }
+
+        .timer-value {
+            font-size: 1.2rem;
+        }
+
+        .timer-label {
+            font-size: 0.6rem;
+        }
+
+        .initiative-description {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Section Cards */
+        .section-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.4rem;
+        }
+
+        /* Battle Cards */
+        .battle-card {
+            padding: 0.85rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .battle-card h5 {
+            font-size: 0.95rem;
+        }
+
+        .battle-info {
+            flex-direction: column;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+        }
+
+        /* Active Battle Alert */
+        .active-battle-alert {
+            padding: 1rem;
+        }
+
+        .active-battle-alert h4 {
+            font-size: 1rem;
+        }
+
+        .active-battle-alert p {
+            font-size: 0.85rem;
+        }
+
+        .join-battle-btn {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.9rem;
+        }
+
+        /* Start Battle Form */
+        .region-select {
+            padding: 0.65rem 0.85rem;
+            font-size: 0.9rem;
+        }
+
+        .start-battle-btn {
+            padding: 0.85rem 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* Back Link */
+        .btn-outline-secondary {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+
+        /* Bootstrap row adjustments */
+        .row > .col-lg-6 {
+            margin-bottom: 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .war-container {
+            padding: 0.5rem;
+        }
+
+        .war-header {
+            padding: 1rem;
+        }
+
+        .country-battle {
+            gap: 0.5rem;
+        }
+
+        .country-flag img {
+            width: 40px;
+            height: 30px;
+        }
+
+        .country-name {
+            font-size: 1.05rem;
+        }
+
+        .country-role {
+            font-size: 0.65rem;
+        }
+
+        .vs-badge {
+            padding: 0.3rem 0.85rem;
+            font-size: 0.8rem;
+        }
+
+        .war-stat {
+            min-width: 70px;
+            padding: 0.4rem;
+        }
+
+        .war-stat .value {
+            font-size: 0.9rem;
+        }
+
+        .war-stat .label {
+            font-size: 0.6rem;
+        }
+
+        .initiative-banner {
+            padding: 0.85rem;
+        }
+
+        .initiative-header i {
+            font-size: 1.1rem;
+        }
+
+        .initiative-title {
+            font-size: 0.85rem;
+        }
+
+        .timer-segment {
+            padding: 0.35rem 0.5rem;
+            min-width: 48px;
+        }
+
+        .timer-value {
+            font-size: 1.1rem;
+        }
+
+        .initiative-description {
+            font-size: 0.75rem;
+        }
+
+        .section-card {
+            padding: 0.85rem;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+        }
+
+        .battle-card {
+            padding: 0.75rem;
+        }
+
+        .battle-card h5 {
+            font-size: 0.9rem;
+        }
+
+        .battle-info {
+            font-size: 0.75rem;
+        }
+
+        .active-battle-alert {
+            padding: 0.85rem;
+        }
+
+        .active-battle-alert h4 {
+            font-size: 0.95rem;
+        }
+
+        .join-battle-btn {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .start-battle-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .country-flag img {
+            width: 36px;
+            height: 27px;
+        }
+
+        .country-name {
+            font-size: 0.95rem;
+        }
+
+        .vs-badge {
+            padding: 0.25rem 0.7rem;
+            font-size: 0.75rem;
+        }
+
+        .war-stat .value {
+            font-size: 0.85rem;
+        }
+
+        .war-stat .label {
+            font-size: 0.55rem;
+        }
+
+        .initiative-title {
+            font-size: 0.8rem;
+        }
+
+        .timer-segment {
+            min-width: 42px;
+            padding: 0.3rem 0.4rem;
+        }
+
+        .timer-value {
+            font-size: 1rem;
+        }
+
+        .timer-label {
+            font-size: 0.55rem;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+        }
+
+        .battle-card h5 {
+            font-size: 0.85rem;
+        }
+    }
 </style>
 {% endblock %}
 

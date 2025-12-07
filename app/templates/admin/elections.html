@@ -1,0 +1,300 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <h2><i class="fas fa-vote-yea"></i> Elections Management</h2>
+    <p class="text-muted">Manage government elections, advance phases, and close voting</p>
+    <hr>
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-4" id="electionTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-elections" type="button" role="tab">
+                <i class="fas fa-hourglass-half me-1"></i> Active Elections
+                <span class="badge bg-primary ms-1">{{ active_elections|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-elections" type="button" role="tab">
+                <i class="fas fa-check-circle me-1"></i> Completed
+                <span class="badge bg-secondary ms-1">{{ completed_elections|length }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="electionTabsContent">
+        <!-- Active Elections Tab -->
+        <div class="tab-pane fade show active" id="active-elections" role="tabpanel">
+            {% if active_elections %}
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Country</th>
+                            <th>Status</th>
+                            <th>Candidates</th>
+                            <th>Votes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for election in active_elections %}
+                        <tr>
+                            <td><a href="{{ url_for('admin.government_election_detail', election_id=election.id) }}" class="text-info">{{ election.id }}</a></td>
+                            <td>
+                                {% if election.election_type.value == 'presidential' %}
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-crown"></i> Presidential</span>
+                                {% else %}
+                                    <span class="badge bg-info"><i class="fas fa-landmark"></i> Congressional</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ election.country.name if election.country else 'N/A' }}</td>
+                            <td>
+                                {% if election.status.value == 'nominations' %}
+                                    <span class="badge bg-secondary">Nominations</span>
+                                {% elif election.status.value == 'applications' %}
+                                    <span class="badge bg-secondary">Applications</span>
+                                {% elif election.status.value == 'voting' %}
+                                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Voting</span>
+                                {% elif election.status.value == 'completed' %}
+                                    <span class="badge bg-dark">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-dark">{{ election.status.value }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set approved_count = election.candidates|selectattr('status.value', 'equalto', 'approved')|list|length %}
+                                <span class="badge bg-primary">{{ approved_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ election.votes.count() }}</span>
+                            </td>
+                            <td>
+                                {% if election.status.value not in ['completed', 'cancelled'] %}
+                                <form method="POST" action="{{ url_for('admin.advance_government_election', election_id=election.id) }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-success" title="Advance to next phase">
+                                        <i class="fas fa-forward"></i> Advance
+                                    </button>
+                                </form>
+                                {% if election.status.value == 'voting' %}
+                                <button type="button" class="btn btn-sm btn-warning" title="Close & calculate results" data-bs-toggle="modal" data-bs-target="#closeElectionModal{{ election.id }}">
+                                    <i class="fas fa-calculator"></i> Close
+                                </button>
+                                {% endif %}
+                                <form method="POST" action="{{ url_for('admin.cancel_government_election', election_id=election.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to cancel this election?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel election">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No active elections at the moment.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Completed Elections Tab -->
+        <div class="tab-pane fade" id="completed-elections" role="tabpanel">
+            {% if completed_elections %}
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Country</th>
+                            <th>Completed</th>
+                            <th>Winner / Elected</th>
+                            <th>Total Votes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for election in completed_elections %}
+                        <tr>
+                            <td><a href="{{ url_for('admin.government_election_detail', election_id=election.id) }}" class="text-info">{{ election.id }}</a></td>
+                            <td>
+                                {% if election.election_type.value == 'presidential' %}
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-crown"></i> Presidential</span>
+                                {% else %}
+                                    <span class="badge bg-info"><i class="fas fa-landmark"></i> Congressional</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ election.country.name if election.country else 'N/A' }}</td>
+                            <td>{{ election.voting_end.strftime('%Y-%m-%d') if election.voting_end else 'N/A' }}</td>
+                            <td>
+                                {% if election.election_type.value == 'presidential' %}
+                                    {% if election.winner_user_id %}
+                                        <a href="{{ url_for('main.view_profile', username=election.winner.username) }}" class="text-success">
+                                            <i class="fas fa-crown me-1"></i>{{ election.winner.username }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">No winner</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-info">
+                                        <i class="fas fa-users me-1"></i>{{ election.candidates|selectattr('won_seat', 'equalto', true)|list|length }} elected
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ election.total_votes_cast or 0 }}</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.government_election_detail', election_id=election.id) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{{ url_for('government.election_detail', election_id=election.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Public
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No completed elections yet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+    .nav-tabs {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .nav-tabs .nav-link {
+        color: rgba(255, 255, 255, 0.6);
+        border: none;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        padding: 0.75rem 1.25rem;
+    }
+    .nav-tabs .nav-link:hover {
+        color: rgba(255, 255, 255, 0.9);
+        border-color: transparent;
+    }
+    .nav-tabs .nav-link.active {
+        color: #22c55e;
+        background: transparent;
+        border-bottom: 2px solid #22c55e;
+    }
+    .modal-content.admin-modal {
+        background: linear-gradient(145deg, #1a1f2e 0%, #0f1419 100%);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: 16px;
+    }
+    .modal-content.admin-modal .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem 1.5rem;
+    }
+    .modal-content.admin-modal .modal-title {
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .modal-content.admin-modal .modal-body {
+        padding: 1.5rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .modal-content.admin-modal .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem 1.5rem;
+    }
+    .modal-content.admin-modal .info-box {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    .modal-content.admin-modal .info-box i {
+        color: #3b82f6;
+        margin-right: 0.5rem;
+    }
+</style>
+
+<!-- Close Election Modals -->
+{% if active_elections %}
+{% for election in active_elections %}
+{% if election.status.value == 'voting' %}
+<div class="modal fade" id="closeElectionModal{{ election.id }}" tabindex="-1" aria-labelledby="closeElectionModalLabel{{ election.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content admin-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="closeElectionModalLabel{{ election.id }}">
+                    <i class="fas fa-calculator me-2" style="color: #f59e0b;"></i>Close Election & Calculate Results
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to close voting for:</p>
+                <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                    <div style="font-weight: 600; color: #f59e0b; font-size: 1.1rem;">
+                        {% if election.election_type.value == 'presidential' %}
+                            <i class="fas fa-crown me-2"></i>Presidential Election
+                        {% else %}
+                            <i class="fas fa-landmark me-2"></i>Congressional Election
+                        {% endif %}
+                    </div>
+                    <div style="color: rgba(255,255,255,0.7); margin-top: 0.5rem;">
+                        <i class="fas fa-flag me-1"></i>{{ election.country.name if election.country else 'Unknown Country' }}
+                    </div>
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-shield-alt"></i>
+                    <strong>This will:</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; color: rgba(255,255,255,0.8);">
+                        <li>Count all regular votes</li>
+                        <li>Count all ZK anonymous votes (verified on zkVerify blockchain)</li>
+                        <li>Determine the winner(s)</li>
+                        <li>Send alerts to elected officials</li>
+                        <li>Mark the election as completed</li>
+                    </ul>
+                </div>
+                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 0;">
+                    <i class="fas fa-exclamation-triangle me-1" style="color: #f59e0b;"></i>
+                    This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('admin.close_government_election', election_id=election.id) }}" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-calculator me-1"></i>Close & Calculate Results
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% endblock %}

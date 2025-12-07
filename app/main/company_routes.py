@@ -750,6 +750,7 @@ def job_market():
     query = select(JobOffer).join(Company).filter(
         JobOffer.is_active == True,
         Company.is_deleted == False,
+        Company.is_frozen == False,  # Exclude frozen companies (conquered countries)
         Company.country_id == player_country_id  # Only show jobs from player's current country
     )
 
@@ -878,6 +879,11 @@ def apply_job(job_id):
         return redirect(url_for('company.job_market'))
 
     company = job_offer.company
+
+    # Check if company is frozen (conquered country)
+    if company.is_frozen:
+        flash('This company is frozen due to country conquest.', 'error')
+        return redirect(url_for('company.job_market'))
 
     # Check if already employed
     existing_employment = db.session.scalar(

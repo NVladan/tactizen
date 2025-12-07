@@ -262,6 +262,8 @@ def verify_listing_transaction(
         nft_listed_signature = w3.keccak(text="NFTListed(uint256,address,uint256,uint256)").hex()
 
         for log in receipt['logs']:
+            if not log.get('topics') or len(log['topics']) < 3:
+                continue
             if log['topics'][0].hex() == nft_listed_signature:
                 token_id = int(log['topics'][1].hex(), 16)
                 seller = '0x' + log['topics'][2].hex()[-40:]
@@ -356,6 +358,8 @@ def verify_purchase_transaction(
         nft_sold_signature = w3.keccak(text="NFTSold(uint256,address,address,uint256,uint256,uint256)").hex()
 
         for log in receipt['logs']:
+            if not log.get('topics') or len(log['topics']) < 4:
+                continue
             if log['topics'][0].hex() == nft_sold_signature:
                 token_id = int(log['topics'][1].hex(), 16)
                 seller = '0x' + log['topics'][2].hex()[-40:]
@@ -434,6 +438,8 @@ def verify_cancel_transaction(
         listing_cancelled_signature = w3.keccak(text="ListingCancelled(uint256,address,uint256)").hex()
 
         for log in receipt['logs']:
+            if not log.get('topics') or len(log['topics']) < 3:
+                continue
             if log['topics'][0].hex() == listing_cancelled_signature:
                 token_id = int(log['topics'][1].hex(), 16)
                 seller = '0x' + log['topics'][2].hex()[-40:]

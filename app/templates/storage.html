@@ -456,6 +456,53 @@
         color: rgba(34, 197, 94, 0.3);
         font-size: 3rem !important;
     }
+
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Storage Page
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        .main-container { padding: 0.5rem; }
+
+        #myPlacesTab {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        #myPlacesTab::-webkit-scrollbar { display: none; }
+        #myPlacesTab .nav-item { flex-shrink: 0; }
+        #myPlacesTab .nav-link { padding: 0.5rem 0.75rem; font-size: 0.85rem; white-space: nowrap; }
+
+        .storage-header { padding: 2rem 1rem; min-height: 120px; margin-bottom: 1rem; border-radius: 12px; }
+        .storage-header h2 { font-size: 1.5rem; }
+        .storage-header p { font-size: 0.85rem; }
+
+        .resource-card { padding: 1rem; border-radius: 12px; }
+        .resource-image { height: 80px; margin-bottom: 0.75rem; }
+        .resource-name { font-size: 0.9rem; }
+        .resource-quantity { font-size: 1.25rem; }
+        .resource-unit { font-size: 0.7rem; }
+    }
+
+    @media (max-width: 480px) {
+        .main-container { padding: 0.35rem; }
+        #myPlacesTab .nav-link { padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+        .storage-header { padding: 1.5rem 0.75rem; }
+        .storage-header h2 { font-size: 1.25rem; }
+        .resource-card { padding: 0.75rem; }
+        .resource-image { height: 60px; }
+        .resource-name { font-size: 0.85rem; }
+        .resource-quantity { font-size: 1.1rem; }
+    }
+
+    @media (max-width: 360px) {
+        #myPlacesTab .nav-link { padding: 0.35rem 0.5rem; font-size: 0.75rem; }
+        .storage-header h2 { font-size: 1.1rem; }
+        .resource-image { height: 50px; }
+    }
 </style>
 {% endblock %}
 
@@ -489,8 +536,6 @@
             <div class="text-center">
                 <h2 class="mb-3">Storage</h2>
                 <p class="text-muted mb-2">All your items and resources in one place.</p>
-                {% set storage_count = current_user.get_total_inventory_count() %}
-                {% set storage_limit = current_user.USER_STORAGE_LIMIT %}
                 {% set storage_pct = (storage_count / storage_limit * 100) if storage_limit > 0 else 0 %}
                 <div class="storage-indicator mx-auto text-center" style="max-width: 400px;">
                     <div class="d-flex justify-content-center align-items-center mb-2">
@@ -504,6 +549,11 @@
                              aria-valuenow="{{ storage_count }}" aria-valuemin="0" aria-valuemax="{{ storage_limit }}">
                         </div>
                     </div>
+                    {% if storage_bonus > 0 %}
+                    <small class="text-success d-block mt-2">
+                        <i class="fas fa-warehouse me-1"></i>+{{ storage_bonus }} from Storage Increase NFT
+                    </small>
+                    {% endif %}
                 </div>
             </div>
         </div>

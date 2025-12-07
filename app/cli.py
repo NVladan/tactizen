@@ -311,3 +311,176 @@ def register_cli_commands(app):
             click.echo('Seeding missions...')
             created, updated = do_seed_missions()
             click.echo(f'Done! Created: {created}, Updated: {updated}')
+
+    @app.cli.command('fix-battle-rounds')
+    @click.option('--battle-id', '-b', type=int, default=None, help='Battle ID to fix (or all active battles if not specified)')
+    def fix_battle_rounds_command(battle_id):
+        """Fix battle rounds where round end time exceeds battle end time."""
+        with app.app_context():
+            from app.models import Battle, BattleRound
+            from app.models.battle import BattleStatus, RoundStatus
+
+            if battle_id:
+                battles = [db.session.get(Battle, battle_id)]
+                if not battles[0]:
+                    click.echo(f'Error: Battle with ID {battle_id} not found!')
+                    return
+            else:
+                battles = db.session.scalars(
+                    db.select(Battle).where(Battle.status == BattleStatus.ACTIVE)
+                ).all()
+
+            click.echo(f'Checking {len(battles)} battle(s) for round timing issues...')
+            click.echo('=' * 80)
+
+            fixed_count = 0
+            for battle in battles:
+                if not battle.ends_at:
+                    continue
+
+                current_round = battle.get_current_round()
+                if not current_round or not current_round.ends_at:
+                    continue
+
+                region_name = battle.region.name if battle.region else 'Unknown'
+                click.echo(f'\nBattle {battle.id}: {region_name}')
+                click.echo(f'  Battle ends at: {battle.ends_at}')
+                click.echo(f'  Round {current_round.round_number} ends at: {current_round.ends_at}')
+
+                if current_round.ends_at > battle.ends_at:
+                    old_end = current_round.ends_at
+                    current_round.ends_at = battle.ends_at
+                    click.echo(f'  [FIX] Round end time exceeded battle end time!')
+                    click.echo(f'  [FIX] Changed from {old_end} to {battle.ends_at}')
+                    fixed_count += 1
+                else:
+                    click.echo(f'  [OK] Round timing is correct')
+
+            if fixed_count > 0:
+                db.session.commit()
+                click.echo(f'\n{"=" * 80}')
+                click.echo(f'Fixed {fixed_count} round(s) with timing issues.')
+            else:
+                click.echo(f'\n{"=" * 80}')
+                click.echo('No timing issues found.')
+
+    @app.cli.command('list-elections')
+    @click.option('--limit', '-l', type=int, default=10, help='Number of elections to show')
+    def list_elections_command(limit):
+        """List government elections."""
+        with app.app_context():
+            from app.models import GovernmentElection
+
+            elections = db.session.scalars(
+                db.select(GovernmentElection).order_by(GovernmentElection.id.desc()).limit(limit)
+            ).all()
+
+            click.echo(f'Government Elections (last {limit}):')
+            click.echo('=' * 80)
+
+            for e in elections:
+                country_name = e.country.name if e.country else 'Unknown'
+                click.echo(f'ID: {e.id:4d} | {e.election_type.value:15s} | {e.status.value:15s} | {country_name}')
+
+    @app.cli.command('advance-election')
+    @click.option('--election-id', '-e', type=int, required=True, help='Election ID to advance')
+    def advance_election_command(election_id):
+        """Advance an election to the next phase (for testing)."""
+        with app.app_context():
+            from app.models import GovernmentElection, GovernmentElectionStatus
+
+            election = db.session.get(GovernmentElection, election_id)
+            if not election:
+                click.echo(f'Error: Election with ID {election_id} not found!')
+                return
+
+            status_order = [
+                GovernmentElectionStatus.NOMINATIONS,
+                GovernmentElectionStatus.APPLICATIONS,
+                GovernmentElectionStatus.VOTING,
+                GovernmentElectionStatus.COMPLETED
+            ]
+
+            current_idx = -1
+            for i, s in enumerate(status_order):
+                if election.status == s:
+                    current_idx = i
+                    break
+
+            if current_idx == -1:
+                click.echo(f'Election status {election.status.value} cannot be advanced.')
+                return
+
+            if current_idx >= len(status_order) - 1:
+                click.echo('Election is already completed.')
+                return
+
+            old_status = election.status.value
+            election.status = status_order[current_idx + 1]
+            db.session.commit()
+
+            click.echo(f'Election {election_id} advanced from {old_status} to {election.status.value}')
+
+    @app.cli.command('add-test-candidate')
+    @click.option('--election-id', '-e', type=int, required=True, help='Election ID')
+    @click.option('--user-id', '-u', type=int, required=True, help='User ID to add as candidate')
+    def add_test_candidate_command(election_id, user_id):
+        """Add a test candidate to an election."""
+        with app.app_context():
+            from app.models import GovernmentElection, ElectionCandidate, CandidateStatus
+
+            election = db.session.get(GovernmentElection, election_id)
+            if not election:
+                click.echo(f'Error: Election with ID {election_id} not found!')
+                return
+
+            user = db.session.get(User, user_id)
+            if not user:
+                click.echo(f'Error: User with ID {user_id} not found!')
+                return
+
+            # Check if already a candidate
+            existing = db.session.scalars(
+                db.select(ElectionCandidate).where(
+                    ElectionCandidate.election_id == election_id,
+                    ElectionCandidate.user_id == user_id
+                )
+            ).first()
+
+            if existing:
+                click.echo(f'User {user.username} is already a candidate (status: {existing.status.value})')
+                return
+
+            # Get user's party
+            party_id = None
+            if user.party_memberships:
+                party_id = user.party_memberships[0].party_id
+
+            candidate = ElectionCandidate(
+                election_id=election_id,
+                user_id=user_id,
+                party_id=party_id,
+                status=CandidateStatus.APPROVED
+            )
+            db.session.add(candidate)
+            db.session.commit()
+
+            click.echo(f'Added {user.username} as candidate to election {election_id}')
+
+    @app.cli.command('reset-zk-voting')
+    def reset_zk_voting_command():
+        """Reset all ZK voting data (for testing after hash algorithm change)."""
+        with app.app_context():
+            from app.models import VoterCommitment, MerkleTree, ZKVote
+
+            # Delete all ZK voting data
+            vc_count = VoterCommitment.query.delete()
+            mt_count = MerkleTree.query.delete()
+            zv_count = ZKVote.query.delete()
+
+            db.session.commit()
+
+            click.echo(f'Deleted {vc_count} voter commitments')
+            click.echo(f'Deleted {mt_count} merkle trees')
+            click.echo(f'Deleted {zv_count} ZK votes')
+            click.echo('Done! Users need to clear localStorage and re-register for anonymous voting.')

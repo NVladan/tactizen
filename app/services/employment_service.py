@@ -121,6 +121,13 @@ class EmploymentService:
             select(Company).where(Company.id == employment.company_id).with_for_update()
         )
 
+        if not company:
+            return False, "Company no longer exists", 0.0, Decimal('0'), 0, 0
+
+        # Check if company is frozen (country conquered)
+        if company.is_frozen:
+            return False, "Company operations are frozen due to country conquest", 0.0, Decimal('0'), 0, 0
+
         # Validate hours
         can_allocate, reason = EmploymentService.can_allocate_hours(user, 'working', hours)
         if not can_allocate:

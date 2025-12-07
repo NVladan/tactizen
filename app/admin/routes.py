@@ -62,6 +62,37 @@ def index():
                          deleted_resources_count=deleted_resources_count)
 
 
+@bp.route('/elections')
+@login_required
+@admin_required
+def elections():
+    """Elections management page."""
+    from app.models import GovernmentElection, GovernmentElectionStatus
+
+    # Get active elections (not completed or cancelled)
+    active_elections = db.session.scalars(
+        db.select(GovernmentElection)
+        .where(GovernmentElection.status.notin_([
+            GovernmentElectionStatus.COMPLETED,
+            GovernmentElectionStatus.CANCELLED
+        ]))
+        .order_by(GovernmentElection.country_id.asc(), GovernmentElection.id.desc())
+    ).all()
+
+    # Get completed elections (last 50)
+    completed_elections = db.session.scalars(
+        db.select(GovernmentElection)
+        .where(GovernmentElection.status == GovernmentElectionStatus.COMPLETED)
+        .order_by(GovernmentElection.voting_end.desc())
+        .limit(50)
+    ).all()
+
+    return render_template('admin/elections.html',
+                         title='Elections Management',
+                         active_elections=active_elections,
+                         completed_elections=completed_elections)
+
+
 # --- Deleted Users ---
 @bp.route('/deleted-users')
 @login_required
@@ -896,7 +927,8 @@ def government_elections():
 @admin_required
 def government_election_detail(election_id):
     """View details of a specific government election."""
-    from app.models import GovernmentElection, ElectionCandidate
+    from app.models import GovernmentElection, ElectionCandidate, ElectionType
+    from app.models.zk_voting import ZKVote
 
     election = db.session.get(GovernmentElection, election_id)
     if not election:
@@ -909,10 +941,20 @@ def government_election_detail(election_id):
         .order_by(ElectionCandidate.votes_received.desc())
     ).all()
 
+    # Count ZK anonymous votes for this election
+    zk_election_type = 'presidential' if election.election_type == ElectionType.PRESIDENTIAL else 'congressional'
+    zk_vote_count = db.session.scalar(
+        db.select(db.func.count(ZKVote.id))
+        .where(ZKVote.election_type == zk_election_type)
+        .where(ZKVote.election_id == election_id)
+        .where(ZKVote.proof_verified == True)
+    ) or 0
+
     return render_template('admin/government_election_detail.html',
                           title=f'Election {election_id}',
                           election=election,
-                          candidates=candidates)
+                          candidates=candidates,
+                          zk_vote_count=zk_vote_count)
 
 
 @bp.route('/government/elections/<int:election_id>/cancel', methods=['POST'])
@@ -942,6 +984,97 @@ def cancel_government_election(election_id):
         flash('Error cancelling election.', 'danger')
 
     return redirect(url_for('admin.government_election_detail', election_id=election_id))
+
+
+@bp.route('/government/elections/<int:election_id>/advance', methods=['POST'])
+@login_required
+@admin_required
+def advance_government_election(election_id):
+    """Advance election to next phase (for testing)."""
+    from app.models import GovernmentElection, GovernmentElectionStatus
+
+    election = db.session.get(GovernmentElection, election_id)
+    if not election:
+        abort(404)
+
+    # Only allow advancing: NOMINATIONS -> APPLICATIONS -> VOTING
+    # To go from VOTING -> COMPLETED, must use "Close & Calculate" button
+    status_transitions = {
+        GovernmentElectionStatus.NOMINATIONS: GovernmentElectionStatus.APPLICATIONS,
+        GovernmentElectionStatus.APPLICATIONS: GovernmentElectionStatus.VOTING,
+    }
+
+    if election.status == GovernmentElectionStatus.VOTING:
+        flash('Election is in VOTING phase. Use "Close & Calculate Results" button to close voting and count votes.', 'warning')
+        return redirect(url_for('admin.elections'))
+
+    if election.status not in status_transitions:
+        flash('Cannot advance this election further.', 'warning')
+        return redirect(url_for('admin.elections'))
+
+    try:
+        next_status = status_transitions[election.status]
+        election.status = next_status
+        db.session.commit()
+        current_app.logger.info(f"Admin {current_user.id} advanced election {election_id} to {election.status.value}")
+        flash(f'Election advanced to {election.status.value}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error advancing election: {e}", exc_info=True)
+        flash('Error advancing election.', 'danger')
+
+    return redirect(url_for('admin.elections'))
+
+
+@bp.route('/government/elections/<int:election_id>/close', methods=['POST'])
+@login_required
+@admin_required
+def close_government_election(election_id):
+    """Close voting and calculate results (includes ZK anonymous votes)."""
+    from app.models import GovernmentElection, GovernmentElectionStatus
+    from app.scheduler import calculate_election_results
+
+    election = db.session.get(GovernmentElection, election_id)
+    if not election:
+        abort(404)
+
+    if election.status != GovernmentElectionStatus.VOTING:
+        flash('Can only close elections that are in VOTING phase.', 'warning')
+        return redirect(url_for('admin.elections'))
+
+    try:
+        # Calculate results (includes both regular and ZK votes)
+        calculate_election_results(election)
+
+        # Mark as completed
+        election.status = GovernmentElectionStatus.COMPLETED
+        db.session.commit()
+
+        current_app.logger.info(f"Admin {current_user.id} closed election {election_id} and calculated results")
+
+        # Build appropriate message based on election type
+        from app.models import ElectionType, CongressMember, User
+        if election.election_type == ElectionType.PRESIDENTIAL:
+            if election.winner_user_id:
+                winner = db.session.get(User, election.winner_user_id)
+                winner_name = winner.username if winner else f"User #{election.winner_user_id}"
+                flash(f'Election closed! Total votes: {election.total_votes_cast}. President elected: {winner_name}', 'success')
+            else:
+                flash(f'Election closed! Total votes: {election.total_votes_cast}. No winner (no candidates with votes).', 'warning')
+        else:  # Congressional
+            # Count how many congress members were elected
+            elected_count = db.session.scalar(
+                db.select(db.func.count(CongressMember.id))
+                .where(CongressMember.election_id == election.id)
+                .where(CongressMember.is_current == True)
+            ) or 0
+            flash(f'Election closed! Total votes: {election.total_votes_cast}. {elected_count} congress member(s) elected.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error closing election: {e}", exc_info=True)
+        flash(f'Error closing election: {str(e)}', 'danger')
+
+    return redirect(url_for('admin.elections'))
 
 
 @bp.route('/government/elections/create', methods=['GET', 'POST'])
@@ -1503,3 +1636,50 @@ def delete_regional_resource(deposit_id):
         flash('Error deleting resource. Please try again.', 'danger')
 
     return redirect(url_for('admin.regional_resources'))
+
+
+# --- Game Settings Management ---
+
+@bp.route('/game-settings')
+@login_required
+@admin_required
+def game_settings():
+    """View and manage game settings."""
+    from app.models import GameSettings
+
+    # Get current settings
+    starter_protection = GameSettings.is_starter_protection_enabled()
+
+    # Get all settings from database for display
+    all_settings = db.session.scalars(
+        db.select(GameSettings).order_by(GameSettings.key)
+    ).all()
+
+    return render_template('admin/game_settings.html',
+                          title='Game Settings',
+                          starter_protection=starter_protection,
+                          all_settings=all_settings)
+
+
+@bp.route('/game-settings/toggle-starter-protection', methods=['POST'])
+@login_required
+@admin_required
+def toggle_starter_protection():
+    """Toggle the starter protection setting."""
+    from app.models import GameSettings
+
+    current_value = GameSettings.is_starter_protection_enabled()
+    new_value = not current_value
+
+    GameSettings.set_value(
+        GameSettings.STARTER_PROTECTION_ENABLED,
+        new_value,
+        description='When enabled, countries with only 1 region cannot be attacked.',
+        updated_by_id=current_user.id
+    )
+
+    status = 'enabled' if new_value else 'disabled'
+    current_app.logger.info(f"Admin {current_user.id} {status} starter protection")
+    flash(f'Starter Protection has been {status}.', 'success')
+
+    return redirect(url_for('admin.game_settings'))

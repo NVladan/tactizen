@@ -4,6 +4,7 @@
 
 {% block head_extra %}
 {% include '_dashboard_styles.html' %}
+{% include '_community_mobile_styles.html' %}
 {% endblock %}
 
 {% block main_layout %}
@@ -556,7 +557,7 @@
     background: linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(168, 85, 247, 0.02) 100%);
     border: 1px solid rgba(168, 85, 247, 0.2);
     border-radius: 16px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .nft-collection-header {
@@ -580,6 +581,7 @@
 
 .nft-collection-body {
     padding: 1.5rem;
+    overflow: visible;
 }
 
 /* Custom Tabs */
@@ -1040,29 +1042,34 @@
 
 .nft-image-link {
     display: block;
-    transition: all 0.3s ease;
     flex-shrink: 0;
+    position: relative;
 }
 
-.nft-image-link:hover {
-    transform: scale(1.03);
-    filter: brightness(1.1);
-}
-
+/* NFT Image with zoom hover effect - matches marketplace */
 .nft-card .nft-image {
     width: 150px;
     height: 240px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 12px;
     border: 2px solid rgba(34, 197, 94, 0.3);
     background: #0a0e1a;
     display: block;
+    cursor: pointer;
+    position: relative;
     transition: all 0.3s ease;
 }
 
 .nft-card .nft-image:hover {
-    border-color: rgba(34, 197, 94, 0.6);
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    transform: scale(2);
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(34, 197, 94, 0.4);
+}
+
+/* Allow zoomed images to escape container */
+.nft-card,
+.nft-image-link {
+    overflow: visible;
 }
 
 .nft-tier-badge {
@@ -1092,10 +1099,9 @@
 .nft-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
-    max-height: 520px;
-    overflow-y: auto;
-    padding: 0.5rem;
+    gap: 1.5rem;
+    padding: 1rem;
+    justify-content: center;
 }
 
 .nft-card-inner {

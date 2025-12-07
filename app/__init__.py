@@ -50,6 +50,10 @@ def create_app(config_class=Config):
     from app.government import bp as government_bp
     app.register_blueprint(government_bp)
 
+    from app.government.zk_routes import zk_bp
+    app.register_blueprint(zk_bp)
+    csrf.exempt(zk_bp)  # ZK voting uses cryptographic proof instead of CSRF
+
     from app.main.company_routes import company_bp
     app.register_blueprint(company_bp)
 

@@ -3,6 +3,10 @@
 
 {% block title %}Edit {{ newspaper.name }}{% endblock %}
 
+{% block head_extra %}
+{% include '_community_mobile_styles.html' %}
+{% endblock %}
+
 {% block main_layout %}
 <div class="container mt-4" style="max-width: 800px;">
     <div class="card bg-dark border-success">

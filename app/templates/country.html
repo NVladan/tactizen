@@ -885,6 +885,7 @@
         }
     }
 </style>
+{% include '_community_mobile_styles.html' %}
 {% endblock %}
 
 {% block main_layout %}
@@ -927,6 +928,44 @@
         </div>
     </div>
 </div>
+
+{# --- Conquest Status Banner --- #}
+{% if country.is_conquered %}
+<div class="alert mb-4" style="background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(127, 29, 29, 0.3)); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 12px;">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-skull-crossbones fa-2x me-3 text-danger"></i>
+        <div>
+            <h5 class="mb-1 text-danger"><strong>Country Under Occupation</strong></h5>
+            <p class="mb-0 text-white-50">
+                {{ country.name }} has been conquered by
+                <a href="{{ url_for('main.country', slug=country.conquered_by.slug) }}" class="text-danger">
+                    <strong>{{ country.conquered_by.name }}</strong>
+                </a>
+                {% if country.conquered_at %}
+                on {{ country.conquered_at.strftime('%B %d, %Y') }}
+                {% endif %}.
+                All government positions are vacant and political activities are suspended.
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# --- Starter Protection Banner --- #}
+{% if country.has_starter_protection and not country.is_conquered %}
+<div class="alert mb-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.3)); border: 1px solid rgba(96, 165, 250, 0.5); border-radius: 12px;">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-shield-alt fa-2x me-3 text-info"></i>
+        <div>
+            <h5 class="mb-1 text-info"><strong>Starter Protection Active</strong></h5>
+            <p class="mb-0 text-white-50">
+                {{ country.name }} has only {{ country.region_count }} region and is protected from war declarations.
+                This protection will be removed when the country controls more than 1 region.
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {# --- Country Stats --- #}
 <div class="row g-4 mb-4">

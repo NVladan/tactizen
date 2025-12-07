@@ -285,17 +285,453 @@
     .damage-labels .defender { color: #22c55e; }
     .damage-labels .attacker { color: #dc2626; }
 
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN (Tablets & Phones)
+       ===================================================== */
+
+    /* Tablet breakpoint */
     @media (max-width: 768px) {
+        .battle-container {
+            padding: 0.5rem;
+        }
+
+        .battle-main-section {
+            border-radius: 12px;
+        }
+
+        .battle-header {
+            padding: 0.75rem 1rem 0.5rem 1rem;
+        }
+
+        .battle-title {
+            font-size: 1.4rem;
+            padding-right: 60px; /* Space for back button */
+        }
+
+        .battle-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .back-to-war {
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+
+        .back-to-war .btn {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .back-to-war .btn span {
+            display: none;
+        }
+
+        .walls-container {
+            padding: 0.5rem 0.75rem 0.75rem 0.75rem;
+            gap: 0.5rem;
+        }
+
+        .wall-card {
+            padding: 0.75rem;
+            border-radius: 10px;
+        }
+
+        .wall-header {
+            margin-bottom: 0.5rem;
+        }
+
+        .wall-name {
+            font-size: 0.95rem;
+        }
+
+        .wall-weapon {
+            font-size: 0.75rem;
+        }
+
         .wall-content {
             flex-direction: column;
+            gap: 0.5rem;
         }
+
         .wall-side {
             flex-direction: row;
             width: 100%;
-            justify-content: space-around;
+            justify-content: flex-start;
+            min-width: unset;
+            gap: 0.5rem;
         }
+
         .wall-side.attacker {
             flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+
+        .wall-side-label {
+            display: none;
+        }
+
+        .top-fighter {
+            padding: 0.15rem 0;
+        }
+
+        .top-fighter-avatar {
+            width: 24px;
+            height: 24px;
+        }
+
+        .top-fighter-name {
+            font-size: 0.7rem;
+            max-width: 60px;
+        }
+
+        .top-fighter-damage {
+            font-size: 0.65rem;
+        }
+
+        .progress-bar-container {
+            height: 20px;
+            margin-bottom: 0.25rem;
+        }
+
+        .battle-stats-inline {
+            padding: 0.25rem 0.5rem;
+            gap: 0.4rem;
+        }
+
+        .stat-item {
+            padding: 0.2rem 0.5rem;
+            min-width: 50px;
+        }
+
+        .stat-label {
+            font-size: 0.55rem;
+        }
+
+        .stat-value {
+            font-size: 0.8rem;
+        }
+
+        .fight-panel-inline {
+            padding: 0.5rem 0.75rem 0.75rem 0.75rem;
+        }
+
+        .fight-row {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .wall-selector {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .wall-btn {
+            flex: 1;
+            padding: 0.5rem 0.4rem;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .weapon-selector {
+            width: 100%;
+            min-width: unset;
+        }
+
+        .weapon-selector .form-select {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.75rem;
+        }
+
+        .fight-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .fight-btn {
+            flex: 1;
+            max-width: 200px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        .fight-info {
+            justify-content: center;
+            width: 100%;
+            gap: 1.5rem;
+            font-size: 0.8rem;
+        }
+
+        .constructions-info {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .construction-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .your-side {
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    /* Phone breakpoint - more aggressive changes */
+    @media (max-width: 480px) {
+        .battle-container {
+            padding: 0.25rem;
+        }
+
+        .battle-main-section {
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .battle-header {
+            padding: 0.5rem 0.5rem 0.25rem 0.5rem;
+        }
+
+        .battle-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .battle-title i {
+            display: none;
+        }
+
+        .battle-subtitle {
+            font-size: 0.8rem;
+        }
+
+        .back-to-war .btn {
+            padding: 0.25rem 0.4rem;
+            font-size: 0.7rem;
+        }
+
+        /* Compact stats row for mobile */
+        .battle-stats-inline {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .stat-item {
+            padding: 0.15rem 0.25rem;
+            min-width: unset;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.5rem;
+            letter-spacing: -0.3px;
+        }
+
+        .stat-value {
+            font-size: 0.7rem;
+        }
+
+        /* Simplified wall cards for mobile */
+        .walls-container {
+            padding: 0.25rem 0.5rem 0.5rem 0.5rem;
+            gap: 0.4rem;
+        }
+
+        .wall-card {
+            padding: 0.5rem;
+            border-radius: 8px;
+            border-left-width: 3px;
+        }
+
+        .wall-header {
+            margin-bottom: 0.4rem;
+        }
+
+        .wall-name {
+            font-size: 0.85rem;
+        }
+
+        .wall-name i {
+            margin-right: 0.3rem;
+            font-size: 0.8rem;
+        }
+
+        .wall-weapon {
+            font-size: 0.65rem;
+        }
+
+        /* Hide top fighters on small phones - show only progress bar */
+        .wall-side {
+            display: none;
+        }
+
+        .wall-progress-section {
+            width: 100%;
+        }
+
+        .progress-bar-container {
+            height: 16px;
+            border-radius: 8px;
+        }
+
+        .progress-indicator {
+            width: 2px;
+        }
+
+        /* Compact fight panel */
+        .fight-panel-inline {
+            padding: 0.4rem 0.5rem 0.5rem 0.5rem;
+        }
+
+        .your-side {
+            font-size: 0.75rem;
+            margin-bottom: 0.4rem;
+            padding: 0.25rem 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+
+        .fight-row {
+            gap: 0.5rem;
+        }
+
+        .wall-selector {
+            gap: 0.3rem;
+        }
+
+        .wall-btn {
+            padding: 0.4rem 0.3rem;
+            font-size: 0.7rem;
+            border-radius: 6px;
+        }
+
+        .wall-btn i {
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+
+        .weapon-selector .form-select {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        #weapon-info {
+            font-size: 0.7rem;
+        }
+
+        .fight-btn {
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+            border-radius: 8px;
+        }
+
+        .cooldown-timer {
+            font-size: 0.85rem;
+        }
+
+        .fight-info {
+            gap: 1rem;
+            font-size: 0.75rem;
+        }
+
+        .constructions-info {
+            gap: 0.3rem;
+        }
+
+        .construction-badge {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.4rem;
+        }
+
+        .construction-badge small {
+            font-size: 0.55rem;
+        }
+
+        .hospital-action {
+            margin-top: 0.5rem;
+        }
+
+        .hospital-btn {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .cannot-fight-inline {
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* Smaller floating damage on mobile */
+        .floating-damage {
+            font-size: 1.8rem;
+        }
+
+        .floating-damage.critical {
+            font-size: 2.2rem;
+        }
+
+        /* Resistance war side selection - mobile */
+        .resistance-side-selection {
+            padding: 1rem !important;
+            margin: 0.5rem !important;
+            border-radius: 12px !important;
+        }
+
+        .resistance-side-selection h4 {
+            font-size: 1rem !important;
+        }
+
+        .resistance-side-selection p {
+            font-size: 0.8rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .resistance-side-selection button {
+            padding: 1rem !important;
+        }
+
+        .resistance-side-selection button i {
+            font-size: 1.5rem !important;
+        }
+
+        .resistance-side-selection button strong {
+            font-size: 0.9rem !important;
+        }
+
+        .resistance-side-selection button span {
+            font-size: 0.75rem !important;
+        }
+    }
+
+    /* Extra small phones */
+    @media (max-width: 360px) {
+        .battle-title {
+            font-size: 1rem;
+        }
+
+        .battle-subtitle {
+            font-size: 0.75rem;
+        }
+
+        .stat-value {
+            font-size: 0.65rem;
+        }
+
+        .wall-name {
+            font-size: 0.8rem;
+        }
+
+        .wall-btn {
+            padding: 0.35rem 0.2rem;
+            font-size: 0.65rem;
+        }
+
+        .fight-btn {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
         }
     }
 
@@ -628,16 +1064,6 @@
         color: #ffffff;
     }
 
-    @media (max-width: 768px) {
-        .fight-row {
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .wall-selector {
-            justify-content: center;
-        }
-    }
-
     /* Floating Damage Numbers */
     .floating-damage {
         position: fixed;
@@ -742,7 +1168,7 @@
     <!-- Back to War Button (top right) -->
     <div class="back-to-war">
         <a href="{{ url_for('main.war_detail', war_id=battle.war_id) }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back to War
+            <i class="fas fa-arrow-left"></i><span class="d-none d-md-inline"> Back to War</span>
         </a>
     </div>
 
@@ -1047,8 +1473,8 @@
                 </div>
 
                 <div class="fight-info">
-                    <span><i class="fas fa-bolt text-warning"></i> {{ current_user.energy }}/100</span>
-                    <span><i class="fas fa-heart text-danger"></i> {{ current_user.wellness }}/100</span>
+                    <span><i class="fas fa-bolt text-warning"></i> <span id="energy-display">{{ current_user.energy|round(1) }}/{{ current_user.max_energy|int }}</span></span>
+                    <span><i class="fas fa-heart text-danger"></i> <span id="wellness-display">{{ current_user.wellness|round(1) }}/{{ current_user.max_wellness|int }}</span></span>
                 </div>
 
                 <!-- Regional Constructions Info -->
@@ -1160,9 +1586,9 @@ function useHospital() {
     .then(data => {
         if (data.success) {
             // Update wellness display
-            const wellnessDisplay = document.querySelector('.fight-info span:nth-child(2)');
+            const wellnessDisplay = document.getElementById('wellness-display');
             if (wellnessDisplay) {
-                wellnessDisplay.innerHTML = `<i class="fas fa-heart text-danger"></i> ${data.new_wellness}/${data.max_wellness}`;
+                wellnessDisplay.textContent = `${data.new_wellness}/${data.max_wellness}`;
             }
 
             // Show success message
@@ -1441,7 +1867,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token() }}'
                 }
             })
             .then(response => response.json())
@@ -1474,10 +1901,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Update energy/wellness display
-                    const energyDisplay = document.querySelector('.fight-info span:first-child');
-                    const wellnessDisplay = document.querySelector('.fight-info span:nth-child(2)');
-                    if (energyDisplay) energyDisplay.innerHTML = `<i class="fas fa-bolt text-warning"></i> Energy: ${data.user_energy}/100`;
-                    if (wellnessDisplay) wellnessDisplay.innerHTML = `<i class="fas fa-heart text-danger"></i> Wellness: ${data.user_wellness}/100`;
+                    const energyDisplay = document.getElementById('energy-display');
+                    const wellnessDisplay = document.getElementById('wellness-display');
+                    if (energyDisplay) energyDisplay.textContent = `${data.user_energy}/${data.max_energy}`;
+                    if (wellnessDisplay) wellnessDisplay.textContent = `${data.user_wellness}/${data.max_wellness}`;
 
                     // Update weapon counts from fight response
                     if (data.available_weapons) {
@@ -1535,14 +1962,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTimers() {
         const now = new Date();
 
-        if (roundEndsAt) {
-            const roundDiff = roundEndsAt - now;
-            document.getElementById('round-timer').textContent = formatTime(roundDiff);
+        // Calculate battle remaining time first
+        let battleDiff = 0;
+        if (battleEndsAt) {
+            battleDiff = battleEndsAt - now;
+            document.getElementById('battle-timer').textContent = formatTime(battleDiff);
         }
 
-        if (battleEndsAt) {
-            const battleDiff = battleEndsAt - now;
-            document.getElementById('battle-timer').textContent = formatTime(battleDiff);
+        if (roundEndsAt) {
+            let roundDiff = roundEndsAt - now;
+            // Cap round timer to not exceed battle timer (fix for bug where round exceeds battle)
+            if (battleEndsAt && roundDiff > battleDiff) {
+                roundDiff = battleDiff;
+            }
+            document.getElementById('round-timer').textContent = formatTime(roundDiff);
         }
     }
 
@@ -1644,10 +2077,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // Update energy/wellness display
-                const energyDisplay = document.querySelector('.fight-info span:first-child');
-                const wellnessDisplay = document.querySelector('.fight-info span:nth-child(2)');
-                if (energyDisplay) energyDisplay.innerHTML = `<i class="fas fa-bolt text-warning"></i> Energy: ${data.user_energy}/100`;
-                if (wellnessDisplay) wellnessDisplay.innerHTML = `<i class="fas fa-heart text-danger"></i> Wellness: ${data.user_wellness}/100`;
+                const energyDisplay = document.getElementById('energy-display');
+                const wellnessDisplay = document.getElementById('wellness-display');
+                if (energyDisplay) energyDisplay.textContent = `${data.user_energy}/${data.max_energy}`;
+                if (wellnessDisplay) wellnessDisplay.textContent = `${data.user_wellness}/${data.max_wellness}`;
 
                 // Update round wins
                 document.getElementById('attacker-wins').textContent = data.attacker_rounds_won;

@@ -163,6 +163,307 @@
         font-size: 0.9rem;
         margin-top: 0.5rem;
     }
+
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Residence Page
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 0.5rem;
+        }
+
+        /* Tab Navigation - horizontal scroll */
+        #myPlacesTab {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        #myPlacesTab::-webkit-scrollbar {
+            display: none;
+        }
+
+        #myPlacesTab .nav-item {
+            flex-shrink: 0;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        /* Residence Header */
+        .residence-header {
+            padding: 2rem 1rem;
+            min-height: 120px;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .residence-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .residence-header p {
+            font-size: 0.85rem;
+        }
+
+        /* Residence Card */
+        .residence-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        /* House Image */
+        .residence-card img {
+            width: 120px !important;
+            height: 120px !important;
+        }
+
+        .residence-card h2 {
+            font-size: 1.5rem !important;
+        }
+
+        /* Star Rating */
+        .residence-card .mb-2[style*="font-size: 2rem"] {
+            font-size: 1.5rem !important;
+        }
+
+        /* Time Info Cards - Stack vertically on mobile */
+        .residence-card .row.g-3 .col-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .residence-card .row.g-3 .col-4 > div {
+            padding: 0.75rem !important;
+        }
+
+        .residence-card .row.g-3 .col-4 > div div[style*="font-size: 0.85rem"] {
+            font-size: 0.9rem !important;
+        }
+
+        /* Restoration Timer Box */
+        .residence-card div[style*="border-radius: 16px; padding: 2rem"] {
+            padding: 1rem !important;
+            border-radius: 12px !important;
+        }
+
+        /* Restoration Benefits - Stack on mobile */
+        .residence-card .d-flex.justify-content-center.gap-3 {
+            flex-direction: column;
+            gap: 0.5rem !important;
+            align-items: center;
+        }
+
+        .residence-card .d-flex.justify-content-center.gap-3 > div {
+            padding: 0.5rem 1rem !important;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Timer Display */
+        #restorationTimer {
+            font-size: 2.5rem !important;
+        }
+
+        .residence-card div[style*="Until next restoration"] {
+            font-size: 0.85rem !important;
+        }
+
+        /* Info Text */
+        .residence-card .text-center.mt-3.pt-3 div {
+            font-size: 0.8rem !important;
+        }
+
+        /* Destroy Button Section */
+        .residence-card .mt-4.pt-4 .btn-outline-danger {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .residence-card .mt-4.pt-4 p {
+            font-size: 0.8rem !important;
+        }
+
+        /* House Icon */
+        .house-icon {
+            width: 80px;
+            height: 80px;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* No Residence Card */
+        .no-residence-card {
+            padding: 2rem 1rem;
+        }
+
+        .no-residence-icon {
+            width: 80px;
+            height: 80px;
+            font-size: 2.5rem;
+        }
+
+        .no-residence-card h3 {
+            font-size: 1.25rem;
+        }
+
+        .no-residence-card p {
+            font-size: 0.9rem;
+        }
+
+        .no-residence-card .btn-lg {
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem;
+        }
+
+        /* Info Row */
+        .info-row {
+            padding: 0.75rem 0;
+            font-size: 0.9rem;
+        }
+
+        /* Timer Display */
+        .timer-display {
+            padding: 1rem;
+        }
+
+        .timer-value {
+            font-size: 1.5rem;
+        }
+
+        /* Modal adjustments */
+        .modal-body {
+            padding: 1.5rem !important;
+        }
+
+        .modal-body img {
+            width: 60px !important;
+            height: 60px !important;
+        }
+
+        .modal-body p {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-container {
+            padding: 0.35rem;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .residence-header {
+            padding: 1.5rem 0.75rem;
+            min-height: 100px;
+        }
+
+        .residence-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .residence-header p {
+            font-size: 0.8rem;
+        }
+
+        .residence-card {
+            padding: 0.85rem;
+        }
+
+        .residence-card img {
+            width: 100px !important;
+            height: 100px !important;
+        }
+
+        .residence-card h2 {
+            font-size: 1.25rem !important;
+        }
+
+        .residence-card .mb-2[style*="font-size: 2rem"] {
+            font-size: 1.25rem !important;
+        }
+
+        #restorationTimer {
+            font-size: 2rem !important;
+        }
+
+        .house-icon {
+            width: 70px;
+            height: 70px;
+            font-size: 2rem;
+        }
+
+        .no-residence-card {
+            padding: 1.5rem 0.75rem;
+        }
+
+        .no-residence-icon {
+            width: 70px;
+            height: 70px;
+            font-size: 2rem;
+        }
+
+        .no-residence-card h3 {
+            font-size: 1.1rem;
+        }
+
+        .timer-value {
+            font-size: 1.25rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #myPlacesTab .nav-link {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .residence-header h2 {
+            font-size: 1.1rem;
+        }
+
+        .residence-card img {
+            width: 80px !important;
+            height: 80px !important;
+        }
+
+        .residence-card h2 {
+            font-size: 1.1rem !important;
+        }
+
+        #restorationTimer {
+            font-size: 1.75rem !important;
+        }
+
+        .house-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.75rem;
+        }
+
+        .no-residence-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.75rem;
+        }
+
+        .no-residence-card h3 {
+            font-size: 1rem;
+        }
+    }
 </style>
 {% endblock %}
 

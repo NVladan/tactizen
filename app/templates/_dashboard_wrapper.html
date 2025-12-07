@@ -7,24 +7,52 @@
 <div class="user-info-wrapper">
 <div class="user-info-section">
     {# User Name & Avatar Section #}
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-        {# Username above avatar #}
-        <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="text-decoration-none">
+    <div class="user-header-row">
+        {# Avatar with glow effect #}
+        <div class="avatar-container">
+            {% if current_user.avatar %}
+                <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="avatar-link">
+                    <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.id|string + '.png') }}?v={{ range(1, 10000)|random }}"
+                         alt="Profile" class="user-avatar"> {# Cache buster #}
+                </a>
+            {% else %}
+                <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="avatar-link">
+                    <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}"
+                         alt="Profile" class="user-avatar">
+                </a>
+            {% endif %}
+        </div>
+
+        {# Desktop: Username below avatar #}
+        <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="text-decoration-none d-none d-md-block">
             <h3 class="user-name m-0" style="text-align: center;">{{ current_user.username if current_user.username else current_user.wallet_address[:6] + '...' }}</h3>
         </a>
 
-        {# Avatar with glow effect #}
-        {% if current_user.avatar %}
-            <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="avatar-link">
-                <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.id|string + '.png') }}?v={{ range(1, 10000)|random }}"
-                     alt="Profile" class="user-avatar"> {# Cache buster #}
-            </a>
-        {% else %}
-            <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="avatar-link">
-                <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}"
-                     alt="Profile" class="user-avatar">
-            </a>
-        {% endif %}
+        {# Mobile: Name + Level on first line, Icons on second line #}
+        <div class="mobile-user-info d-md-none">
+            <div class="mobile-name-level-row">
+                <a href="{{ url_for('main.view_profile', username=current_user.username) if current_user.username else url_for('main.edit_profile') }}" class="text-decoration-none">
+                    <span class="mobile-username">{{ current_user.username if current_user.username else current_user.wallet_address[:6] + '...' }}</span>
+                </a>
+                <span class="mobile-level-badge">
+                    <i class="fas fa-star"></i> Lv.{{ current_user.level|default(1) }}
+                </span>
+            </div>
+            <div class="mobile-icons-row">
+                <div class="mobile-icon-btn" id="messages-dropdown-trigger-mobile" title="Messages">
+                    <i class="fas fa-envelope"></i>
+                    {% if current_user.unread_message_count > 0 %}
+                    <span class="mobile-icon-badge">{{ current_user.unread_message_count }}</span>
+                    {% endif %}
+                </div>
+                <div class="mobile-icon-btn" id="alerts-dropdown-trigger-mobile" title="Alerts">
+                    <i class="fas fa-bell"></i>
+                    {% if current_user.unread_alert_count > 0 %}
+                    <span class="mobile-icon-badge">{{ current_user.unread_alert_count }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 
     {# Stats Container #}
@@ -297,12 +325,12 @@
 
     function initMessagesDropdown() {
         const messagesTrigger = document.getElementById('messages-dropdown-trigger');
+        const messagesTriggerMobile = document.getElementById('messages-dropdown-trigger-mobile');
         const messagesDropdown = document.getElementById('messages-dropdown');
 
-        if (!messagesTrigger || !messagesDropdown) return;
+        if (!messagesDropdown) return;
 
-        // Toggle dropdown on click
-        messagesTrigger.addEventListener('click', function(e) {
+        function toggleMessagesDropdown(e) {
             e.stopPropagation();
             e.preventDefault();
 
@@ -313,11 +341,27 @@
             if (alertsDropdown) alertsDropdown.classList.remove('show');
 
             messagesDropdown.classList.toggle('show');
-        });
+        }
+
+        // Desktop trigger
+        if (messagesTrigger) {
+            messagesTrigger.addEventListener('click', toggleMessagesDropdown);
+        }
+
+        // Mobile trigger - navigate to messages page on mobile
+        if (messagesTriggerMobile) {
+            messagesTriggerMobile.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                window.location.href = '{{ url_for("main.messages") }}';
+            });
+        }
 
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            if (!messagesTrigger.contains(e.target)) {
+            const isOutside = (!messagesTrigger || !messagesTrigger.contains(e.target)) &&
+                             (!messagesTriggerMobile || !messagesTriggerMobile.contains(e.target));
+            if (isOutside) {
                 messagesDropdown.classList.remove('show');
             }
         });
@@ -330,12 +374,12 @@
 
     function initAlertsDropdown() {
         const alertsTrigger = document.getElementById('alerts-dropdown-trigger');
+        const alertsTriggerMobile = document.getElementById('alerts-dropdown-trigger-mobile');
         const alertsDropdown = document.getElementById('alerts-dropdown');
 
-        if (!alertsTrigger || !alertsDropdown) return;
+        if (!alertsDropdown) return;
 
-        // Toggle dropdown on click
-        alertsTrigger.addEventListener('click', function(e) {
+        function toggleAlertsDropdown(e) {
             e.stopPropagation();
             e.preventDefault();
 
@@ -346,11 +390,27 @@
             if (messagesDropdown) messagesDropdown.classList.remove('show');
 
             alertsDropdown.classList.toggle('show');
-        });
+        }
+
+        // Desktop trigger
+        if (alertsTrigger) {
+            alertsTrigger.addEventListener('click', toggleAlertsDropdown);
+        }
+
+        // Mobile trigger - navigate to alerts page on mobile
+        if (alertsTriggerMobile) {
+            alertsTriggerMobile.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                window.location.href = '{{ url_for("main.messages") }}?tab=alerts';
+            });
+        }
 
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            if (!alertsTrigger.contains(e.target)) {
+            const isOutside = (!alertsTrigger || !alertsTrigger.contains(e.target)) &&
+                             (!alertsTriggerMobile || !alertsTriggerMobile.contains(e.target));
+            if (isOutside) {
                 alertsDropdown.classList.remove('show');
             }
         });

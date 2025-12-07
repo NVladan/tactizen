@@ -657,7 +657,11 @@ def calculate_election_results(election):
         ElectionCandidate, ElectionVote, CountryPresident, CongressMember,
         CandidateStatus, ElectionType, User, Country
     )
+    from app.models.zk_voting import ZKVote
     from app.alert_helpers import send_election_win_alert
+
+    # Determine election type string for ZK votes
+    zk_election_type = 'presidential' if election.election_type == ElectionType.PRESIDENTIAL else 'congressional'
 
     # Get all approved candidates with vote counts
     candidates = db.session.scalars(
@@ -666,13 +670,42 @@ def calculate_election_results(election):
         .where(ElectionCandidate.status == CandidateStatus.APPROVED)
     ).all()
 
-    # Count votes for each candidate
+    # Build ZK index to candidate mapping (1-based, ordered by candidate ID for consistency)
+    candidates_ordered = sorted(candidates, key=lambda c: c.id)
+    zk_index_to_candidate = {idx: c for idx, c in enumerate(candidates_ordered, start=1)}
+
+    # Get ZK vote counts per candidate index
+    zk_vote_counts = {}
+    zk_votes = db.session.execute(
+        db.select(ZKVote.vote_choice, db.func.count(ZKVote.id).label('count'))
+        .where(ZKVote.election_type == zk_election_type)
+        .where(ZKVote.election_id == election.id)
+        .where(ZKVote.proof_verified == True)
+        .where(ZKVote.vote_choice > 0)  # Exclude abstentions
+        .group_by(ZKVote.vote_choice)
+    ).all()
+    for zk_vote in zk_votes:
+        zk_vote_counts[zk_vote.vote_choice] = zk_vote.count
+
+    # Count votes for each candidate (regular + ZK)
     for candidate in candidates:
-        vote_count = db.session.scalar(
+        # Regular votes
+        regular_count = db.session.scalar(
             db.select(db.func.count(ElectionVote.id))
             .where(ElectionVote.candidate_id == candidate.id)
         ) or 0
-        candidate.votes_received = vote_count
+
+        # Find this candidate's ZK index
+        zk_index = None
+        for idx, c in zk_index_to_candidate.items():
+            if c.id == candidate.id:
+                zk_index = idx
+                break
+
+        # ZK votes for this candidate
+        zk_count = zk_vote_counts.get(zk_index, 0) if zk_index else 0
+
+        candidate.votes_received = regular_count + zk_count
 
     # Sort candidates by votes (desc), then XP (desc), then user ID (asc)
     candidates_sorted = sorted(
@@ -688,10 +721,20 @@ def calculate_election_results(election):
     for i, candidate in enumerate(candidates_sorted, 1):
         candidate.final_rank = i
 
-    election.total_votes_cast = db.session.scalar(
+    # Count total votes (regular + ZK)
+    regular_vote_count = db.session.scalar(
         db.select(db.func.count(ElectionVote.id))
         .where(ElectionVote.election_id == election.id)
     ) or 0
+
+    zk_vote_count = db.session.scalar(
+        db.select(db.func.count(ZKVote.id))
+        .where(ZKVote.election_type == zk_election_type)
+        .where(ZKVote.election_id == election.id)
+        .where(ZKVote.proof_verified == True)
+    ) or 0
+
+    election.total_votes_cast = regular_vote_count + zk_vote_count
 
     # Get country name for alerts
     country = db.session.get(Country, election.country_id)
@@ -1044,6 +1087,14 @@ def execute_war_declaration(law, app):
         if existing_war:
             logger.warning(
                 f"War already exists between countries {attacker_country_id} and {defender_country_id}"
+            )
+            return
+
+        # Check if target country has starter protection
+        defender = db.session.get(Country, defender_country_id)
+        if defender and defender.has_starter_protection:
+            logger.warning(
+                f"War declaration blocked: {defender.name} (ID {defender_country_id}) has Starter Protection"
             )
             return
 
@@ -1465,7 +1516,13 @@ def apply_nft_regeneration(app):
 
 
 def check_and_complete_battle_rounds(app):
-    """Check for battle rounds that have ended (8 hours) and complete them."""
+    """Check for battle rounds that have ended (8 hours) and complete them.
+
+    This function handles server downtime gracefully by processing rounds
+    in sequence. If multiple rounds have expired, it will complete them
+    one by one with correct timing (each round's end time is based on when
+    the previous round was scheduled to end, not when it was processed).
+    """
     with app.app_context():
         from app.extensions import db
         from app.models import Battle, BattleRound
@@ -1474,31 +1531,43 @@ def check_and_complete_battle_rounds(app):
 
         try:
             now = datetime.now(timezone.utc).replace(tzinfo=None)
+            total_completed = 0
 
-            # Find all active rounds that have ended
-            expired_rounds = db.session.scalars(
-                db.select(BattleRound)
-                .join(Battle, BattleRound.battle_id == Battle.id)
-                .where(Battle.status == BattleStatus.ACTIVE)
-                .where(BattleRound.status == RoundStatus.ACTIVE)
-                .where(BattleRound.ends_at <= now)
-            ).all()
+            # Keep processing until no more expired rounds are found
+            # This handles cases where server was offline and multiple rounds expired
+            while True:
+                # Find all active rounds that have ended
+                expired_rounds = db.session.scalars(
+                    db.select(BattleRound)
+                    .join(Battle, BattleRound.battle_id == Battle.id)
+                    .where(Battle.status == BattleStatus.ACTIVE)
+                    .where(BattleRound.status == RoundStatus.ACTIVE)
+                    .where(BattleRound.ends_at <= now)
+                ).all()
 
-            completed_count = 0
+                if not expired_rounds:
+                    break
 
-            for round in expired_rounds:
-                battle = db.session.get(Battle, round.battle_id)
-                if battle:
-                    BattleService.complete_round(battle, round)
-                    completed_count += 1
-                    logger.info(
-                        f"Completed round {round.round_number} for battle {battle.id} "
-                        f"(Region: {battle.region.name if battle.region else 'Unknown'})"
-                    )
+                completed_count = 0
 
-            if completed_count > 0:
-                db.session.commit()
-                logger.info(f"Completed {completed_count} battle rounds")
+                for round in expired_rounds:
+                    battle = db.session.get(Battle, round.battle_id)
+                    if battle:
+                        BattleService.complete_round(battle, round)
+                        completed_count += 1
+                        logger.info(
+                            f"Completed round {round.round_number} for battle {battle.id} "
+                            f"(Region: {battle.region.name if battle.region else 'Unknown'})"
+                        )
+
+                if completed_count > 0:
+                    db.session.commit()
+                    total_completed += completed_count
+                else:
+                    break
+
+            if total_completed > 0:
+                logger.info(f"Completed {total_completed} battle rounds total")
 
         except Exception as e:
             db.session.rollback()

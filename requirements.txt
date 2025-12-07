@@ -17,3 +17,4 @@ APScheduler
 python-dateutil
 pytz
 bleach
+poseidon-hash-lib-from-circom

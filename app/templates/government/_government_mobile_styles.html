@@ -1,0 +1,795 @@
+{# Government Mobile Styles - Include this in all government pages #}
+<style>
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Government Pages
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        /* Container adjustments */
+        .politics-container,
+        .congress-container,
+        .elections-container,
+        .defense-container,
+        .finance-container,
+        .foreign-affairs-container,
+        .alliances-container,
+        .law-container {
+            padding: 0.75rem;
+        }
+
+        /* Page Headers */
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.35rem;
+        }
+
+        .page-title-group {
+            flex-direction: row;
+            gap: 0.75rem;
+        }
+
+        .page-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.8rem;
+        }
+
+        .header-actions {
+            width: 100%;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .action-btn,
+        .action-link {
+            padding: 0.5rem 0.85rem;
+            font-size: 0.8rem;
+            flex: 1;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .country-badge {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* Grid Layouts */
+        .grid-2col,
+        .grid-layout {
+            grid-template-columns: 1fr !important;
+            gap: 1rem;
+        }
+
+        .content-layout {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* Stats Bar */
+        .stats-bar,
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card,
+        .stat-box {
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+        }
+
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
+        }
+
+        .stat-content .stat-value {
+            font-size: 1.1rem;
+        }
+
+        /* Sections */
+        .section {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+        }
+
+        .section-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-body {
+            padding: 1rem;
+        }
+
+        /* President Card */
+        .president-card {
+            padding: 1rem;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .president-avatar {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+
+        .president-name {
+            font-size: 1.15rem;
+        }
+
+        .president-info,
+        .president-meta {
+            font-size: 0.8rem;
+        }
+
+        /* Minister Cards */
+        .minister-card {
+            padding: 0.85rem;
+            gap: 0.75rem;
+        }
+
+        .minister-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+
+        .minister-title {
+            font-size: 0.7rem;
+        }
+
+        .minister-name {
+            font-size: 0.9rem;
+        }
+
+        /* Election Cards */
+        .election-card {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .election-header {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .election-type-badge,
+        .election-status-badge {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+        }
+
+        .election-countdown {
+            padding: 0.6rem 0.75rem;
+        }
+
+        .countdown-time {
+            font-size: 1rem;
+        }
+
+        .election-dates {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .date-item {
+            padding: 0.5rem;
+        }
+
+        .date-value {
+            font-size: 0.8rem;
+        }
+
+        .btn-view {
+            padding: 0.65rem;
+            font-size: 0.9rem;
+        }
+
+        /* Congress Members */
+        .members-table {
+            display: block;
+        }
+
+        .members-table thead {
+            display: none;
+        }
+
+        .members-table tbody {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .member-row {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 0.75rem;
+            border-radius: 8px;
+            gap: 0.5rem;
+        }
+
+        .member-row td {
+            padding: 0;
+            border-radius: 0 !important;
+        }
+
+        .member-row td:first-child {
+            order: 1;
+        }
+
+        .member-row td:nth-child(2) {
+            order: 2;
+            flex: 1;
+        }
+
+        .member-row td:last-child {
+            order: 3;
+            width: 100%;
+            text-align: left !important;
+            margin-top: 0.35rem;
+            padding-top: 0.35rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .member-rank {
+            width: 32px;
+            height: 32px;
+            font-size: 0.75rem;
+        }
+
+        .member-avatar {
+            width: 36px;
+            height: 36px;
+            font-size: 0.95rem;
+        }
+
+        .member-name {
+            font-size: 0.9rem;
+        }
+
+        .member-party {
+            font-size: 0.75rem;
+        }
+
+        .member-votes {
+            font-size: 0.8rem;
+        }
+
+        /* Party Distribution */
+        .party-item {
+            padding: 0.6rem;
+        }
+
+        .party-seats {
+            width: 32px;
+            height: 32px;
+            font-size: 0.9rem;
+        }
+
+        .party-name {
+            font-size: 0.9rem;
+        }
+
+        .party-votes {
+            font-size: 0.75rem;
+        }
+
+        /* Congress Grid */
+        .congress-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .congress-member {
+            padding: 0.6rem;
+        }
+
+        .congress-stats {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        /* War Cards */
+        .war-card {
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 0.85rem;
+        }
+
+        .war-countries {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .war-country-name {
+            font-size: 0.85rem;
+        }
+
+        .war-status {
+            font-size: 0.65rem;
+        }
+
+        .war-details-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Law Items */
+        .law-item,
+        .war-item {
+            padding: 0.85rem;
+        }
+
+        .law-title {
+            font-size: 0.9rem;
+        }
+
+        .law-meta {
+            font-size: 0.75rem;
+        }
+
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+        }
+
+        /* Past Presidents */
+        .past-president {
+            flex-direction: column;
+            gap: 0.25rem;
+            text-align: center;
+            padding: 0.6rem 0;
+        }
+
+        .past-president-term {
+            font-size: 0.75rem;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .quick-actions .action-link {
+            justify-content: center;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 1.5rem 0.75rem;
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+        }
+
+        .empty-state-title {
+            font-size: 1rem;
+        }
+
+        /* Sidebar Cards */
+        .sidebar-card {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.85rem;
+        }
+
+        /* Treasury Grid */
+        .treasury-grid {
+            gap: 0.5rem;
+        }
+
+        .treasury-item {
+            padding: 0.6rem;
+        }
+
+        .treasury-value {
+            font-size: 0.95rem;
+        }
+
+        /* Minister Box */
+        .minister-box {
+            padding: 0.6rem;
+            gap: 0.6rem;
+        }
+
+        .minister-avatar {
+            width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
+        }
+
+        /* Pending Items */
+        .pending-item {
+            padding: 0.6rem;
+            gap: 0.6rem;
+        }
+
+        .pending-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 0.8rem;
+        }
+
+        .pending-amount {
+            font-size: 0.85rem;
+        }
+
+        .pending-vote-btn {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.7rem;
+        }
+
+        /* Budget Items */
+        .budget-item {
+            padding: 0.6rem 0.75rem;
+            gap: 0.6rem;
+        }
+
+        .budget-icon {
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
+        }
+
+        .budget-amount {
+            font-size: 0.85rem;
+        }
+
+        .budget-meta {
+            font-size: 0.7rem;
+        }
+
+        /* Inventory Grid */
+        .inventory-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .inventory-item {
+            padding: 0.6rem;
+        }
+
+        .inventory-item-icon {
+            font-size: 1.35rem;
+        }
+
+        .inventory-item-name {
+            font-size: 0.8rem;
+        }
+
+        .inventory-item-quality {
+            font-size: 0.7rem;
+        }
+
+        .inventory-item-qty {
+            font-size: 0.95rem;
+        }
+
+        /* Purchase Section */
+        .purchase-tabs {
+            gap: 0.35rem;
+        }
+
+        .purchase-tab {
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .quality-options {
+            gap: 0.35rem;
+        }
+
+        .quality-btn {
+            padding: 0.4rem;
+            font-size: 0.75rem;
+            min-width: 40px;
+        }
+
+        .purchase-info {
+            padding: 0.75rem;
+        }
+
+        .purchase-info-label {
+            font-size: 0.75rem;
+        }
+
+        .purchase-info-value {
+            font-size: 0.85rem;
+        }
+
+        .purchase-form {
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .purchase-input {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .purchase-btn {
+            width: 100%;
+            padding: 0.6rem;
+            font-size: 0.85rem;
+        }
+
+        /* Construction Section */
+        .construct-stats-row {
+            grid-template-columns: 1fr;
+            gap: 0.6rem;
+        }
+
+        .construct-stat {
+            padding: 0.6rem 0.75rem;
+        }
+
+        .construct-stat-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
+        }
+
+        .construct-stat-value {
+            font-size: 1rem;
+        }
+
+        .construct-place-card {
+            padding: 1rem;
+        }
+
+        .construct-place-title {
+            font-size: 0.9rem;
+        }
+
+        .construct-select {
+            padding: 0.55rem 0.85rem;
+            font-size: 0.85rem;
+        }
+
+        .region-info-panel {
+            padding: 0.85rem;
+        }
+
+        .region-info-slots {
+            grid-template-columns: 1fr;
+            gap: 0.6rem;
+        }
+
+        .region-slot {
+            padding: 0.85rem;
+        }
+
+        .region-slot-icon {
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
+        }
+
+        .region-slot-title {
+            font-size: 0.85rem;
+        }
+
+        .slot-action-btn {
+            padding: 0.45rem 0.65rem;
+            font-size: 0.75rem;
+        }
+
+        .construct-existing-item {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .construct-badge {
+            font-size: 0.65rem;
+        }
+
+        /* Modal */
+        .place-modal {
+            width: 95%;
+            padding: 1rem;
+        }
+
+        .place-modal-title {
+            font-size: 1rem;
+        }
+
+        .place-modal-quality-btn {
+            min-width: 50px;
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .place-modal-btn {
+            padding: 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        /* Term Info */
+        .term-info {
+            padding: 0.75rem;
+        }
+
+        .term-dates {
+            font-size: 0.85rem;
+        }
+
+        /* Alliance Cards */
+        .alliance-card {
+            padding: 1rem;
+        }
+
+        .alliance-header {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .alliance-name {
+            font-size: 1rem;
+        }
+
+        .alliance-members {
+            font-size: 0.8rem;
+        }
+
+        /* Forms in government pages */
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .form-control,
+        .form-select {
+            padding: 0.6rem;
+            font-size: 0.9rem;
+        }
+
+        /* Vote buttons */
+        .vote-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .vote-count {
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .politics-container,
+        .congress-container,
+        .elections-container,
+        .defense-container,
+        .finance-container,
+        .foreign-affairs-container,
+        .alliances-container,
+        .law-container {
+            padding: 0.5rem;
+        }
+
+        .page-title {
+            font-size: 1.2rem;
+        }
+
+        .page-icon {
+            width: 36px;
+            height: 36px;
+        }
+
+        .stats-bar,
+        .stats-grid {
+            gap: 0.4rem;
+        }
+
+        .stat-card,
+        .stat-box {
+            padding: 0.6rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .section {
+            padding: 0.85rem;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+        }
+
+        .president-avatar {
+            width: 50px;
+            height: 50px;
+            font-size: 1.25rem;
+        }
+
+        .president-name {
+            font-size: 1.05rem;
+        }
+
+        .congress-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .inventory-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-btn,
+        .action-link {
+            font-size: 0.75rem;
+            padding: 0.45rem 0.7rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .page-title {
+            font-size: 1.1rem;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+        }
+
+        .president-name {
+            font-size: 1rem;
+        }
+
+        .action-btn,
+        .action-link {
+            font-size: 0.7rem;
+        }
+    }
+</style>

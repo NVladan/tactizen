@@ -1,5 +1,10 @@
 {% extends "layouts/base.html" %}
 
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+{% include 'government/_government_mobile_styles.html' %}
+{% endblock %}
+
 {% block main_layout %}
 <div class="container my-5">
     <div class="row">

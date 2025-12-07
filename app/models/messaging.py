@@ -50,6 +50,9 @@ class Message(db.Model):
     sender_deleted = db.Column(db.Boolean, default=False, nullable=False)
     recipient_deleted = db.Column(db.Boolean, default=False, nullable=False)
 
+    # Admin removal (hides from both users, shows "[Message removed by moderator]")
+    admin_removed = db.Column(db.Boolean, default=False, nullable=False)
+
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

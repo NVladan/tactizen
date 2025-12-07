@@ -83,13 +83,15 @@ def war_detail(war_id):
     if war.is_active():
         user_country_id = current_user.citizenship_id
 
-        # Check if user is president or minister of defence
-        is_president = current_user.is_president_of(user_country_id)
-        is_defence_minister = current_user.is_minister_of(user_country_id, 'defence')
+        # Only check permissions if user has citizenship
+        if user_country_id:
+            # Check if user is president or minister of defence
+            is_president = current_user.is_president_of(user_country_id)
+            is_defence_minister = current_user.is_minister_of(user_country_id, 'defence')
 
-        if (is_president or is_defence_minister) and war.can_country_attack(user_country_id):
-            can_start_battle = True
-            attackable_regions = BattleService.get_attackable_regions(war, user_country_id)
+            if (is_president or is_defence_minister) and war.can_country_attack(user_country_id):
+                can_start_battle = True
+                attackable_regions = BattleService.get_attackable_regions(war, user_country_id)
 
     # Get initiative info
     initiative_info = None
@@ -128,6 +130,9 @@ def start_battle(war_id):
 
     # Determine attacking country (user's citizenship)
     attacking_country_id = current_user.citizenship_id
+    if not attacking_country_id:
+        flash('You must have citizenship to start a battle.', 'danger')
+        return redirect(url_for('main.war_detail', war_id=war_id))
 
     battle, message = BattleService.start_battle(
         war=war,
@@ -383,6 +388,8 @@ def fight(battle_id):
                 'new_level': damage_info.get('new_level'),
                 'user_energy': float(current_user.energy),
                 'user_wellness': float(current_user.wellness),
+                'max_energy': int(current_user.max_energy),
+                'max_wellness': int(current_user.max_wellness),
                 'available_weapons': updated_weapons,
                 'leaderboards': leaderboards
             })
@@ -454,6 +461,8 @@ def battle_status(battle_id):
         'cooldown_remaining': participation.cooldown_remaining if participation else 0,
         'user_energy': current_user.energy,
         'user_wellness': current_user.wellness,
+        'max_energy': int(current_user.max_energy),
+        'max_wellness': int(current_user.max_wellness),
         'available_weapons': available_weapons,
         'leaderboards': leaderboards,
         'round_ends_at': current_round.ends_at.isoformat() + 'Z' if current_round and current_round.ends_at else None,
@@ -578,8 +587,8 @@ def use_hospital(battle_id):
     # Q1=10, Q2=20, Q3=30, Q4=40, Q5=50
     wellness_restore = hospital.quality * 10
 
-    # Get user's max wellness (default 100, but could be modified by other factors)
-    max_wellness = 100.0
+    # Get user's max wellness (based on house quality and other bonuses)
+    max_wellness = current_user.max_wellness
 
     # Check if user already has max wellness
     if current_user.wellness >= max_wellness:
@@ -734,18 +743,16 @@ def start_resistance_war(slug):
     db.session.add(battle)
     db.session.flush()
 
-    # Create the 3 rounds for the battle
-    for round_num in range(1, 4):
-        round_start = now + timedelta(hours=(round_num - 1) * 8)
-        round_end = round_start + timedelta(hours=8)
-        battle_round = BattleRound(
-            battle_id=battle.id,
-            round_number=round_num,
-            status=RoundStatus.ACTIVE if round_num == 1 else RoundStatus.ACTIVE,
-            started_at=round_start,
-            ends_at=round_end
-        )
-        db.session.add(battle_round)
+    # Create only the first round - subsequent rounds are created when needed
+    # This matches the regular battle behavior and avoids timing issues
+    first_round = BattleRound(
+        battle_id=battle.id,
+        round_number=1,
+        status=RoundStatus.ACTIVE,
+        started_at=now,
+        ends_at=now + timedelta(hours=8)
+    )
+    db.session.add(first_round)
 
     try:
         db.session.commit()

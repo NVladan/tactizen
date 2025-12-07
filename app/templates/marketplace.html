@@ -196,6 +196,7 @@
         max-width: 100%;
     }
 </style>
+{% include '_market_mobile_styles.html' %}
 {% endblock %}
 
 {% block main_layout %}
@@ -709,7 +710,10 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(form.action, {
                 method: 'POST',
                 body: formData,
-                headers: {'X-Requested-With': 'XMLHttpRequest'}
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
             })
             .then(response => response.json())
             .then(data => {
@@ -767,7 +771,10 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(form.action, {
                 method: 'POST',
                 body: formData,
-                headers: {'X-Requested-With': 'XMLHttpRequest'}
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
             })
             .then(response => response.json())
             .then(data => {

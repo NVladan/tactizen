@@ -24,7 +24,7 @@ def elections():
     """View all government elections in user's country."""
     if not current_user.citizenship_id:
         flash('You must be a citizen of a country to view elections.', 'warning')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     # Get current and upcoming elections
     elections = db.session.scalars(
@@ -49,11 +49,21 @@ def elections():
         .order_by(CongressMember.final_rank)
     ).all()
 
+    # Get past elections (completed) - last 10
+    past_elections = db.session.scalars(
+        db.select(GovernmentElection)
+        .where(GovernmentElection.country_id == current_user.citizenship_id)
+        .where(GovernmentElection.status == GovernmentElectionStatus.COMPLETED)
+        .order_by(GovernmentElection.voting_end.desc())
+        .limit(10)
+    ).all()
+
     return render_template('government/elections.html',
                           title='Government Elections',
                           elections=elections,
                           current_president=current_president,
-                          current_congress=current_congress)
+                          current_congress=current_congress,
+                          past_elections=past_elections)
 
 
 @bp.route('/election/<int:election_id>')
@@ -141,6 +151,53 @@ def election_detail(election_id):
         if current_user.party:
             can_apply = election.is_nominations_open()
 
+    # Vote transparency data
+    from app.models.zk_voting import ZKVote
+    from app.services.zkverify_service import zkverify_service
+
+    zk_election_type = 'presidential' if election.election_type == ElectionType.PRESIDENTIAL else 'congressional'
+
+    # Count regular votes
+    regular_votes = election.votes.count()
+
+    # Count and get ZK votes
+    zk_vote_records = db.session.scalars(
+        db.select(ZKVote)
+        .where(ZKVote.election_type == zk_election_type)
+        .where(ZKVote.election_id == election_id)
+        .where(ZKVote.proof_verified == True)
+    ).all()
+
+    zk_votes = len(zk_vote_records)
+    total_votes = regular_votes + zk_votes
+
+    # Get zkVerify proof links
+    zk_proofs = [
+        zkverify_service.get_explorer_url(v.zkverify_tx_hash)
+        for v in zk_vote_records if v.zkverify_tx_hash
+    ]
+
+    # Build real-time ZK vote counts per candidate (1-based index -> count)
+    # This matches how voting.py assigns vote_choice (1-based index of approved candidates sorted by ID)
+    approved_candidates = sorted(
+        [c for c in candidates if c.status == CandidateStatus.APPROVED],
+        key=lambda c: c.id
+    )
+    zk_index_to_candidate_id = {idx: c.id for idx, c in enumerate(approved_candidates, start=1)}
+
+    # Count ZK votes per index
+    zk_vote_counts_by_index = {}
+    for record in zk_vote_records:
+        if record.vote_choice > 0:
+            zk_vote_counts_by_index[record.vote_choice] = zk_vote_counts_by_index.get(record.vote_choice, 0) + 1
+
+    # Map to candidate IDs for template
+    candidate_zk_votes = {}
+    for zk_index, count in zk_vote_counts_by_index.items():
+        if zk_index in zk_index_to_candidate_id:
+            candidate_id = zk_index_to_candidate_id[zk_index]
+            candidate_zk_votes[candidate_id] = count
+
     return render_template('government/election_detail.html',
                           title=f'{election.election_type.value.title()} Election',
                           election=election,
@@ -149,7 +206,12 @@ def election_detail(election_id):
                           user_candidacy=user_candidacy,
                           can_nominate=can_nominate,
                           can_apply=can_apply,
-                          party_members=party_members)
+                          party_members=party_members,
+                          regular_votes=regular_votes,
+                          zk_votes=zk_votes,
+                          total_votes=total_votes,
+                          zk_proofs=zk_proofs,
+                          candidate_zk_votes=candidate_zk_votes)
 
 
 @bp.route('/election/<int:election_id>/nominate/<int:user_id>', methods=['POST'])
@@ -211,6 +273,12 @@ def nominate(election_id, user_id):
         flash('Cannot nominate a banned user.', 'danger')
         return redirect(url_for('government.election_detail', election_id=election_id))
 
+    # Check if nominee is citizen of conquered country (political rights suspended)
+    can_run, run_reason = nominee.can_run_for_office()
+    if not can_run:
+        flash(f'Cannot nominate this user: {run_reason}', 'danger')
+        return redirect(url_for('government.election_detail', election_id=election_id))
+
     try:
         # Create candidacy (automatically approved for presidential)
         candidate = ElectionCandidate(
@@ -269,6 +337,12 @@ def apply(election_id):
     # Verify user has citizenship
     if current_user.citizenship_id != election.country_id:
         flash('You must be a citizen of the country to run for congress.', 'danger')
+        return redirect(url_for('government.election_detail', election_id=election_id))
+
+    # Check if citizen of conquered country (political rights suspended)
+    can_run, run_reason = current_user.can_run_for_office()
+    if not can_run:
+        flash(run_reason, 'danger')
         return redirect(url_for('government.election_detail', election_id=election_id))
 
     # Prevent country president from running for congress
@@ -430,6 +504,14 @@ def vote(election_id, candidate_id):
         if is_blockchain_vote:
             return jsonify({'error': 'You must be a citizen of the country to vote.'}), 403
         flash('You must be a citizen of the country to vote.', 'danger')
+        return redirect(url_for('government.election_detail', election_id=election_id))
+
+    # Check if citizen of conquered country (political rights suspended)
+    can_vote, vote_reason = current_user.can_vote()
+    if not can_vote:
+        if is_blockchain_vote:
+            return jsonify({'error': vote_reason}), 403
+        flash(vote_reason, 'danger')
         return redirect(url_for('government.election_detail', election_id=election_id))
 
     # Check if already voted
@@ -743,20 +825,20 @@ def assign_minister():
 
     if not all([country_id, ministry_type, user_id]):
         flash('Missing required fields.', 'danger')
-        return redirect(request.referrer or url_for('main.dashboard'))
+        return redirect(request.referrer or url_for('main.index'))
 
     # Validate ministry type
     try:
         ministry_enum = MinistryType[ministry_type.upper()]
     except (KeyError, AttributeError):
         flash('Invalid ministry type.', 'danger')
-        return redirect(request.referrer or url_for('main.dashboard'))
+        return redirect(request.referrer or url_for('main.index'))
 
     # Check if user is politics of this country
     country = db.session.get(Country, country_id)
     if not country:
         flash('Country not found.', 'danger')
-        return redirect(request.referrer or url_for('main.dashboard'))
+        return redirect(request.referrer or url_for('main.index'))
 
     current_president = db.session.scalar(
         db.select(CountryPresident)
@@ -767,18 +849,18 @@ def assign_minister():
 
     if not current_president:
         flash('You are not the politics of this country.', 'danger')
-        return redirect(request.referrer or url_for('main.dashboard'))
+        return redirect(request.referrer or url_for('main.index'))
 
     # Get the citizen to be assigned
     citizen = db.session.get(User, user_id)
     if not citizen or citizen.citizenship_id != country_id:
         flash('Selected user is not a citizen of this country.', 'danger')
-        return redirect(request.referrer or url_for('main.dashboard'))
+        return redirect(request.referrer or url_for('main.index'))
 
     # President cannot assign themselves
     if citizen.id == current_user.id:
         flash('You cannot assign yourself as a minister.', 'danger')
-        return redirect(request.referrer or url_for('main.dashboard'))
+        return redirect(request.referrer or url_for('main.index'))
 
     # Check if this position already has a minister
     existing_minister = db.session.scalar(
@@ -823,12 +905,12 @@ def resign_minister(minister_id):
     minister = db.session.get(Minister, minister_id)
     if not minister or not minister.is_active:
         flash('Minister position not found.', 'danger')
-        return redirect(request.referrer or url_for('main.dashboard'))
+        return redirect(request.referrer or url_for('main.index'))
 
     # Check if current user is the minister
     if minister.user_id != current_user.id:
         flash('You are not authorized to resign this position.', 'danger')
-        return redirect(request.referrer or url_for('main.dashboard'))
+        return redirect(request.referrer or url_for('main.index'))
 
     # Resign
     minister.resign()
@@ -859,7 +941,7 @@ def propose_law():
 
     if not current_user.citizenship_id:
         flash('You must be a citizen to propose laws.', 'warning')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     # Check if user is president or minister
     is_president = current_user.is_president_of(current_user.citizenship_id)
@@ -868,7 +950,13 @@ def propose_law():
 
     if not is_president and not minister_position and not is_congress_member:
         flash('Only the President, ministers, or Congress members can propose laws.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
+
+    # Check if citizen of conquered country (political rights suspended)
+    can_propose, propose_reason = current_user.can_propose_laws()
+    if not can_propose:
+        flash(propose_reason, 'danger')
+        return redirect(url_for('main.index'))
 
     # Check cooldown for congress members (not president)
     if not is_president and is_congress_member:
@@ -906,14 +994,14 @@ def propose_law():
             available_law_types = ['MILITARY_BUDGET', 'PRINT_CURRENCY', 'IMPORT_TAX', 'SALARY_TAX', 'INCOME_TAX'] + CONGRESS_LAW_TYPES
         else:
             flash('Your ministry cannot propose laws at this time.', 'warning')
-            return redirect(url_for('main.dashboard'))
+            return redirect(url_for('main.index'))
     elif is_congress_member:
         user_role = 'congress_member'
         # Congress members can only propose impeachment
         available_law_types = CONGRESS_LAW_TYPES.copy()
     else:
         flash('You do not have permission to propose laws.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     # Check which law types already have an active proposal for this country
     active_laws = db.session.scalars(
@@ -980,6 +1068,12 @@ def propose_law():
                 if owned_regions_count == 0:
                     flash('Your country has no territory and cannot declare war. Use resistance wars to reclaim your lands.', 'danger')
                     return redirect(url_for('government.propose_law'))
+
+            # Check if target country has starter protection
+            target_country = db.session.get(Country, target_country_id)
+            if target_country and target_country.has_starter_protection:
+                flash(f'{target_country.name} has Starter Protection (only 1 region). Countries with starter protection cannot be attacked.', 'danger')
+                return redirect(url_for('government.propose_law'))
 
             law_details = {'target_country_id': target_country_id}
 
@@ -1346,6 +1440,12 @@ def vote_on_law(law_id):
         flash('Only the politics and congress members can vote on laws.', 'danger')
         return redirect(url_for('government.view_law', law_id=law_id))
 
+    # Check if citizen of conquered country (political rights suspended)
+    can_vote, vote_reason = current_user.can_vote()
+    if not can_vote:
+        flash(vote_reason, 'danger')
+        return redirect(url_for('government.view_law', law_id=law_id))
+
     # Check if user already voted
     existing_vote = db.session.scalar(
         db.select(LawVote)
@@ -1446,7 +1546,7 @@ def view_war(war_id):
     # Check if user's country is involved
     if not current_user.citizenship_id:
         flash('You must be a citizen of a country to view wars.', 'warning')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     # Check if user can propose peace (Minister of Foreign Affairs)
     can_propose_peace = False
@@ -1508,6 +1608,12 @@ def vote_peace(war_id):
 
     if not is_president and not is_congress:
         flash('Only the politics and congress members can vote on peace treaties.', 'danger')
+        return redirect(url_for('government.view_war', war_id=war_id))
+
+    # Check if citizen of conquered country (political rights suspended)
+    can_vote, vote_reason = current_user.can_vote()
+    if not can_vote:
+        flash(vote_reason, 'danger')
         return redirect(url_for('government.view_war', war_id=war_id))
 
     # Check if user has already voted
@@ -1608,12 +1714,12 @@ def ministry_of_defense():
 
     if not current_user.citizenship_id:
         flash('You must be a citizen to access the Ministry of Defense.', 'warning')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     country = db.session.get(Country, current_user.citizenship_id)
     if not country:
         flash('Country not found.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     # Check if user has access (President, Minister of Defense, or Congress member)
     is_president = current_user.is_president_of(current_user.citizenship_id)
@@ -1891,12 +1997,12 @@ def place_construction():
     """Place a Hospital or Fortress in a region."""
     if not current_user.citizenship_id:
         flash('You must be a citizen of a country.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     country = db.session.get(Country, current_user.citizenship_id)
     if not country:
         flash('Country not found.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     # Check if user is president or defense minister
     is_president = current_user.is_president_of(current_user.citizenship_id)
@@ -2000,12 +2106,12 @@ def ministry_of_foreign_affairs():
 
     if not current_user.citizenship_id:
         flash('You must be a citizen to access the Ministry of Foreign Affairs.', 'warning')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     country = db.session.get(Country, current_user.citizenship_id)
     if not country:
         flash('Country not found.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     # Check user permissions
     is_president = current_user.is_president_of(current_user.citizenship_id)
@@ -2088,12 +2194,12 @@ def ministry_of_finance():
 
     if not current_user.citizenship_id:
         flash('You must be a citizen to access the Ministry of Finance.', 'warning')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     country = db.session.get(Country, current_user.citizenship_id)
     if not country:
         flash('Country not found.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     # Check user permissions
     is_president = current_user.is_president_of(current_user.citizenship_id)

@@ -393,24 +393,305 @@
         font-size: 0.95rem;
     }
 
-    /* Responsive */
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Wars Page
+       ===================================================== */
+
     @media (max-width: 768px) {
-        .war-participants {
-            flex-direction: column;
-            text-align: center;
+        .wars-content-container {
+            padding: 0.75rem;
         }
 
-        .vs-divider {
-            padding: 0.5rem 0;
+        /* Page Header */
+        .page-header {
+            margin-bottom: 1rem;
         }
 
-        .war-card-stats {
+        .page-title {
+            font-size: 1.35rem;
+            gap: 0.5rem;
+        }
+
+        .page-title-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Stats Bar - 2x2 grid */
+        .stats-bar {
             grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+            margin-bottom: 1rem;
         }
 
+        .stat-card {
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+        }
+
+        /* Country Status Banner */
         .country-status-banner {
             flex-direction: column;
             text-align: center;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            gap: 0.75rem;
+        }
+
+        .status-icon-container {
+            width: 50px;
+            height: 50px;
+            font-size: 1.35rem;
+        }
+
+        .status-title {
+            font-size: 1.1rem;
+        }
+
+        .status-description {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .war-chips {
+            justify-content: center;
+        }
+
+        .war-chip {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.75rem;
+        }
+
+        /* Sections */
+        .section {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+        }
+
+        /* War Cards */
+        .war-card {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 10px;
+        }
+
+        .war-card-header {
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* War Participants - vertical stack */
+        .war-participants {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .participant {
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .participant-flag {
+            width: 40px;
+            height: 28px;
+        }
+
+        .participant-name {
+            font-size: 0.95rem;
+        }
+
+        .participant-role {
+            font-size: 0.7rem;
+        }
+
+        .vs-divider {
+            padding: 0.35rem 0;
+        }
+
+        .vs-badge {
+            padding: 0.25rem 0.65rem;
+            font-size: 0.7rem;
+        }
+
+        /* War Status Badge */
+        .war-status-badge {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+        }
+
+        /* War Card Stats - 2x2 grid */
+        .war-card-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+            padding-top: 0.75rem;
+        }
+
+        .war-stat-value {
+            font-size: 0.9rem;
+        }
+
+        .war-stat-label {
+            font-size: 0.65rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 2rem 0.75rem;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+        }
+
+        .empty-state-title {
+            font-size: 1.1rem;
+        }
+
+        .empty-state-text {
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .wars-content-container {
+            padding: 0.5rem;
+        }
+
+        .page-title {
+            font-size: 1.2rem;
+        }
+
+        .stats-bar {
+            gap: 0.5rem;
+        }
+
+        .stat-card {
+            padding: 0.6rem;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+        }
+
+        .country-status-banner {
+            padding: 0.85rem;
+        }
+
+        .status-icon-container {
+            width: 44px;
+            height: 44px;
+            font-size: 1.2rem;
+        }
+
+        .status-title {
+            font-size: 1rem;
+        }
+
+        .status-description {
+            font-size: 0.8rem;
+        }
+
+        .section {
+            padding: 0.85rem;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+        }
+
+        .war-card {
+            padding: 0.85rem;
+        }
+
+        .participant-flag {
+            width: 36px;
+            height: 24px;
+        }
+
+        .participant-name {
+            font-size: 0.9rem;
+        }
+
+        .war-card-stats {
+            gap: 0.5rem;
+        }
+
+        .war-stat-value {
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            padding: 1.5rem 0.5rem;
+        }
+
+        .empty-state-icon {
+            font-size: 2.5rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .page-title {
+            font-size: 1.1rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+        }
+
+        .status-icon-container {
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+        }
+
+        .status-title {
+            font-size: 0.95rem;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+        }
+
+        .participant-flag {
+            width: 32px;
+            height: 22px;
+        }
+
+        .participant-name {
+            font-size: 0.85rem;
+        }
+
+        .war-stat-value {
+            font-size: 0.8rem;
+        }
+
+        .war-stat-label {
+            font-size: 0.6rem;
         }
     }
 </style>

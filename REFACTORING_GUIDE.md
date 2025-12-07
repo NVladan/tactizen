@@ -4,87 +4,34 @@
 
 The User model has been refactored from **1,738 lines with 57 methods** into **6 service classes**:
 
-1. ✅ **InventoryService** - Inventory management (6 methods, ~170 lines)
-2. ✅ **CurrencyService** - Currency operations (10 methods, ~220 lines)
-3. ✅ **SkillService** - Training and skill progression (5 methods, ~350 lines)
-4. ✅ **EmploymentService** - Work allocation and production (4 methods, ~300 lines)
-5. ✅ **WellnessService** - Food consumption and residence (3 methods, ~250 lines)
-6. ✅ **SocialService** - Friendships and referrals (8 methods, ~200 lines)
+1. **InventoryService** - Inventory management (6 methods, ~170 lines)
+2. **CurrencyService** - Currency operations (10 methods, ~220 lines)
+3. **SkillService** - Training and skill progression (5 methods, ~350 lines)
+4. **EmploymentService** - Work allocation and production (4 methods, ~300 lines)
+5. **WellnessService** - Food consumption and residence (3 methods, ~250 lines)
+6. **SocialService** - Friendships and referrals (8 methods, ~200 lines)
 
-## Current Status
+## Status: COMPLETED
 
-✅ All 6 service files created in `app/services/`
-✅ Services follow consistent patterns
-⬜ User model still has all original methods (backward compatible)
-⬜ Routes not yet updated to use services
+All services have been implemented and are being used throughout the application.
 
-## Next Steps
+### Service Files (in `app/services/`):
+- `inventory_service.py`
+- `currency_service.py`
+- `skill_service.py`
+- `employment_service.py`
+- `wellness_service.py`
+- `social_service.py`
 
-### Option A: Gradual Migration (RECOMMENDED)
+### Additional Services Added:
+- `battle_service.py` - Battle system logic
+- `mission_service.py` - Missions and rewards
+- `achievement_service.py` - Achievements tracking
+- `alliance_service.py` - Alliance operations
+- `nft_service.py` - NFT management
+- `bonus_calculator.py` - NFT bonus calculations
 
-Update the User model to DELEGATE to services while keeping the old method signatures:
-
-```python
-# In app/models/user.py
-
-from app.services import InventoryService, CurrencyService, SkillService, EmploymentService, WellnessService, SocialService
-
-class User(...):
-    # ... all columns stay ...
-
-    # Inventory methods - DELEGATE to service
-    def get_total_inventory_count(self):
-        return InventoryService.get_total_count(self)
-
-    def add_to_inventory(self, resource_id, quantity, quality=0):
-        return InventoryService.add_item(self, resource_id, quantity, quality)
-
-    # Currency methods - DELEGATE to service
-    def get_currency_amount(self, country_id):
-        return CurrencyService.get_amount(self, country_id)
-
-    def add_currency(self, country_id, amount):
-        return CurrencyService.add_currency(self, country_id, amount)
-
-    # ... etc for all methods ...
-```
-
-**Benefits:**
-- ✅ No breaking changes
-- ✅ Can migrate routes gradually
-- ✅ Easy to test
-- ✅ Can rollback if issues
-
-**Then gradually update routes:**
-```python
-# OLD (still works):
-current_user.add_to_inventory(resource_id, quantity)
-
-# NEW (preferred):
-from app.services import InventoryService
-InventoryService.add_item(current_user, resource_id, quantity)
-```
-
-### Option B: Direct Migration (FASTER but RISKIER)
-
-1. Remove all service methods from User model
-2. Update ALL routes in one go
-3. Test everything
-
-**Files to update (~40 route files):**
-- app/main/routes.py
-- app/main/resource_market_routes.py
-- app/main/currency_market_routes.py
-- app/main/company_routes.py
-- app/main/travel_routes.py
-- app/main/profile_routes.py
-- app/main/training_routes.py
-- app/main/residence_routes.py
-- app/main/study_routes.py
-- app/admin/routes.py
-- ... and more
-
-## Method Mapping
+## Method Mapping Reference
 
 ### InventoryService
 | Old User Method | New Service Method |
@@ -144,33 +91,10 @@ InventoryService.add_item(current_user, resource_id, quantity)
 | `user.referrer` | `SocialService.get_referrer(user)` |
 | `user.referral_stats` | `SocialService.get_referral_stats(user)` |
 
-## Testing Checklist
-
-Before deploying, test these critical flows:
-
-- [ ] User can buy/sell resources from market
-- [ ] User can buy/sell gold
-- [ ] User can work at a company (allocate hours)
-- [ ] User can train military skills
-- [ ] User can study work skills
-- [ ] User can eat bread/drink beer
-- [ ] User can travel between regions
-- [ ] User can send/receive friend requests
-- [ ] Referral system works (code generation, bonus award)
-- [ ] Admin panel inventory operations work
-
-## Rollback Plan
-
-If issues occur:
-1. Keep the old User methods as fallback
-2. Use feature flag to toggle between old/new
-3. Services are additive - can remove without breaking existing code
-
 ## Performance Benefits
 
-After full migration:
-- ✅ User model: ~400 lines (down from 1,738)
-- ✅ Each service: 150-350 lines (easier to understand)
-- ✅ Better testability (test services independently)
-- ✅ Better performance (can optimize services separately)
-- ✅ Better code organization (Single Responsibility Principle)
+- User model reduced to core properties and relationships
+- Each service: 150-350 lines (easier to understand)
+- Better testability (test services independently)
+- Better performance (can optimize services separately)
+- Better code organization (Single Responsibility Principle)

@@ -856,7 +856,8 @@ def take_report_action(report_id):
         elif action == ReportAction.CONTENT_REMOVED:
             # Remove the content
             if report.report_type == ReportType.MESSAGE and report.reported_message:
-                report.reported_message.is_deleted = True
+                # Mark message as admin removed
+                report.reported_message.admin_removed = True
             elif report.report_type == ReportType.NEWSPAPER_ARTICLE and report.reported_article:
                 report.reported_article.is_deleted = True
 

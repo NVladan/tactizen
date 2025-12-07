@@ -103,6 +103,223 @@
         margin-bottom: 2rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
+
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Travel Page
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 0.5rem;
+        }
+
+        /* Tab Navigation - horizontal scroll */
+        #myPlacesTab {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        #myPlacesTab::-webkit-scrollbar {
+            display: none;
+        }
+
+        #myPlacesTab .nav-item {
+            flex-shrink: 0;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        /* Travel Header */
+        .training-header {
+            padding: 2rem 1rem;
+            min-height: 120px;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .training-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .training-header p {
+            font-size: 0.85rem;
+        }
+
+        /* Location and Form Cards */
+        .location-card,
+        .training-form-card {
+            margin-bottom: 0.75rem;
+        }
+
+        .location-card .card-body,
+        .training-form-card .card-body {
+            padding: 1rem;
+        }
+
+        .location-icon {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+        }
+
+        .location-icon .fa-2x {
+            font-size: 1.5rem !important;
+        }
+
+        .location-name {
+            font-size: 1rem;
+        }
+
+        .location-info {
+            font-size: 0.9rem;
+        }
+
+        /* Form Elements */
+        .form-label {
+            font-size: 0.9rem;
+        }
+
+        .form-select {
+            font-size: 0.9rem;
+            padding: 0.6rem 0.75rem;
+        }
+
+        /* Payment Method Buttons */
+        .btn-group .btn {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        /* Event Cards */
+        .event-card {
+            margin-bottom: 0.75rem;
+        }
+
+        .event-card-header {
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .event-card-body {
+            padding: 0.75rem;
+        }
+
+        .event-item {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Article Cards */
+        .article-card {
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .article-title {
+            font-size: 0.95rem;
+        }
+
+        .article-meta {
+            font-size: 0.8rem;
+        }
+
+        /* Modal adjustments */
+        .modal-body {
+            padding: 1.5rem !important;
+        }
+
+        .modal-body p {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-container {
+            padding: 0.35rem;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .training-header {
+            padding: 1.5rem 0.75rem;
+            min-height: 100px;
+        }
+
+        .training-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .training-header p {
+            font-size: 0.8rem;
+        }
+
+        .location-card .card-body,
+        .training-form-card .card-body {
+            padding: 0.85rem;
+        }
+
+        .location-icon {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+        }
+
+        .location-icon .fa-2x {
+            font-size: 1.25rem !important;
+        }
+
+        .location-name {
+            font-size: 0.95rem;
+        }
+
+        .btn-group .btn {
+            font-size: 0.8rem;
+            padding: 0.45rem 0.6rem;
+        }
+
+        .btn-success {
+            font-size: 0.9rem;
+            padding: 0.6rem 1rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #myPlacesTab .nav-link {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .training-header h2 {
+            font-size: 1.1rem;
+        }
+
+        .location-icon {
+            width: 35px;
+            height: 35px;
+            min-width: 35px;
+        }
+
+        .location-name {
+            font-size: 0.9rem;
+        }
+
+        .btn-group .btn {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.5rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -188,13 +405,18 @@
                                 <div class="btn-group d-flex" role="group">
                                     <input type="radio" class="btn-check" name="payment_method" id="payment_gold" value="gold" checked>
                                     <label class="btn btn-outline-warning" for="payment_gold">
-                                        <i class="fas fa-coins me-1"></i>1 Gold
+                                        <i class="fas fa-coins me-1"></i>{% if travel_cost_gold == 0 %}Free{% else %}{{ travel_cost_gold }} Gold{% endif %}
                                     </label>
                                     <input type="radio" class="btn-check" name="payment_method" id="payment_stats" value="stats">
                                     <label class="btn btn-outline-info" for="payment_stats">
-                                        <i class="fas fa-bolt me-1"></i>50 Energy
+                                        <i class="fas fa-bolt me-1"></i>{% if travel_cost_energy == 0 %}Free{% else %}{{ travel_cost_energy }} Energy{% endif %}
                                     </label>
                                 </div>
+                                {% if travel_cost_gold < 1 or travel_cost_energy < 50 %}
+                                <small class="text-success d-block mt-2">
+                                    <i class="fas fa-tag me-1"></i>Travel Discount NFT active!
+                                </small>
+                                {% endif %}
                             </div>
 
                             <div class="d-grid">
@@ -221,7 +443,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="padding: 2rem;">
-                <p class="text-white mb-0">You don't have enough gold to use premium travel. You need at least 1 Gold.</p>
+                <p class="text-white mb-0">You don't have enough gold to travel. You need at least {{ travel_cost_gold }} Gold.</p>
             </div>
             <div class="modal-footer" style="border-top: 1px solid rgba(239, 68, 68, 0.2);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
@@ -241,7 +463,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="padding: 2rem;">
-                <p class="text-white mb-0">You need at least 50 Energy to travel using this method.</p>
+                <p class="text-white mb-0">You need at least {{ travel_cost_energy }} Energy to travel using this method.</p>
             </div>
             <div class="modal-footer" style="border-top: 1px solid rgba(239, 68, 68, 0.2);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
@@ -317,16 +539,20 @@
                 const userWellness = parseFloat('{{ current_user.wellness }}') || 0;
                 const userEnergy = parseFloat('{{ current_user.energy }}') || 0;
 
+                // Get travel costs (with NFT discount applied)
+                const travelCostGold = parseFloat('{{ travel_cost_gold }}') || 0;
+                const travelCostEnergy = parseInt('{{ travel_cost_energy }}') || 0;
+
                 if (paymentMethod === 'gold') {
-                    // Check if user has enough gold
-                    if (userGold < 1) {
+                    // Check if user has enough gold (skip if free)
+                    if (travelCostGold > 0 && userGold < travelCostGold) {
                         const modal = new bootstrap.Modal(insufficientGoldModal);
                         modal.show();
                         return;
                     }
                 } else if (paymentMethod === 'stats') {
-                    // Check if user has enough energy
-                    if (userEnergy < 50) {
+                    // Check if user has enough energy (skip if free)
+                    if (travelCostEnergy > 0 && userEnergy < travelCostEnergy) {
                         const modal = new bootstrap.Modal(insufficientStatsModal);
                         modal.show();
                         return;

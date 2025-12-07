@@ -108,6 +108,235 @@
         opacity: 0.5;
         cursor: not-allowed;
     }
+
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Training Page
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 0.5rem;
+        }
+
+        /* Tab Navigation - horizontal scroll (same as companies page) */
+        #myPlacesTab {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        #myPlacesTab::-webkit-scrollbar {
+            display: none;
+        }
+
+        #myPlacesTab .nav-item {
+            flex-shrink: 0;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        /* Training Header */
+        .training-header {
+            padding: 2rem 1rem;
+            min-height: 120px;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .training-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .training-header p {
+            font-size: 0.85rem;
+        }
+
+        /* Time Info Card */
+        .time-info-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+        }
+
+        .time-info-card h5 {
+            font-size: 1rem;
+        }
+
+        .hours-remaining {
+            font-size: 2rem;
+        }
+
+        .time-info-card .text-muted {
+            font-size: 0.85rem;
+        }
+
+        /* Skill Cards */
+        .skill-card {
+            padding: 0.85rem;
+            margin-bottom: 0.75rem;
+            border-radius: 10px;
+        }
+
+        .skill-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem !important;
+        }
+
+        .skill-card h5 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem !important;
+        }
+
+        .skill-card h6 {
+            font-size: 0.9rem;
+        }
+
+        /* Skills Display */
+        .skill-card .fa-2x {
+            font-size: 1.5rem !important;
+        }
+
+        .skill-card .text-white.fw-bold {
+            font-size: 1rem;
+        }
+
+        .skill-card .text-muted.small {
+            font-size: 0.75rem;
+        }
+
+        /* Hour Display */
+        .hour-display {
+            font-size: 2.25rem;
+        }
+
+        /* Form Elements */
+        .form-label {
+            font-size: 0.9rem;
+        }
+
+        .form-select {
+            font-size: 0.9rem;
+            padding: 0.6rem 0.75rem;
+        }
+
+        /* Cost Summary */
+        .skill-card .p-3 {
+            padding: 0.75rem !important;
+        }
+
+        .skill-card .p-3 .text-muted.small {
+            font-size: 0.75rem;
+        }
+
+        .skill-card .p-3 .fw-bold {
+            font-size: 1rem;
+        }
+
+        /* Train Button */
+        .btn-train {
+            padding: 0.85rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        /* Two column layout stacks on mobile */
+        .col-lg-5,
+        .col-lg-7 {
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-container {
+            padding: 0.35rem;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .training-header {
+            padding: 1.5rem 0.75rem;
+            min-height: 100px;
+        }
+
+        .training-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .training-header p {
+            font-size: 0.8rem;
+        }
+
+        .time-info-card {
+            padding: 0.85rem;
+        }
+
+        .time-info-card h5 {
+            font-size: 0.95rem;
+        }
+
+        .hours-remaining {
+            font-size: 1.75rem;
+        }
+
+        .skill-card {
+            padding: 0.75rem;
+        }
+
+        .skill-card h4 {
+            font-size: 1rem;
+        }
+
+        .skill-card .fa-2x {
+            font-size: 1.25rem !important;
+        }
+
+        .skill-card .text-white.fw-bold {
+            font-size: 0.9rem;
+        }
+
+        .hour-display {
+            font-size: 2rem;
+        }
+
+        .btn-train {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #myPlacesTab .nav-link {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .training-header h2 {
+            font-size: 1.1rem;
+        }
+
+        .hours-remaining {
+            font-size: 1.5rem;
+        }
+
+        .skill-card h4 {
+            font-size: 0.95rem;
+        }
+
+        .hour-display {
+            font-size: 1.75rem;
+        }
+    }
 </style>
 {% endblock %}
 

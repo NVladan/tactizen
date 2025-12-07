@@ -1,0 +1,112 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <h2><i class="fas fa-cog"></i> Game Settings</h2>
+    <p class="text-muted">Configure global game settings that affect all players</p>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="card-header" style="background: rgba(59, 130, 246, 0.2); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Starter Protection</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-white-50">
+                        When enabled, countries with only <strong>1 region</strong> cannot be attacked.
+                        This protects new or small countries from being completely conquered.
+                    </p>
+
+                    <div class="d-flex align-items-center justify-content-between mt-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 8px;">
+                        <div>
+                            <strong>Current Status:</strong>
+                            {% if starter_protection %}
+                            <span class="badge bg-success ms-2">
+                                <i class="fas fa-check me-1"></i>Enabled
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger ms-2">
+                                <i class="fas fa-times me-1"></i>Disabled
+                            </span>
+                            {% endif %}
+                        </div>
+                        <form method="POST" action="{{ url_for('admin.toggle_starter_protection') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if starter_protection %}
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Are you sure you want to DISABLE Starter Protection? Countries with only 1 region will be vulnerable to attacks.');">
+                                <i class="fas fa-power-off me-1"></i>Disable Protection
+                            </button>
+                            {% else %}
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-shield-alt me-1"></i>Enable Protection
+                            </button>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="card-header" style="background: rgba(75, 85, 99, 0.3); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Settings History</h5>
+                </div>
+                <div class="card-body">
+                    {% if all_settings %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Setting</th>
+                                    <th>Value</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for setting in all_settings %}
+                                <tr>
+                                    <td>{{ setting.key.replace('_', ' ').title() }}</td>
+                                    <td>
+                                        {% if setting.value|lower in ['true', '1', 'yes'] %}
+                                        <span class="badge bg-success">Enabled</span>
+                                        {% elif setting.value|lower in ['false', '0', 'no'] %}
+                                        <span class="badge bg-danger">Disabled</span>
+                                        {% else %}
+                                        {{ setting.value }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ setting.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                                        {% if setting.updated_by %}
+                                        <br><small class="text-muted">by {{ setting.updated_by.username }}</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No settings have been modified yet. Default config values are in use.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+</style>
+{% endblock %}

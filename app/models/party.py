@@ -203,14 +203,29 @@ class PartyElection(db.Model):
 
     def calculate_winner(self):
         """
-        Calculate the election winner based on votes.
+        Calculate the election winner based on votes (regular + ZK anonymous votes).
         Tiebreaker: highest level -> highest exp -> lowest user ID
         Returns the winning user or None if no votes.
         """
         from app.models.user import User
+        from app.models.zk_voting import ZKVote
+        from collections import Counter
 
-        # Get all candidates with their vote counts
-        candidates_votes = db.session.execute(
+        # Get all candidates for this election (ordered by announcement time for consistent indexing)
+        candidates = db.session.execute(
+            db.select(PartyCandidate.user_id)
+            .where(PartyCandidate.election_id == self.id)
+            .order_by(PartyCandidate.announced_at)
+        ).scalars().all()
+
+        if not candidates:
+            return None
+
+        # Build mapping from ZK index (1-based) to user_id
+        zk_index_to_user_id = {idx: user_id for idx, user_id in enumerate(candidates, start=1)}
+
+        # Count regular votes per candidate
+        regular_votes = db.session.execute(
             db.select(
                 PartyCandidate.user_id,
                 db.func.count(PartyVote.voter_id).label('vote_count')
@@ -223,14 +238,34 @@ class PartyElection(db.Model):
             .group_by(PartyCandidate.user_id)
         ).all()
 
-        if not candidates_votes:
+        # Initialize vote counts with regular votes
+        vote_counts = {cv.user_id: cv.vote_count for cv in regular_votes}
+
+        # Count ZK anonymous votes
+        zk_votes = db.session.execute(
+            db.select(ZKVote.vote_choice, db.func.count(ZKVote.id).label('count'))
+            .where(ZKVote.election_type == 'party')
+            .where(ZKVote.election_id == self.id)
+            .where(ZKVote.proof_verified == True)
+            .where(ZKVote.vote_choice > 0)  # Exclude abstentions (vote_choice=0)
+            .group_by(ZKVote.vote_choice)
+        ).all()
+
+        # Add ZK votes to counts (mapping zk_index back to user_id)
+        for zk_vote in zk_votes:
+            zk_index = zk_vote.vote_choice
+            if zk_index in zk_index_to_user_id:
+                user_id = zk_index_to_user_id[zk_index]
+                vote_counts[user_id] = vote_counts.get(user_id, 0) + zk_vote.count
+
+        if not vote_counts or all(v == 0 for v in vote_counts.values()):
             return None
 
         # Find maximum vote count
-        max_votes = max(cv.vote_count for cv in candidates_votes)
+        max_votes = max(vote_counts.values())
 
         # Get all candidates with max votes (for tiebreaker)
-        tied_candidate_ids = [cv.user_id for cv in candidates_votes if cv.vote_count == max_votes]
+        tied_candidate_ids = [uid for uid, count in vote_counts.items() if count == max_votes]
 
         # If only one winner, return them
         if len(tied_candidate_ids) == 1:
@@ -263,12 +298,41 @@ class PartyCandidate(db.Model):
     user = db.relationship('User', backref=db.backref('party_candidacies', lazy='dynamic'))
 
     def get_vote_count(self):
-        """Get the number of votes this candidate received."""
-        return db.session.scalar(
+        """Get the number of votes this candidate received (regular + ZK anonymous votes)."""
+        from app.models.zk_voting import ZKVote
+
+        # Count regular votes
+        regular_count = db.session.scalar(
             db.select(db.func.count(PartyVote.voter_id))
             .where(PartyVote.election_id == self.election_id)
             .where(PartyVote.candidate_id == self.user_id)
         ) or 0
+
+        # Get this candidate's ZK index (1-based position among candidates)
+        candidates = db.session.execute(
+            db.select(PartyCandidate.user_id)
+            .where(PartyCandidate.election_id == self.election_id)
+            .order_by(PartyCandidate.announced_at)
+        ).scalars().all()
+
+        zk_index = None
+        for idx, uid in enumerate(candidates, start=1):
+            if uid == self.user_id:
+                zk_index = idx
+                break
+
+        # Count ZK votes for this candidate
+        zk_count = 0
+        if zk_index is not None:
+            zk_count = db.session.scalar(
+                db.select(db.func.count(ZKVote.id))
+                .where(ZKVote.election_type == 'party')
+                .where(ZKVote.election_id == self.election_id)
+                .where(ZKVote.vote_choice == zk_index)
+                .where(ZKVote.proof_verified == True)
+            ) or 0
+
+        return regular_count + zk_count
 
     def __repr__(self):
         return f'<PartyCandidate Election:{self.election_id} User:{self.user_id}>'

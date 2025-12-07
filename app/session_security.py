@@ -156,9 +156,18 @@ def validate_session_fingerprint():
     Note: IP address checking is not included as users may have dynamic IPs
     or use VPNs legitimately.
 
+    Note: This check is skipped in DEBUG mode to allow testing with browser
+    DevTools device emulation (which changes the User-Agent).
+
     Returns:
         tuple: (is_valid: bool, reason: str or None)
     """
+    from flask import current_app
+
+    # Skip User-Agent validation in DEBUG mode (allows DevTools device emulation)
+    if current_app.debug:
+        return True, None
+
     # Check if we have session fingerprint data
     if not session.get('_user_agent'):
         return True, None

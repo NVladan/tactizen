@@ -738,6 +738,7 @@
         }
     }
 </style>
+{% include 'government/_government_mobile_styles.html' %}
 {% endblock %}
 
 {% block main_layout %}
@@ -845,14 +846,99 @@
             <div class="stat-label">Candidates</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">{{ election.votes.count() }}</div>
-            <div class="stat-label">Votes Cast</div>
+            <div class="stat-value">{{ total_votes }}</div>
+            <div class="stat-label">Total Votes</div>
         </div>
         <div class="stat-card">
             <div class="stat-value">{{ election.term_start.strftime('%b %Y') }}</div>
             <div class="stat-label">Term</div>
         </div>
     </div>
+
+    <!-- Transparent Results Section (shown when completed or voting) -->
+    {% if election.status.value in ['voting', 'completed'] and total_votes > 0 %}
+    <div class="section-card" style="border-color: rgba(147, 51, 234, 0.3);">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-shield-alt" style="color: #9333ea;"></i>
+                Verified Vote Results
+            </h2>
+            <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">
+                <i class="fas fa-lock me-1"></i>All votes anonymously verified on zkVerify
+            </span>
+        </div>
+
+        <div style="background: rgba(147, 51, 234, 0.1); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 12px; padding: 1.25rem; text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 2rem; font-weight: 700; color: #a855f7;">{{ total_votes }}</div>
+            <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">Total Anonymous Votes</div>
+            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem;">
+                <i class="fas fa-user-secret me-1"></i>Zero-Knowledge Proof Verified
+            </div>
+        </div>
+
+        {% if zk_proofs %}
+        <div style="margin-top: 1rem;">
+            <div style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 0.75rem;">
+                <i class="fas fa-link me-1" style="color: #9333ea;"></i>
+                <strong>Blockchain Verification Proofs</strong>
+                <span style="color: rgba(255,255,255,0.5);">({{ zk_proofs|length }} on-chain)</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% for proof in zk_proofs[:10] %}
+                <a href="{{ proof }}" target="_blank" rel="noopener"
+                   style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.35rem 0.7rem;
+                          background: rgba(147, 51, 234, 0.15); border: 1px solid rgba(147, 51, 234, 0.3);
+                          border-radius: 6px; color: #a855f7; font-size: 0.8rem; text-decoration: none;
+                          transition: all 0.2s ease;">
+                    <i class="fas fa-external-link-alt" style="font-size: 0.7rem;"></i>
+                    Proof #{{ loop.index }}
+                </a>
+                {% endfor %}
+                {% if zk_proofs|length > 10 %}
+                <span style="color: rgba(255,255,255,0.5); font-size: 0.8rem; padding: 0.35rem;">
+                    +{{ zk_proofs|length - 10 }} more
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="alert-box info" style="margin-top: 1rem;">
+            <i class="fas fa-info-circle"></i>
+            <div class="alert-box-content" style="font-size: 0.85rem;">
+                <strong>Transparent & Private:</strong> Every vote is cryptographically verified on the zkVerify blockchain using zero-knowledge proofs.
+                This proves each voter was eligible without revealing who voted for whom. Click any proof link to audit it on the blockchain explorer.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ZK Voter Registration Section -->
+    {% if election.status.value in ['nominations', 'applications', 'voting'] and current_user.citizenship_id == election.country_id and not user_vote %}
+    <div class="section-card" id="zk-registration-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-shield-alt"></i>
+                Anonymous Voter Registration
+            </h2>
+            <span id="zk-reg-status-badge" class="status-badge" style="display: none;"></span>
+        </div>
+        <div id="zk-registration-content">
+            <div class="alert-box info" style="margin-bottom: 1rem;">
+                <i class="fas fa-info-circle"></i>
+                <div class="alert-box-content">
+                    <strong>Register for Anonymous Voting</strong><br>
+                    To vote anonymously, you must first register. This creates a cryptographic commitment that proves your eligibility without revealing your identity when you vote.
+                </div>
+            </div>
+            <div id="zk-reg-status" style="margin-bottom: 1rem;"></div>
+            <button type="button" class="vote-btn primary" id="zkRegisterBtn"
+                    onclick="registerForZKVoting('{{ election.election_type.value }}', {{ election.country_id }})">
+                <i class="fas fa-user-plus me-1"></i>Register for Anonymous Voting
+            </button>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- User Candidacy Alert -->
     {% if user_candidacy %}
@@ -997,10 +1083,31 @@
 
         {% if candidates %}
         {% set approved_candidates = candidates|selectattr('status.value', 'equalto', 'approved')|list %}
-        {% set total_votes = approved_candidates|sum(attribute='votes_received') %}
+        {# For completed elections, votes_received already includes ZK votes. For active elections, add live ZK votes. #}
+        {% set ns = namespace(zk_index=0, total_realtime=0) %}
+        {% set zk_candidate_map = {} %}
+        {% for c in approved_candidates %}
+            {% set ns.zk_index = ns.zk_index + 1 %}
+            {% set _ = zk_candidate_map.update({c.id: ns.zk_index}) %}
+            {% if election.status.value == 'completed' %}
+                {# Completed: votes_received already has everything #}
+                {% set realtime_votes = c.votes_received or 0 %}
+            {% else %}
+                {# Active: add live ZK votes to any stored votes #}
+                {% set realtime_votes = (c.votes_received or 0) + (candidate_zk_votes.get(c.id, 0) if candidate_zk_votes else 0) %}
+            {% endif %}
+            {% set ns.total_realtime = ns.total_realtime + realtime_votes %}
+        {% endfor %}
+        {% set total_candidate_votes = ns.total_realtime %}
         <div class="candidates-list">
             {% for candidate in candidates %}
-            {% set is_leading = loop.first and candidate.votes_received > 0 %}
+            {# Calculate real-time votes for this candidate #}
+            {% if election.status.value == 'completed' %}
+                {% set realtime_votes = candidate.votes_received or 0 %}
+            {% else %}
+                {% set realtime_votes = (candidate.votes_received or 0) + (candidate_zk_votes.get(candidate.id, 0) if candidate_zk_votes else 0) %}
+            {% endif %}
+            {% set is_leading = loop.first and realtime_votes > 0 %}
             {% set is_voted = user_vote and user_vote.candidate_id == candidate.id %}
             <div class="candidate-card {% if is_leading %}leading{% endif %} {% if is_voted %}voted{% endif %}">
                 <div class="candidate-main">
@@ -1034,51 +1141,58 @@
                         {% if election.status.value in ['voting', 'completed'] and candidate.status.value == 'approved' %}
                         <div class="vote-percentage">
                             <div class="vote-bar">
-                                {% set percent = (candidate.votes_received / total_votes * 100) if total_votes > 0 else 0 %}
+                                {% set percent = (realtime_votes / total_candidate_votes * 100) if total_candidate_votes > 0 else 0 %}
                                 <div class="vote-bar-fill {% if is_leading %}leading{% else %}normal{% endif %}" style="width: {{ percent }}%;"></div>
                             </div>
                             <div class="vote-percent-text">{{ "%.1f"|format(percent) }}%</div>
                         </div>
                         <div class="candidate-votes">
-                            <div class="candidate-votes-count">{{ candidate.votes_received }}</div>
+                            <div class="candidate-votes-count">{{ realtime_votes }}</div>
                             <div class="candidate-votes-label">votes</div>
                         </div>
                         {% endif %}
 
                         {% if election.status.value == 'voting' and not user_vote and current_user.citizenship_id == election.country_id and candidate.status.value == 'approved' %}
                         <button type="button" class="vote-btn primary" data-bs-toggle="modal" data-bs-target="#voteModal{{ candidate.id }}">
-                            <i class="fas fa-vote-yea"></i>Vote
+                            <i class="fas fa-shield-alt"></i>Vote Anonymously
                         </button>
 
-                        <!-- Vote Confirmation Modal with Blockchain Signing -->
+                        <!-- Anonymous ZK Vote Modal -->
                         <div class="modal fade" id="voteModal{{ candidate.id }}" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title">
-                                            <i class="fas fa-vote-yea me-2" style="color: #22c55e;"></i>Confirm Your Vote
+                                            <i class="fas fa-shield-alt me-2" style="color: #22c55e;"></i>Anonymous Vote
                                         </h5>
                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                     </div>
                                     <div class="modal-body">
                                         <p>Vote for <strong style="color: #22c55e;">{{ candidate.user.username }}</strong>?</p>
                                         <div class="alert-box info" style="margin: 1rem 0;">
-                                            <i class="fas fa-wallet"></i>
+                                            <i class="fas fa-user-secret"></i>
                                             <div class="alert-box-content" style="font-size: 0.85rem;">
-                                                <strong>Blockchain Verification Required</strong><br>
-                                                Your vote will be cryptographically signed with your wallet for tamper-proof election integrity.
+                                                <strong>Zero-Knowledge Proof Voting</strong><br>
+                                                Your vote is completely anonymous. A cryptographic proof will verify you're eligible to vote without revealing your identity.
+                                            </div>
+                                        </div>
+                                        <div class="alert-box" style="background: rgba(147, 51, 234, 0.1); border: 1px solid rgba(147, 51, 234, 0.3); margin: 1rem 0;">
+                                            <i class="fas fa-link" style="color: #9333ea;"></i>
+                                            <div class="alert-box-content" style="font-size: 0.85rem;">
+                                                <strong>Verified on zkVerify Blockchain</strong><br>
+                                                Your proof will be verified on-chain for tamper-proof, publicly auditable elections.
                                             </div>
                                         </div>
                                         <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0;">
-                                            <i class="fas fa-exclamation-triangle me-1" style="color: #f59e0b;"></i>This action cannot be undone. You can only vote once.
+                                            <i class="fas fa-exclamation-triangle me-1" style="color: #f59e0b;"></i>This action cannot be undone. You can only vote once per election.
                                         </p>
-                                        <div id="voteStatus{{ candidate.id }}" style="margin-top: 1rem; display: none;"></div>
+                                        <div id="zk-vote-status-{{ candidate.id }}" style="margin-top: 1rem;"></div>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="button" class="vote-btn primary" id="confirmVoteBtn{{ candidate.id }}"
-                                                onclick="signAndVote({{ election.id }}, {{ candidate.id }}, '{{ 'country_president' if election.election_type.value == 'presidential' else 'congress' }}', '{{ candidate.user.username }}')">
-                                            <i class="fas fa-signature me-1"></i>Sign & Vote
+                                        <button type="button" class="vote-btn primary" id="zkVoteBtn{{ candidate.id }}"
+                                                onclick="castZKVote('{{ election.election_type.value }}', {{ election.id }}, {{ election.country_id }}, {{ zk_candidate_map[candidate.id] }}, {{ approved_candidates|length }}, {{ candidate.id }})">
+                                            <i class="fas fa-shield-alt me-1"></i>Cast Anonymous Vote
                                         </button>
                                     </div>
                                 </div>
@@ -1129,8 +1243,172 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="{{ url_for('static', filename='js/ethers.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/zk_voting.js') }}"></script>
 <script>
+// ZK Registration state
+let zkRegistered = false;
+let zkLeafIndex = null;
+
+// Check ZK registration status on page load
+async function checkZKRegistration() {
+    try {
+        const response = await fetch('/api/zk/registration-status?election_type={{ election.election_type.value }}&scope_id={{ election.country_id }}');
+        const data = await response.json();
+
+        const statusDiv = document.getElementById('zk-reg-status');
+        const regBtn = document.getElementById('zkRegisterBtn');
+        const statusBadge = document.getElementById('zk-reg-status-badge');
+
+        if (data.registered) {
+            zkRegistered = true;
+            zkLeafIndex = data.leaf_index;
+
+            if (statusDiv) {
+                statusDiv.innerHTML = `
+                    <div class="alert-box success">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="alert-box-content">
+                            <strong>You are registered for anonymous voting!</strong><br>
+                            <small style="opacity: 0.8;">Your identity is protected by zero-knowledge cryptography.</small>
+                        </div>
+                    </div>
+                `;
+            }
+            if (regBtn) regBtn.style.display = 'none';
+            if (statusBadge) {
+                statusBadge.textContent = 'REGISTERED';
+                statusBadge.classList.add('voting');
+                statusBadge.style.display = 'inline-flex';
+            }
+        }
+    } catch (error) {
+        console.error('Failed to check registration status:', error);
+    }
+}
+
+// Register for anonymous voting
+async function registerForZKVoting(electionType, scopeId) {
+    const statusDiv = document.getElementById('zk-reg-status');
+    const regBtn = document.getElementById('zkRegisterBtn');
+
+    if (regBtn) regBtn.disabled = true;
+
+    statusDiv.innerHTML = `
+        <div class="alert-box info">
+            <i class="fas fa-spinner fa-spin"></i>
+            <div class="alert-box-content">Generating cryptographic commitment...</div>
+        </div>
+    `;
+
+    try {
+        const result = await ZKVoting.register(electionType, scopeId);
+
+        if (result.success || result.alreadyRegistered) {
+            zkRegistered = true;
+            zkLeafIndex = result.leaf_index || result.leafIndex;
+
+            statusDiv.innerHTML = `
+                <div class="alert-box success">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="alert-box-content">
+                        <strong>${result.alreadyRegistered ? 'Already registered!' : 'Successfully registered!'}</strong><br>
+                        <small>You can now vote anonymously. Your identity will be protected.</small>
+                    </div>
+                </div>
+            `;
+            if (regBtn) regBtn.style.display = 'none';
+
+            const statusBadge = document.getElementById('zk-reg-status-badge');
+            if (statusBadge) {
+                statusBadge.textContent = 'REGISTERED';
+                statusBadge.classList.add('voting');
+                statusBadge.style.display = 'inline-flex';
+            }
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert-box" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                    <div class="alert-box-content">${result.error || 'Registration failed. Please try again.'}</div>
+                </div>
+            `;
+            if (regBtn) regBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        statusDiv.innerHTML = `
+            <div class="alert-box" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                <div class="alert-box-content">Error: ${error.message}</div>
+            </div>
+        `;
+        if (regBtn) regBtn.disabled = false;
+    }
+}
+
+// Cast anonymous vote with ZK proof
+async function castZKVote(electionType, electionId, scopeId, candidateId, numCandidates, statusCandidateId) {
+    const statusDiv = document.getElementById('zk-vote-status-' + statusCandidateId);
+    const voteBtn = document.getElementById('zkVoteBtn' + statusCandidateId);
+
+    // Check if registered
+    if (!zkRegistered) {
+        statusDiv.innerHTML = `
+            <div class="alert-box" style="background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3);">
+                <i class="fas fa-exclamation-triangle" style="color: #fbbf24;"></i>
+                <div class="alert-box-content">
+                    Please register for anonymous voting first before casting your vote.
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    if (voteBtn) voteBtn.disabled = true;
+
+    statusDiv.innerHTML = `
+        <div class="alert-box info">
+            <i class="fas fa-spinner fa-spin"></i>
+            <div class="alert-box-content">Generating zero-knowledge proof... This may take a moment.</div>
+        </div>
+    `;
+
+    try {
+        const result = await ZKVoting.castVote(electionType, electionId, scopeId, candidateId, numCandidates);
+
+        if (result.success) {
+            statusDiv.innerHTML = `
+                <div class="alert-box success">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="alert-box-content">
+                        <strong>Vote cast anonymously!</strong><br>
+                        <small>Your vote has been verified on zkVerify blockchain.</small>
+                        ${result.explorer_url ? `<br><a href="${result.explorer_url}" target="_blank" style="color: #22c55e;">View proof on blockchain &rarr;</a>` : ''}
+                    </div>
+                </div>
+            `;
+            // Reload page after delay
+            setTimeout(() => window.location.reload(), 2500);
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert-box" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                    <div class="alert-box-content">${result.error || 'Vote failed. Please try again.'}</div>
+                </div>
+            `;
+            if (voteBtn) voteBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Vote error:', error);
+        statusDiv.innerHTML = `
+            <div class="alert-box" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                <div class="alert-box-content">Error: ${error.message}</div>
+            </div>
+        `;
+        if (voteBtn) voteBtn.disabled = false;
+    }
+}
+
 // Election countdown timer
 function initElectionCountdown() {
     const countdownEl = document.getElementById('election-countdown');
@@ -1260,6 +1538,12 @@ async function signAndVote(electionId, candidateId, electionType, candidateName)
     }
 }
 
-document.addEventListener('DOMContentLoaded', initElectionCountdown);
+document.addEventListener('DOMContentLoaded', function() {
+    initElectionCountdown();
+    // Check ZK registration status if user is eligible voter
+    {% if election.status.value in ['nominations', 'applications', 'voting'] and current_user.citizenship_id == election.country_id and not user_vote %}
+    checkZKRegistration();
+    {% endif %}
+});
 </script>
 {% endblock %}

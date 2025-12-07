@@ -1158,7 +1158,10 @@
                     // Verify signature
                     const verifyResponse = await fetch('/auth/verify_signature', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        },
                         body: JSON.stringify({ address: signerAddress, signature: signature })
                     });
 

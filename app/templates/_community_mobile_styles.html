@@ -1,0 +1,1755 @@
+{# Community Mobile Styles - Include this in all community pages #}
+<style>
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Community Pages
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        /* Main Container */
+        .main-container,
+        .newspaper-content-container,
+        .achievements-content-container {
+            padding: 0.5rem !important;
+        }
+
+        /* Page Headers */
+        .page-header,
+        .messages-header,
+        .newspaper-header,
+        .achievements-header {
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .page-header h2,
+        .messages-header h2 {
+            font-size: 1.35rem;
+        }
+
+        .page-header p {
+            font-size: 0.85rem;
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-title {
+            font-size: 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .leaderboard-tabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            gap: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .leaderboard-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .leaderboard-tab {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .filters-section {
+            padding: 1rem;
+            gap: 0.75rem;
+            flex-direction: column;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .filter-select {
+            width: 100%;
+            min-width: 100%;
+        }
+
+        .user-position-banner {
+            padding: 1rem;
+            flex-direction: column;
+            text-align: center;
+            gap: 0.75rem;
+        }
+
+        .user-position-banner i {
+            font-size: 1.5rem;
+        }
+
+        /* Leaderboard Table - Card Layout */
+        .leaderboard-table {
+            display: block;
+        }
+
+        .leaderboard-table tr {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 10px;
+            gap: 0.75rem;
+        }
+
+        .leaderboard-row td {
+            padding: 0;
+            border: none !important;
+        }
+
+        .rank-cell {
+            width: auto;
+            min-width: 50px;
+        }
+
+        .rank-medal {
+            font-size: 1.5rem;
+        }
+
+        .rank-number {
+            font-size: 1.25rem;
+        }
+
+        .player-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+        }
+
+        .player-name {
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+        }
+
+        /* Election Cards */
+        .election-card {
+            padding: 1rem;
+        }
+
+        .election-header {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .election-title {
+            font-size: 1rem;
+        }
+
+        .winner-info {
+            padding: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        /* Messages Styles */
+        .nav-tabs .nav-link {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .conversation-card {
+            padding: 1rem;
+        }
+
+        .conversation-card .d-flex {
+            flex-wrap: wrap;
+        }
+
+        .user-avatar-small {
+            width: 40px;
+            height: 40px;
+        }
+
+        .unread-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+        }
+
+        .alert-card {
+            padding: 1rem;
+        }
+
+        .alert-card .d-flex {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.25rem;
+        }
+
+        .empty-state {
+            padding: 2rem 1rem;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+        }
+
+        /* Achievements Styles */
+        .achievement-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-box {
+            padding: 0.75rem;
+        }
+
+        .stat-box .stat-value,
+        .stat-value {
+            font-size: 1.5rem;
+        }
+
+        .achievements-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .achievement-card {
+            padding: 1rem;
+        }
+
+        .achievement-header {
+            gap: 0.75rem;
+        }
+
+        .achievement-icon {
+            font-size: 2rem;
+            min-width: 40px;
+        }
+
+        .achievement-name {
+            font-size: 1rem;
+        }
+
+        .achievement-description {
+            font-size: 0.85rem;
+        }
+
+        .category-header {
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .category-icon {
+            font-size: 1.25rem;
+        }
+
+        .category-title {
+            font-size: 1.1rem;
+        }
+
+        /* Party Styles */
+        .stats-summary {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-card-value {
+            font-size: 1.5rem;
+        }
+
+        .stat-card-label {
+            font-size: 0.75rem;
+        }
+
+        .user-party-banner {
+            padding: 1rem;
+            flex-direction: column;
+            text-align: center;
+            gap: 0.75rem;
+        }
+
+        .user-party-info {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .user-party-info i {
+            font-size: 1.5rem;
+        }
+
+        .party-card {
+            padding: 1rem;
+        }
+
+        .party-info {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .party-logo,
+        .party-logo-placeholder {
+            width: 60px;
+            height: 60px;
+        }
+
+        .party-logo-placeholder i {
+            font-size: 1.5rem;
+        }
+
+        .party-details {
+            text-align: center;
+        }
+
+        .party-name-row {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .party-name {
+            font-size: 1.2rem;
+        }
+
+        .party-meta {
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .party-stat {
+            font-size: 0.8rem;
+        }
+
+        .party-stats-sidebar {
+            text-align: center;
+            width: 100%;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(34, 197, 94, 0.1);
+        }
+
+        .party-member-count {
+            font-size: 1.5rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Newspaper Styles */
+        .newspaper-header {
+            padding: 1.25rem;
+        }
+
+        .newspaper-logo {
+            width: 70px;
+            height: 70px;
+        }
+
+        .newspaper-stats {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .article-card {
+            padding: 1rem;
+        }
+
+        .article-card h4 {
+            font-size: 1.1rem;
+        }
+
+        .article-meta {
+            font-size: 0.8rem;
+        }
+
+        /* Military Unit Styles */
+        .unit-header,
+        .unit-card {
+            padding: 1rem;
+        }
+
+        .unit-logo {
+            width: 60px;
+            height: 60px;
+        }
+
+        .unit-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        /* Country Page */
+        .country-content-container {
+            padding: 0.75rem !important;
+        }
+
+        .country-header {
+            padding: 1.25rem;
+            padding-top: 5.5rem;
+            position: relative;
+        }
+
+        .country-selector-wrapper {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            left: 0.75rem;
+            z-index: 100;
+        }
+
+        .country-selector-label {
+            font-size: 0.7rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .country-selector {
+            width: 100%;
+            min-width: unset;
+            font-size: 0.85rem;
+            padding: 0.4rem 2rem 0.4rem 0.75rem;
+        }
+
+        .country-header .d-flex.align-items-center {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.75rem;
+        }
+
+        .country-header .d-flex.align-items-center > div {
+            text-align: center;
+        }
+
+        .country-flag {
+            width: 70px !important;
+            height: auto !important;
+            margin-right: 0 !important;
+        }
+
+        .country-header h1 {
+            font-size: 1.75rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .country-header h1 small {
+            display: block;
+            margin-top: 0.25rem;
+        }
+
+        .country-header .d-flex.flex-wrap.gap-2 {
+            justify-content: center;
+        }
+
+        .world-stat {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.75rem;
+        }
+
+        .country-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        /* Country Page Tabs */
+        .country-content-container .nav-pills {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            gap: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .country-content-container .nav-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .country-content-container .nav-pills .nav-link {
+            padding: 0.65rem 1rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Region List - Make Clickable */
+        .region-list-item {
+            padding: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .region-list-item a {
+            display: flex !important;
+            width: 100%;
+            padding: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Stat Cards on Country Page */
+        .country-content-container .stat-card {
+            padding: 1rem;
+        }
+
+        .country-content-container .stat-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 0.75rem;
+        }
+
+        .country-content-container .stat-value {
+            font-size: 1.25rem;
+        }
+
+        .country-content-container .stat-label {
+            font-size: 0.75rem;
+        }
+
+        /* Position Cards */
+        .position-card {
+            padding: 1.25rem;
+        }
+
+        .position-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+        }
+
+        /* Congress Members */
+        .congress-member {
+            padding: 0.75rem;
+        }
+
+        .congress-member .d-flex {
+            gap: 0.5rem;
+        }
+
+        .rank-badge {
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
+        }
+
+        /* Election Cards */
+        .election-card {
+            padding: 1rem;
+        }
+
+        .election-badge {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.75rem;
+        }
+
+        /* Action Buttons */
+        .country-content-container .action-button {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* War Cards */
+        .war-card {
+            padding: 1rem;
+        }
+
+        .war-title {
+            font-size: 1rem;
+        }
+
+        .war-vs {
+            flex-direction: column;
+            gap: 0.75rem;
+            text-align: center;
+        }
+
+        .war-country {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .war-country-flag {
+            width: 40px;
+            height: auto;
+        }
+
+        /* Region Page */
+        .region-content-container {
+            padding: 0.75rem !important;
+        }
+
+        .region-header {
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .region-header .d-flex.align-items-center {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.75rem;
+        }
+
+        .region-header h1 {
+            font-size: 1.5rem !important;
+            margin-bottom: 0 !important;
+            order: 2;
+        }
+
+        .region-header h1 small {
+            display: block;
+            margin-top: 0.25rem;
+        }
+
+        .region-flag {
+            width: 60px !important;
+            height: auto !important;
+            margin-right: 0 !important;
+            order: 1;
+        }
+
+        .region-header .btn-outline-secondary {
+            order: 3;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .region-header .me-auto {
+            margin-right: 0 !important;
+        }
+
+        /* Region Tabs */
+        .region-content-container .nav-pills {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            gap: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .region-content-container .nav-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .region-content-container .nav-pills .nav-link {
+            padding: 0.6rem 0.85rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .region-content-container .nav-pills .nav-link i {
+            margin-right: 0.35rem !important;
+        }
+
+        /* Region Cards */
+        .region-content-container .card {
+            margin-bottom: 1rem;
+        }
+
+        .region-content-container .card-header {
+            padding: 1rem;
+        }
+
+        .region-content-container .card-header h5 {
+            font-size: 1rem;
+        }
+
+        .region-content-container .card-body {
+            padding: 1rem;
+        }
+
+        /* Constructions Grid */
+        .constructions-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .construction-item {
+            padding: 0.85rem;
+        }
+
+        .construction-icon {
+            width: 42px;
+            height: 42px;
+        }
+
+        .construction-img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .construction-name {
+            font-size: 0.9rem;
+        }
+
+        .construction-quality {
+            font-size: 0.75rem;
+        }
+
+        .construction-bonus {
+            font-size: 0.7rem;
+        }
+
+        /* Resources Grid */
+        .resources-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .resource-item {
+            padding: 0.85rem;
+        }
+
+        .resource-icon {
+            width: 42px;
+            height: 42px;
+        }
+
+        .resource-img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .resource-name {
+            font-size: 0.9rem;
+        }
+
+        .resource-amount {
+            font-size: 0.8rem;
+        }
+
+        /* Neighbor Items */
+        .neighbor-item {
+            padding: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .neighbor-item a {
+            font-size: 0.9rem;
+        }
+
+        .neighbor-flag {
+            width: 24px;
+            height: 16px;
+        }
+
+        /* Resistance War Section */
+        .resistance-info .alert-box {
+            padding: 0.85rem;
+            font-size: 0.85rem;
+        }
+
+        .resistance-active,
+        .resistance-start {
+            padding: 1rem !important;
+        }
+
+        .resistance-active h6,
+        .resistance-start h6 {
+            font-size: 0.95rem;
+        }
+
+        .resistance-active p,
+        .resistance-start p {
+            font-size: 0.8rem !important;
+        }
+
+        .resistance-cost {
+            flex-wrap: wrap;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .resistance-cost span:last-child {
+            width: 100%;
+            margin-left: 0 !important;
+            margin-top: 0.25rem;
+        }
+
+        .resistance-rules {
+            font-size: 0.8rem !important;
+        }
+
+        .resistance-rules ul {
+            padding-left: 1.25rem !important;
+        }
+
+        /* Row Layout for Region */
+        .region-content-container .row {
+            flex-direction: column;
+        }
+
+        .region-content-container .col-md-8,
+        .region-content-container .col-md-4 {
+            width: 100%;
+        }
+
+        /* Game Guide */
+        .guide-section {
+            padding: 1rem;
+        }
+
+        .guide-nav {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .guide-nav-item {
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Modals */
+        .modal-dialog {
+            margin: 0.5rem;
+        }
+
+        .modal-content {
+            border-radius: 12px;
+        }
+
+        /* General Components */
+        .btn-lg {
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+        }
+
+        /* Table Responsive */
+        .table-responsive {
+            margin: 0 -0.5rem;
+        }
+
+        /* Form Elements */
+        .form-control,
+        .form-select {
+            font-size: 0.95rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        /* Message Thread Specific */
+        .message-bubble {
+            max-width: 90%;
+            padding: 0.75rem;
+        }
+
+        .message-input-container {
+            padding: 0.75rem;
+        }
+
+        /* Referral Page */
+        .referral-code-display {
+            font-size: 1.1rem;
+            padding: 0.75rem;
+        }
+
+        .referral-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        /* Latest Updates */
+        .update-card {
+            padding: 1rem;
+        }
+
+        .update-date {
+            font-size: 0.8rem;
+        }
+
+        /* =====================================================
+           PARTY & MILITARY UNIT DETAIL PAGES
+           ===================================================== */
+
+        /* Party Detail Page */
+        .party-content-container,
+        .unit-content-container {
+            padding: 1rem !important;
+        }
+
+        .party-hero,
+        .unit-hero {
+            padding: 1.25rem;
+            border-radius: 12px;
+        }
+
+        .party-hero-content,
+        .unit-hero-content {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .party-logo,
+        .party-logo-placeholder,
+        .unit-avatar,
+        .unit-avatar-placeholder {
+            width: 80px !important;
+            height: 80px !important;
+        }
+
+        .party-name,
+        .unit-name {
+            font-size: 1.35rem !important;
+        }
+
+        .party-title-row,
+        .unit-title-row {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .country-badge {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+        }
+
+        .party-meta,
+        .unit-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .party-meta-item,
+        .unit-meta-item {
+            font-size: 0.85rem;
+        }
+
+        .party-actions,
+        .unit-actions {
+            width: 100%;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .party-actions .btn,
+        .unit-actions .btn {
+            width: 100%;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.35rem;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.7rem;
+        }
+
+        /* Content Grid - Stack on Mobile */
+        .content-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem;
+        }
+
+        /* Section Cards */
+        .section-card {
+            margin-bottom: 1rem;
+        }
+
+        .section-header {
+            padding: 0.85rem 1rem;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+        }
+
+        .section-body {
+            padding: 1rem;
+        }
+
+        /* Member Grid */
+        .member-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem;
+        }
+
+        .member-card {
+            padding: 0.85rem;
+        }
+
+        .member-avatar {
+            width: 42px;
+            height: 42px;
+        }
+
+        .member-name {
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .member-meta {
+            font-size: 0.75rem;
+        }
+
+        .rank-tag,
+        .president-tag {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.4rem;
+        }
+
+        /* Election Banner */
+        .election-banner {
+            padding: 1rem;
+        }
+
+        .election-banner-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .election-banner-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+
+        .election-banner-title {
+            font-size: 1rem;
+        }
+
+        .election-banner-subtitle {
+            font-size: 0.8rem;
+        }
+
+        .election-banner-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .election-banner-actions .btn,
+        .election-banner-actions form {
+            width: 100%;
+        }
+
+        .candidate-pills {
+            justify-content: center;
+        }
+
+        .candidate-pill {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+        }
+
+        /* Sidebar Cards */
+        .sidebar-card {
+            margin-bottom: 0.85rem;
+        }
+
+        .sidebar-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.85rem;
+        }
+
+        .sidebar-body {
+            padding: 0.85rem;
+        }
+
+        /* President/Commander Card */
+        .president-card,
+        .commander-card {
+            padding: 0.75rem;
+        }
+
+        .president-avatar,
+        .commander-avatar {
+            width: 48px;
+            height: 48px;
+        }
+
+        .president-info h4,
+        .commander-info h4 {
+            font-size: 0.9rem;
+        }
+
+        .president-info p,
+        .commander-info p {
+            font-size: 0.75rem;
+        }
+
+        /* Contract Banner */
+        .contract-banner {
+            padding: 1rem;
+        }
+
+        .contract-banner-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .contract-banner-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+
+        .contract-banner-title {
+            font-size: 1rem;
+        }
+
+        .progress-bar-container {
+            height: 20px;
+        }
+
+        .progress-bar-fill {
+            font-size: 0.65rem;
+        }
+
+        /* Application Card */
+        .application-card {
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+
+        .applicant-info {
+            gap: 0.75rem;
+        }
+
+        .applicant-avatar {
+            width: 36px;
+            height: 36px;
+        }
+
+        /* Messages Page */
+        .messages-container {
+            padding: 1rem !important;
+        }
+
+        .page-header {
+            flex-direction: column;
+            gap: 0.75rem;
+            text-align: center;
+        }
+
+        .message-form {
+            flex-direction: column;
+        }
+
+        .message-form .btn {
+            width: 100%;
+        }
+
+        .message-item {
+            padding: 1rem;
+        }
+
+        .message-header {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+        }
+
+        .message-author {
+            font-size: 0.9rem;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            width: 100%;
+        }
+
+        .message-content {
+            font-size: 0.9rem;
+        }
+
+        /* Referral Page */
+        .referral-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .referral-header p {
+            font-size: 0.95rem;
+        }
+
+        .referral-card {
+            padding: 1.25rem;
+        }
+
+        .referral-link-section {
+            padding: 1rem;
+        }
+
+        .link-label {
+            font-size: 0.95rem;
+        }
+
+        .link-container {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .link-input {
+            width: 100%;
+            font-size: 0.85rem;
+            padding: 0.65rem 0.85rem;
+        }
+
+        .copy-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stats-grid .stat-card {
+            padding: 1rem;
+        }
+
+        .stats-grid .stat-value {
+            font-size: 1.75rem;
+        }
+
+        .stats-grid .stat-label {
+            font-size: 0.8rem;
+        }
+
+        /* Referral Table */
+        .referral-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .referral-table thead {
+            display: none;
+        }
+
+        .referral-table tbody {
+            display: block;
+        }
+
+        .referral-table tr {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: rgba(34, 197, 94, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(34, 197, 94, 0.15);
+        }
+
+        .referral-table td {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.35rem 0;
+            border: none;
+        }
+
+        .referral-table td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .info-box {
+            padding: 1rem;
+        }
+
+        .info-box h3 {
+            font-size: 1rem;
+        }
+
+        .info-box ul {
+            font-size: 0.9rem;
+        }
+
+        /* NFT Inventory Page */
+        .nft-inventory-container {
+            padding: 1rem !important;
+        }
+
+        .nft-page-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .nft-page-header-left {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .nft-page-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.25rem;
+        }
+
+        .nft-page-title {
+            font-size: 1.35rem;
+        }
+
+        .nft-page-subtitle {
+            font-size: 0.85rem;
+        }
+
+        .nft-page-actions {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.5rem;
+        }
+
+        .nft-action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* NFT Tabs */
+        .nft-tabs {
+            flex-direction: row !important;
+            overflow-x: auto;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .nft-tab {
+            flex-shrink: 0;
+            white-space: nowrap;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* NFT Grid */
+        .nft-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem;
+        }
+
+        /* NFT Cards */
+        .nft-card {
+            padding: 1rem;
+        }
+
+        .nft-card-header {
+            gap: 0.75rem;
+        }
+
+        .nft-card-icon {
+            width: 45px;
+            height: 45px;
+        }
+
+        .nft-card-title {
+            font-size: 1rem;
+        }
+
+        .nft-card-tier {
+            font-size: 0.7rem;
+        }
+
+        .nft-card-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nft-card-actions .btn {
+            width: 100%;
+        }
+
+        /* Upgrade Section */
+        .upgrade-section-card {
+            padding: 1rem;
+        }
+
+        .upgrade-section-header {
+            flex-direction: column;
+            gap: 0.75rem;
+            text-align: center;
+        }
+
+        .upgrade-header-left {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .upgrade-icon {
+            width: 45px;
+            height: 45px;
+        }
+
+        .upgrade-title {
+            font-size: 1.1rem;
+        }
+
+        .upgrade-subtitle {
+            font-size: 0.8rem;
+        }
+
+        .upgrade-ratio-badge {
+            font-size: 0.8rem;
+        }
+
+        .upgrade-forge-area {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .forge-input-section {
+            width: 100%;
+        }
+
+        .forge-slots {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .forge-connector {
+            transform: rotate(90deg);
+        }
+
+        .upgrade-slot {
+            width: 100%;
+            min-height: 100px;
+        }
+
+        .slot-text {
+            font-size: 0.9rem;
+        }
+
+        .slot-hint {
+            font-size: 0.75rem;
+        }
+
+        .forge-arrow-section {
+            transform: rotate(90deg);
+            margin: 0.5rem 0;
+        }
+
+        .forge-result-section {
+            width: 100%;
+        }
+
+        .upgrade-result {
+            width: 100%;
+            min-height: 100px;
+        }
+
+        .upgrade-action-area {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .upgrade-forge-btn {
+            width: 100%;
+        }
+
+        .upgrade-info-banner {
+            padding: 0.85rem;
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+
+        .info-banner-content {
+            font-size: 0.85rem;
+        }
+
+        /* Leaderboards Improvements */
+        .leaderboard-row td[style*="width: 300px"],
+        .leaderboard-row td[style*="width: 400px"] {
+            width: auto !important;
+            flex: 1;
+        }
+
+        .leaderboard-row td[style*="text-align: right"] {
+            width: 100%;
+            text-align: center !important;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(34, 197, 94, 0.1);
+            margin-top: 0.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-container,
+        .newspaper-content-container,
+        .achievements-content-container {
+            padding: 0.35rem !important;
+        }
+
+        .page-header,
+        .messages-header,
+        .newspaper-header {
+            padding: 1rem;
+        }
+
+        .page-header h2,
+        .messages-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .leaderboard-title {
+            font-size: 1.25rem;
+        }
+
+        .leaderboard-tab {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .achievement-stats {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .stat-box .stat-value,
+        .stat-value {
+            font-size: 1.25rem;
+        }
+
+        .party-name {
+            font-size: 1.1rem;
+        }
+
+        .party-logo,
+        .party-logo-placeholder {
+            width: 50px;
+            height: 50px;
+        }
+
+        .player-avatar {
+            width: 36px;
+            height: 36px;
+        }
+
+        .user-avatar-small {
+            width: 36px;
+            height: 36px;
+        }
+
+        .achievement-icon {
+            font-size: 1.75rem;
+            min-width: 35px;
+        }
+
+        .nav-tabs .nav-link {
+            padding: 0.6rem 0.85rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-lg {
+            padding: 0.5rem 0.85rem;
+            font-size: 0.9rem;
+        }
+
+        /* Region Page 480px */
+        .region-content-container {
+            padding: 0.5rem !important;
+        }
+
+        .region-header {
+            padding: 1rem;
+        }
+
+        .region-header h1 {
+            font-size: 1.35rem !important;
+        }
+
+        .region-flag {
+            width: 50px !important;
+        }
+
+        .region-content-container .nav-pills .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .constructions-grid,
+        .resources-grid {
+            gap: 0.5rem;
+        }
+
+        .construction-item,
+        .resource-item {
+            padding: 0.75rem;
+        }
+
+        .construction-icon,
+        .resource-icon {
+            width: 38px;
+            height: 38px;
+        }
+
+        .construction-img,
+        .resource-img {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Country Page 480px */
+        .country-content-container {
+            padding: 0.5rem !important;
+        }
+
+        .country-header {
+            padding: 1rem;
+            padding-top: 5rem;
+        }
+
+        .country-header h1 {
+            font-size: 1.5rem !important;
+        }
+
+        .country-flag {
+            width: 60px !important;
+        }
+
+        .country-content-container .nav-pills .nav-link {
+            padding: 0.5rem 0.85rem;
+            font-size: 0.8rem;
+        }
+
+        .region-list-item {
+            padding: 0.85rem;
+        }
+
+        .position-card {
+            padding: 1rem;
+        }
+
+        .position-icon {
+            width: 45px;
+            height: 45px;
+            font-size: 1.25rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .page-header h2,
+        .messages-header h2 {
+            font-size: 1.1rem;
+        }
+
+        .leaderboard-title {
+            font-size: 1.1rem;
+        }
+
+        .leaderboard-tab {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        .stat-box .stat-value,
+        .stat-value {
+            font-size: 1.1rem;
+        }
+
+        .party-name {
+            font-size: 1rem;
+        }
+
+        .achievement-name {
+            font-size: 0.95rem;
+        }
+
+        .category-title {
+            font-size: 1rem;
+        }
+
+        /* Region Page 360px */
+        .region-header h1 {
+            font-size: 1.2rem !important;
+        }
+
+        .region-flag {
+            width: 45px !important;
+        }
+
+        .region-content-container .nav-pills .nav-link {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.7rem;
+        }
+
+        .neighbor-item {
+            padding: 0.7rem;
+        }
+
+        .neighbor-item a {
+            font-size: 0.85rem;
+        }
+
+        /* Country Page 360px */
+        .country-header {
+            padding-top: 4.5rem;
+        }
+
+        .country-header h1 {
+            font-size: 1.35rem !important;
+        }
+
+        .country-flag {
+            width: 55px !important;
+        }
+
+        .country-selector {
+            font-size: 0.8rem;
+            padding: 0.35rem 1.75rem 0.35rem 0.6rem;
+        }
+
+        .country-content-container .nav-pills .nav-link {
+            padding: 0.4rem 0.7rem;
+            font-size: 0.75rem;
+        }
+
+        .region-list-item {
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+    }
+</style>

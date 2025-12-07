@@ -241,6 +241,9 @@ class BattleService:
             is_attacker is True for attacker side, False for defender side, None if can't fight
         """
         war = battle.war
+        if not war:
+            return False, None, "Battle is in invalid state (no associated war)."
+
         attacker_id = war.attacker_country_id
         defender_id = war.defender_country_id
 
@@ -278,7 +281,8 @@ class BattleService:
                     return True, None, "CHOOSE_SIDE"
 
             # User is not in the occupying country - can't participate
-            return False, None, f"You must be located in {war.defender_country.name} to participate in this resistance war."
+            defender_name = war.defender_country.name if war.defender_country else "the defending country"
+            return False, None, f"You must be located in {defender_name} to participate in this resistance war."
 
         # Regular war logic
         # Check if user is in attacker's territory
@@ -754,6 +758,11 @@ class BattleService:
         if not region_owner or region_owner.id != defending_country_id:
             return False, "This region does not belong to the enemy."
 
+        # Check if defending country has Starter Protection (only 1 region left)
+        defending_country = Country.query.get(defending_country_id)
+        if defending_country and defending_country.has_starter_protection:
+            return False, f"{defending_country.name} has Starter Protection. Countries with only 1 region cannot be attacked until protection is removed."
+
         # Check target region is adjacent to attacking country's territory
         attacking_country = Country.query.get(attacking_country_id)
         if not attacking_country:
@@ -884,26 +893,37 @@ class BattleService:
             next_round_num = battle_round.round_number + 1
             battle.current_round = next_round_num
 
+            # Calculate next round timing based on when previous round was SUPPOSED to end
+            # This ensures correct timing even if server was offline
+            now = datetime.utcnow()
+
+            # The next round should start when the previous round was scheduled to end
+            # and end 8 hours after that (not 8 hours from now)
+            scheduled_start = battle_round.ends_at if battle_round.ends_at else now
+            scheduled_end = scheduled_start + timedelta(hours=ROUND_DURATION_HOURS)
+
+            # If the scheduled times are in the past (server was offline), cap to battle end time
+            # but don't extend beyond what was originally scheduled
+            if battle.ends_at and scheduled_end > battle.ends_at:
+                scheduled_end = battle.ends_at
+
             # Check if next round already exists
             next_round = battle.get_round(next_round_num)
             if not next_round:
                 # Create the next round
-                now = datetime.utcnow()
                 next_round = BattleRound(
                     battle_id=battle.id,
                     round_number=next_round_num,
                     status=RoundStatus.ACTIVE,
-                    started_at=now,
-                    ends_at=now + timedelta(hours=ROUND_DURATION_HOURS)
+                    started_at=scheduled_start,
+                    ends_at=scheduled_end
                 )
                 db.session.add(next_round)
             else:
-                # Activate existing round
+                # Activate existing round with correct timing
                 next_round.status = RoundStatus.ACTIVE
-                # Update timing if round was pre-created with wrong times
-                now = datetime.utcnow()
-                next_round.started_at = now
-                next_round.ends_at = now + timedelta(hours=ROUND_DURATION_HOURS)
+                next_round.started_at = scheduled_start
+                next_round.ends_at = scheduled_end
 
         db.session.commit()
 
@@ -992,6 +1012,14 @@ class BattleService:
         if resistance_won:
             # RESISTANCE WON - Liberate the region
             BattleService.capture_region(battle)  # This transfers the region
+
+            # Check if this liberates a conquered country
+            # If resistance_country was conquered and now has regions, it's being liberated
+            from app.services.conquest_service import ConquestService
+            if resistance_country and resistance_country.is_conquered:
+                # Country is being liberated! Pass the starter user ID for president assignment
+                starter_id = starter.id if starter else None
+                ConquestService.liberate_country(resistance_country.id, starter_id)
 
             # Update the war starter's stats
             if starter:
@@ -1169,6 +1197,11 @@ class BattleService:
             import logging
             logger = logging.getLogger(__name__)
             logger.info(f"Destroyed {len(constructions)} construction(s) in {region.name} after capture by {attacker_country.name}")
+
+        # Check if defender has lost ALL regions (full conquest)
+        from app.services.conquest_service import ConquestService
+        if ConquestService.check_full_conquest(defender_country.id):
+            ConquestService.conquer_country(defender_country.id, attacker_country.id, war)
 
     # =========================================================================
     # QUERIES

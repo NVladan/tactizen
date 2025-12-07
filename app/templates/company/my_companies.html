@@ -361,6 +361,354 @@
         font-size: 1.1rem;
         margin: 0;
     }
+
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - My Companies
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        .dashboard-content-container {
+            padding: 0.5rem;
+        }
+
+        .main-container {
+            padding: 0.5rem;
+        }
+
+        /* Tab Navigation - horizontal scroll */
+        #myPlacesTab {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #myPlacesTab .nav-item {
+            flex-shrink: 0;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        /* Header */
+        .training-header {
+            padding: 2rem 1rem;
+            min-height: 120px;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .training-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .training-header p {
+            font-size: 0.85rem;
+        }
+
+        /* Action buttons */
+        .mb-4.text-center .btn {
+            display: block;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            margin-right: 0 !important;
+        }
+
+        /* Job Section */
+        .job-section {
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .job-header {
+            padding: 1rem;
+        }
+
+        .job-header h3 {
+            font-size: 1.2rem;
+        }
+
+        .job-body {
+            padding: 0.75rem;
+        }
+
+        .job-card {
+            padding: 1rem;
+        }
+
+        /* Job card layout - stack vertically on mobile */
+        .job-card .row {
+            flex-direction: column;
+        }
+
+        .job-card .col-md-3,
+        .job-card .col-md-5,
+        .job-card .col-md-4 {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .job-card .col-md-4:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Job company info - horizontal layout */
+        .job-card .col-md-3 .d-flex {
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .job-card .col-md-3 img {
+            width: 60px !important;
+            height: 60px !important;
+            margin-right: 12px !important;
+        }
+
+        .job-card .col-md-3 > .d-flex > div:last-child > div:first-child {
+            font-size: 1rem !important;
+        }
+
+        .job-card .col-md-3 > .d-flex > div:last-child > div:last-child {
+            font-size: 0.8rem !important;
+        }
+
+        /* Job stats row */
+        .job-card .col-md-5 .row {
+            flex-direction: row;
+            flex-wrap: nowrap;
+        }
+
+        .job-card .col-md-5 .col-4 {
+            padding: 0.5rem;
+            background: rgba(34, 197, 94, 0.05);
+            border-radius: 8px;
+            margin: 0 0.25rem;
+        }
+
+        .job-card .col-md-5 .col-4:first-child {
+            margin-left: 0;
+        }
+
+        .job-card .col-md-5 .col-4:last-child {
+            margin-right: 0;
+        }
+
+        /* Job action buttons */
+        .job-card .col-md-4 .d-flex {
+            flex-wrap: wrap;
+        }
+
+        .job-card .col-md-4 .btn {
+            flex: 1 1 auto;
+            min-width: 70px;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        /* Companies Section */
+        .companies-section {
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .companies-header {
+            padding: 1rem;
+        }
+
+        .companies-header h3 {
+            font-size: 1.2rem;
+        }
+
+        .companies-body {
+            padding: 0.75rem;
+        }
+
+        /* Company grid - single column */
+        .company-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .company-card {
+            padding: 1rem;
+        }
+
+        .company-card-header {
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+
+        /* Company header - image and name */
+        .company-card-header .d-flex {
+            align-items: flex-start;
+        }
+
+        .company-card-header img {
+            width: 60px !important;
+            height: 60px !important;
+            margin-right: 12px !important;
+            flex-shrink: 0;
+        }
+
+        .company-card-name {
+            font-size: 1rem;
+            word-break: break-word;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .company-card-type {
+            font-size: 0.8rem;
+        }
+
+        /* Company stats grid - 2x2 */
+        .company-stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .company-stat {
+            padding: 0.6rem;
+        }
+
+        .company-stat-label {
+            font-size: 0.65rem;
+        }
+
+        .company-stat-value {
+            font-size: 0.85rem;
+            word-break: break-word;
+        }
+
+        .company-card-footer {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+        }
+
+        .company-card-footer .btn {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* No companies/job message */
+        .no-job-message,
+        .no-companies-message {
+            padding: 2rem 1rem;
+        }
+
+        .no-job-message i,
+        .no-companies-message i {
+            font-size: 2rem;
+        }
+
+        .no-job-message p,
+        .no-companies-message p {
+            font-size: 0.95rem;
+        }
+
+        /* Work Modal */
+        .work-modal .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100% - 1rem);
+        }
+
+        .work-modal .modal-body {
+            padding: 1rem !important;
+        }
+
+        .hour-display {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-container {
+            padding: 0.35rem;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .training-header {
+            padding: 1.5rem 0.75rem;
+            min-height: 100px;
+        }
+
+        .training-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .job-header,
+        .companies-header {
+            padding: 0.85rem;
+        }
+
+        .job-header h3,
+        .companies-header h3 {
+            font-size: 1.1rem;
+        }
+
+        .job-body,
+        .companies-body {
+            padding: 0.5rem;
+        }
+
+        .job-card,
+        .company-card {
+            padding: 0.75rem;
+        }
+
+        .job-card .col-md-3 img {
+            width: 50px !important;
+            height: 50px !important;
+        }
+
+        .company-card-header img {
+            width: 50px !important;
+            height: 50px !important;
+        }
+
+        .company-card-name {
+            font-size: 0.95rem;
+        }
+
+        .company-stat {
+            padding: 0.5rem;
+        }
+
+        .company-stat-label {
+            font-size: 0.6rem;
+        }
+
+        .company-stat-value {
+            font-size: 0.8rem;
+        }
+
+        .job-card .col-md-4 .btn {
+            padding: 0.5rem 0.6rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .job-header h3,
+        .companies-header h3 {
+            font-size: 1rem;
+        }
+
+        .company-card-name {
+            font-size: 0.9rem;
+        }
+
+        .company-stat-value {
+            font-size: 0.75rem;
+        }
+    }
 </style>
 {% endblock %}
 

@@ -380,6 +380,7 @@
         color: #22c55e;
     }
 </style>
+{% include 'government/_government_mobile_styles.html' %}
 {% endblock %}
 
 {% block main_layout %}
@@ -464,6 +465,52 @@
                     <div class="empty-state">
                         No active elections at this time.<br>
                         <span style="font-size: 0.85rem;">Elections are held on the 5th (Presidential) and 25th (Congressional) of each month.</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Election History -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">&#128218;</span>
+                    Election History
+                </h2>
+
+                {% if past_elections %}
+                    {% for election in past_elections %}
+                    <div class="election-card {{ election.election_type.value }}" style="opacity: 0.85;">
+                        <div class="election-header">
+                            <span class="election-type-badge {{ election.election_type.value }}">
+                                {% if election.election_type.value == 'presidential' %}
+                                    &#128081; Presidential
+                                {% else %}
+                                    &#127963; Congressional
+                                {% endif %}
+                            </span>
+                            <span class="election-status-badge" style="background: rgba(107, 114, 128, 0.2); color: #9ca3af;">
+                                Completed
+                            </span>
+                        </div>
+
+                        <div class="election-dates">
+                            <div class="date-item">
+                                <div class="date-label">Election Date</div>
+                                <div class="date-value">{{ election.voting_end.strftime('%b %d, %Y') }}</div>
+                            </div>
+                            <div class="date-item">
+                                <div class="date-label">Total Votes</div>
+                                <div class="date-value">{{ election.total_votes_cast or 0 }} votes</div>
+                            </div>
+                        </div>
+
+                        <a href="{{ url_for('government.election_detail', election_id=election.id) }}" class="btn-view" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+                            View Results
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        No past elections yet.
                     </div>
                 {% endif %}
             </div>

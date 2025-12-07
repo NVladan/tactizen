@@ -377,10 +377,12 @@
                 <div class="stat-value">{{ stats.weekly_completed }}/{{ stats.weekly_total }}</div>
                 <div class="stat-label">Weekly</div>
             </div>
+            {% if not stats.tutorial_all_claimed %}
             <div class="stat-box">
                 <div class="stat-value">{{ stats.tutorial_completed }}/{{ stats.tutorial_total }}</div>
                 <div class="stat-label">Tutorial</div>
             </div>
+            {% endif %}
             <div class="stat-box">
                 <div class="stat-value">{{ stats.total_completed }}</div>
                 <div class="stat-label">Total Done</div>
@@ -407,10 +409,12 @@
             <i class="fas fa-calendar-week"></i> Weekly
             <span class="badge bg-purple">{{ weekly_missions|length }}</span>
         </button>
+        {% if not stats.tutorial_all_claimed %}
         <button class="mission-tab" data-tab="tutorial">
             <i class="fas fa-graduation-cap"></i> Tutorial
             <span class="badge bg-success">{{ tutorial_missions|selectattr('is_completed', 'equalto', false)|list|length }}</span>
         </button>
+        {% endif %}
     </div>
 
     <!-- Daily Missions -->
@@ -554,6 +558,7 @@
     </div>
 
     <!-- Tutorial Missions -->
+    {% if not stats.tutorial_all_claimed %}
     <div class="mission-section" id="tutorial-section">
         {% if tutorial_missions %}
         <div class="missions-grid">
@@ -622,6 +627,7 @@
         </div>
         {% endif %}
     </div>
+    {% endif %}
 </div>
 
 <script>

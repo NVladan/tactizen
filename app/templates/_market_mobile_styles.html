@@ -1,0 +1,515 @@
+{# Market Mobile Styles - Include this in all market pages #}
+<style>
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Market Pages
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        /* Main Container */
+        .main-container {
+            padding: 0.5rem;
+        }
+
+        /* Tab Navigation - horizontal scroll */
+        #marketTabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        #marketTabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        #marketTabs .nav-item {
+            flex-shrink: 0;
+        }
+
+        #marketTabs .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        /* Market Headers (marketplace, currency, zen, job, nft) */
+        .marketplace-header,
+        .currency-header,
+        .zen-header,
+        .training-header,
+        .nft-header {
+            padding: 2rem 1rem;
+            min-height: 120px;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .marketplace-header h2,
+        .currency-header h2,
+        .zen-header h2,
+        .training-header h2,
+        .nft-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .marketplace-header p,
+        .currency-header p,
+        .zen-header p,
+        .training-header p,
+        .nft-header p {
+            font-size: 0.85rem;
+        }
+
+        /* Storage Indicator */
+        .storage-indicator {
+            max-width: 100% !important;
+        }
+
+        /* Market Cards */
+        .market-item-card {
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        .market-item-card .card-body {
+            padding: 1rem !important;
+        }
+
+        /* Resource Selection Grid */
+        .resource-grid {
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .resource-card {
+            padding: 0.75rem;
+            border-radius: 10px;
+        }
+
+        .resource-card img,
+        .resource-card .resource-placeholder-icon {
+            width: 40px;
+            height: 40px;
+        }
+
+        .resource-card .resource-name {
+            font-size: 0.75rem;
+        }
+
+        /* Category Tabs */
+        .category-tabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            gap: 0.4rem;
+        }
+
+        .category-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-tab {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Selected Resource View */
+        .market-selector-area .d-flex.align-items-center.justify-content-between {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0.75rem 0 !important;
+        }
+
+        .market-selector-area .d-flex.align-items-center.gap-3 {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem !important;
+        }
+
+        #countryFilterContainer,
+        #qualityFilterContainer {
+            min-width: 100% !important;
+            width: 100%;
+        }
+
+        /* Forms */
+        .form-control-lg,
+        .form-select-lg,
+        .custom-dropdown-select {
+            font-size: 1rem;
+            min-height: 44px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        /* Buy/Sell Forms */
+        .w-100.d-flex.flex-column.flex-md-row.gap-2 {
+            flex-direction: column !important;
+        }
+
+        .w-100.d-flex.flex-column.flex-md-row.gap-2 form {
+            width: 100%;
+        }
+
+        .w-100.d-flex.flex-column.flex-md-row.gap-2 form .d-flex.gap-2 {
+            flex-wrap: wrap;
+        }
+
+        .w-100.d-flex.flex-column.flex-md-row.gap-2 form input[type="number"] {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .w-100.d-flex.flex-column.flex-md-row.gap-2 form button {
+            min-width: 80px;
+        }
+
+        /* Price Display */
+        .price-display {
+            font-size: 1.1rem;
+        }
+
+        .fs-5 {
+            font-size: 0.95rem !important;
+        }
+
+        /* Progress Bars */
+        .progress {
+            height: 8px !important;
+        }
+
+        /* Column Layout */
+        .col-lg-6 {
+            margin-bottom: 1rem;
+        }
+
+        /* Balance Cards (Zen Market) */
+        .balance-card {
+            padding: 0.85rem 1rem;
+        }
+
+        .balance-value {
+            font-size: 1.25rem;
+        }
+
+        .balance-label {
+            font-size: 0.8rem;
+        }
+
+        /* Zen Logo */
+        .zen-logo {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+
+        /* Transaction Rows */
+        .transaction-row {
+            padding: 0.6rem 0.75rem;
+        }
+
+        .transaction-row .d-flex {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        /* Job Market Table - Card Layout */
+        .job-table {
+            display: block;
+        }
+
+        .job-table thead {
+            display: none;
+        }
+
+        .job-table tbody {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .job-row {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 1rem;
+            border-radius: 10px;
+            gap: 0.5rem;
+        }
+
+        .job-row td {
+            padding: 0.25rem 0;
+            border: none !important;
+        }
+
+        .job-row td:first-child {
+            width: 100%;
+            border-radius: 0 !important;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .job-row td:nth-child(2),
+        .job-row td:nth-child(3),
+        .job-row td:nth-child(4) {
+            width: auto;
+            font-size: 0.8rem;
+        }
+
+        .job-row td:nth-child(5) {
+            width: 100%;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #22c55e;
+            margin-top: 0.25rem;
+        }
+
+        .job-row td:nth-child(6),
+        .job-row td:nth-child(7) {
+            width: auto;
+            font-size: 0.8rem;
+        }
+
+        .job-row td:last-child {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(34, 197, 94, 0.2) !important;
+        }
+
+        /* Job Market Filters */
+        .modern-section-body .row.g-3 {
+            gap: 0.5rem !important;
+        }
+
+        .modern-section-body .col-md-3,
+        .modern-section-body .col-md-2 {
+            width: 50%;
+            padding: 0.25rem;
+        }
+
+        .modern-section-body .col-md-2:last-child {
+            width: 100%;
+        }
+
+        /* Modern Section */
+        .modern-section {
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .modern-section-header {
+            padding: 1rem;
+        }
+
+        .modern-section-header h4 {
+            font-size: 1.15rem;
+        }
+
+        .modern-section-body {
+            padding: 1rem;
+        }
+
+        /* NFT Marketplace */
+        .col-lg-3 {
+            order: 2;
+            margin-top: 1rem;
+        }
+
+        .col-lg-9 {
+            order: 1;
+        }
+
+        .marketplace-listings-scroll {
+            max-height: none !important;
+        }
+
+        .sticky-top {
+            position: relative !important;
+            top: 0 !important;
+        }
+
+        #listingsContainer {
+            row-cols-1 !important;
+        }
+
+        .nft-card {
+            margin-bottom: 0.75rem;
+        }
+
+        /* Modals */
+        .modal-dialog {
+            margin: 0.5rem;
+        }
+
+        .modal-content {
+            border-radius: 12px;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .modal-xl {
+            max-width: 100%;
+        }
+
+        /* Buttons */
+        .btn-lg {
+            font-size: 1rem;
+            padding: 0.6rem 1rem;
+        }
+
+        .btn-sm {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.6rem;
+        }
+
+        /* Chart Container */
+        canvas {
+            max-height: 280px !important;
+        }
+
+        /* Info Box */
+        .info-badge {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* Badges */
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-container {
+            padding: 0.35rem;
+        }
+
+        #marketTabs .nav-link {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .marketplace-header,
+        .currency-header,
+        .zen-header,
+        .training-header,
+        .nft-header {
+            padding: 1.5rem 0.75rem;
+            min-height: 100px;
+        }
+
+        .marketplace-header h2,
+        .currency-header h2,
+        .zen-header h2,
+        .training-header h2,
+        .nft-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .resource-grid {
+            grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .resource-card {
+            padding: 0.5rem;
+        }
+
+        .resource-card img,
+        .resource-card .resource-placeholder-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .resource-card .resource-name {
+            font-size: 0.7rem;
+        }
+
+        .category-tab {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.7rem;
+        }
+
+        .market-item-card .card-body {
+            padding: 0.75rem !important;
+        }
+
+        .price-display {
+            font-size: 1rem;
+        }
+
+        .balance-value {
+            font-size: 1.1rem;
+        }
+
+        .zen-logo {
+            width: 50px;
+            height: 50px;
+            font-size: 1.25rem;
+        }
+
+        .modern-section-header {
+            padding: 0.85rem;
+        }
+
+        .modern-section-header h4 {
+            font-size: 1rem;
+        }
+
+        .modern-section-body {
+            padding: 0.85rem;
+        }
+
+        .job-row {
+            padding: 0.75rem;
+        }
+
+        canvas {
+            max-height: 220px !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #marketTabs .nav-link {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .marketplace-header h2,
+        .currency-header h2,
+        .zen-header h2,
+        .training-header h2,
+        .nft-header h2 {
+            font-size: 1.1rem;
+        }
+
+        .resource-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .balance-value {
+            font-size: 1rem;
+        }
+
+        .price-display {
+            font-size: 0.95rem;
+        }
+
+        .modern-section-header h4 {
+            font-size: 0.95rem;
+        }
+    }
+</style>

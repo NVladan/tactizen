@@ -90,6 +90,10 @@ class Company(SoftDeleteMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+    # Frozen status (when country is conquered)
+    is_frozen = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    frozen_at = db.Column(db.DateTime, nullable=True)
+
     # Relationships
     owner = db.relationship('User', back_populates='companies')
     country = db.relationship('Country')
@@ -253,6 +257,21 @@ class Company(SoftDeleteMixin, db.Model):
             CompanyType.CONSTRUCTION: 'construction',
         }
         return skill_mapping.get(self.company_type, 'resource_extraction')
+
+    def freeze(self):
+        """Freeze company operations (when country is conquered)."""
+        self.is_frozen = True
+        self.frozen_at = datetime.utcnow()
+
+    def unfreeze(self):
+        """Unfreeze company operations (when country is liberated)."""
+        self.is_frozen = False
+        self.frozen_at = None
+
+    @property
+    def can_operate(self):
+        """Check if company can operate (not frozen, not deleted)."""
+        return not self.is_frozen and not self.is_deleted
 
     def __repr__(self):
         return f'<Company {self.name} Q{self.quality_level} ({self.company_type.value})>'

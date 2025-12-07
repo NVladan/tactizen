@@ -81,6 +81,10 @@ from .military_unit import (
 from .game_update import GameUpdate, UpdateCategory
 # Import mission models
 from .mission import Mission, UserMission, MissionType, MissionCategory
+# Import game settings model
+from .game_settings import GameSettings
+# Import ZK voting models (anonymous elections)
+from .zk_voting import VoterCommitment, MerkleTree, ZKVote, ZKElectionConfig
 
 # Define __all__ to specify what gets imported with 'from app.models import *'
 __all__ = [
@@ -228,4 +232,11 @@ __all__ = [
     'UserMission',             # Imported from mission.py
     'MissionType',             # Imported from mission.py
     'MissionCategory',         # Imported from mission.py
+    # Game Settings models
+    'GameSettings',            # Imported from game_settings.py
+    # ZK Voting models (anonymous elections)
+    'VoterCommitment',         # Imported from zk_voting.py
+    'MerkleTree',              # Imported from zk_voting.py
+    'ZKVote',                  # Imported from zk_voting.py
+    'ZKElectionConfig',        # Imported from zk_voting.py
 ]

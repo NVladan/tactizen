@@ -108,6 +108,109 @@
         opacity: 0.5;
         cursor: not-allowed;
     }
+
+    /* =====================================================
+       MOBILE RESPONSIVE DESIGN - Study Page
+       ===================================================== */
+
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 0.5rem;
+        }
+
+        /* Tab Navigation - horizontal scroll */
+        #myPlacesTab {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        #myPlacesTab::-webkit-scrollbar {
+            display: none;
+        }
+
+        #myPlacesTab .nav-item {
+            flex-shrink: 0;
+        }
+
+        #myPlacesTab .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .study-header {
+            padding: 2rem 1rem;
+            min-height: 120px;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
+
+        .study-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .study-header p {
+            font-size: 0.85rem;
+        }
+
+        .time-info-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .hours-remaining {
+            font-size: 2rem;
+        }
+
+        .skill-card {
+            padding: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .skill-card h4, .skill-card h5 {
+            font-size: 1rem;
+        }
+
+        .skill-card .fa-2x {
+            font-size: 1.5rem !important;
+        }
+
+        .hour-display {
+            font-size: 2.25rem;
+        }
+
+        .btn-study {
+            padding: 0.85rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        .col-lg-5, .col-lg-7 {
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-container { padding: 0.35rem; }
+        #myPlacesTab .nav-link { padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+        .study-header { padding: 1.5rem 0.75rem; min-height: 100px; }
+        .study-header h2 { font-size: 1.25rem; }
+        .hours-remaining { font-size: 1.75rem; }
+        .skill-card { padding: 0.75rem; }
+        .hour-display { font-size: 2rem; }
+        .btn-study { padding: 0.75rem 1.25rem; font-size: 0.95rem; }
+    }
+
+    @media (max-width: 360px) {
+        #myPlacesTab .nav-link { padding: 0.35rem 0.5rem; font-size: 0.75rem; }
+        .study-header h2 { font-size: 1.1rem; }
+        .hours-remaining { font-size: 1.5rem; }
+        .hour-display { font-size: 1.75rem; }
+    }
 </style>
 {% endblock %}
 

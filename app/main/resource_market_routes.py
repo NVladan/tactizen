@@ -293,6 +293,10 @@ def market_buy(slug, resource_id):
         # Update OHLC price history with the average price paid
         update_market_price_ohlc(country.id, resource_id, market_item.quality, avg_price)
 
+        # Track mission progress for market_buy (count each item bought)
+        from app.services.mission_service import MissionService
+        MissionService.track_progress(current_user, 'market_buy', quantity_added)
+
         db.session.commit()
 
         # Show appropriate message based on whether full or partial purchase
@@ -438,6 +442,10 @@ def market_sell(slug, resource_id):
 
         # Update OHLC price history with the average price received
         update_market_price_ohlc(country.id, resource_id, market_item.quality, avg_price)
+
+        # Track mission progress for market_sell (count each item sold)
+        from app.services.mission_service import MissionService
+        MissionService.track_progress(current_user, 'market_sell', quantity)
 
         db.session.commit()
         flash(f'Sold {quantity} {resource_display_name} for {format_currency(total_proceeds)} {country.currency_code}.', 'success')

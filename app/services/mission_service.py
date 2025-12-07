@@ -235,6 +235,7 @@ class MissionService:
         """
         Get tutorial missions for a user, assigning them if needed.
         Tutorial missions are assigned once and persist until completed.
+        Also checks if user already meets requirements for certain missions.
 
         Returns:
             list: List of UserMission objects for tutorial missions
@@ -249,6 +250,8 @@ class MissionService:
         ).all()
 
         if existing_tutorial:
+            # Check if any existing missions should be auto-completed
+            MissionService._check_retroactive_completion(user, existing_tutorial)
             return existing_tutorial
 
         # Get all tutorial missions ordered by tutorial_order
@@ -270,22 +273,141 @@ class MissionService:
         assigned = []
 
         for mission in tutorial_missions:
+            # Check if user already meets requirements
+            initial_progress, is_completed = MissionService._get_initial_progress(user, mission)
+
             user_mission = UserMission(
                 user_id=user.id,
                 mission_id=mission.id,
-                current_progress=0,
-                is_completed=False,
+                current_progress=initial_progress,
+                is_completed=is_completed,
                 is_claimed=False,
                 assigned_at=now,
+                completed_at=now if is_completed else None,
                 expires_at=None  # Tutorial missions never expire
             )
             db.session.add(user_mission)
             assigned.append(user_mission)
 
+            if is_completed:
+                logger.info(f"User {user.id} auto-completed tutorial mission '{mission.code}' (already met requirements)")
+
         db.session.flush()
         logger.info(f"Assigned {len(assigned)} tutorial missions to user {user.id}")
 
         return assigned
+
+    @staticmethod
+    def _get_initial_progress(user, mission):
+        """
+        Check if user already meets requirements for a mission.
+        Used when assigning missions to existing players.
+
+        Returns:
+            tuple: (current_progress, is_completed)
+        """
+        action_type = mission.action_type
+        requirement = mission.requirement_count
+
+        # Check level-based missions
+        if action_type == 'level_up':
+            current_level = user.level or 1
+            is_completed = current_level >= requirement
+            return (current_level, is_completed)
+
+        # Check company creation
+        if action_type == 'create_company':
+            from app.models.company import Company
+            company_count = db.session.scalar(
+                select(db.func.count(Company.id))
+                .where(Company.owner_id == user.id, Company.is_deleted == False)
+            ) or 0
+            is_completed = company_count >= requirement
+            return (min(company_count, requirement), is_completed)
+
+        # Check training sessions
+        if action_type == 'train':
+            from app.models.time_allocation import TimeAllocation
+            total_training = db.session.scalar(
+                select(db.func.sum(TimeAllocation.hours_training))
+                .where(TimeAllocation.user_id == user.id)
+            ) or 0
+            is_completed = total_training >= requirement
+            return (min(total_training, requirement), is_completed)
+
+        # Check work sessions
+        if action_type == 'work':
+            from app.models.time_allocation import TimeAllocation
+            total_work = db.session.scalar(
+                select(db.func.sum(TimeAllocation.hours_working))
+                .where(TimeAllocation.user_id == user.id)
+            ) or 0
+            is_completed = total_work >= requirement
+            return (min(total_work, requirement), is_completed)
+
+        # Check study sessions
+        if action_type == 'study':
+            from app.models.time_allocation import TimeAllocation
+            total_study = db.session.scalar(
+                select(db.func.sum(TimeAllocation.hours_studying))
+                .where(TimeAllocation.user_id == user.id)
+            ) or 0
+            is_completed = total_study >= requirement
+            return (min(total_study, requirement), is_completed)
+
+        # Check fights/battles
+        if action_type == 'fight':
+            from app.models.battle import BattleParticipation
+            participation_count = db.session.scalar(
+                select(db.func.count(BattleParticipation.id))
+                .where(BattleParticipation.user_id == user.id)
+            ) or 0
+            is_completed = participation_count >= requirement
+            return (min(participation_count, requirement), is_completed)
+
+        # Check travel
+        if action_type == 'travel':
+            # Check if user has traveled by looking at activity logs
+            from app.models.activity import ActivityLog, ActivityType as ActType
+            travel_count = db.session.scalar(
+                select(db.func.count(ActivityLog.id))
+                .where(
+                    ActivityLog.user_id == user.id,
+                    ActivityLog.activity_type == ActType.TRAVEL
+                )
+            ) or 0
+            is_completed = travel_count >= requirement
+            return (min(travel_count, requirement), is_completed)
+
+        # For other action types, start at 0
+        return (0, False)
+
+    @staticmethod
+    def _check_retroactive_completion(user, user_missions):
+        """
+        Check existing missions for retroactive completion.
+        Called when loading missions for users who may have
+        met requirements before the mission system was added.
+        Also updates progress to reflect current state.
+        """
+        for um in user_missions:
+            if um.is_claimed:
+                continue
+
+            mission = um.mission
+
+            # Get current progress for this mission type
+            current_progress, should_complete = MissionService._get_initial_progress(user, mission)
+
+            # Update progress if it changed
+            if um.current_progress != current_progress:
+                um.current_progress = current_progress
+
+            # Mark as completed if requirement met and not already completed
+            if not um.is_completed and should_complete:
+                um.is_completed = True
+                um.completed_at = datetime.utcnow()
+                logger.info(f"User {user.id} retroactively completed mission '{mission.code}'")
 
     @staticmethod
     def ensure_missions_assigned(user):
@@ -597,6 +719,20 @@ class MissionService:
             .where(Mission.mission_type == MissionType.TUTORIAL.value)
         ) or 0
 
+        # Count claimed tutorial missions
+        tutorial_claimed = db.session.scalar(
+            select(db.func.count(UserMission.id))
+            .where(
+                UserMission.user_id == user.id,
+                UserMission.is_claimed == True
+            )
+            .join(UserMission.mission)
+            .where(Mission.mission_type == MissionType.TUTORIAL.value)
+        ) or 0
+
+        # Check if all tutorials are completed and claimed
+        tutorial_all_claimed = (tutorial_total > 0 and tutorial_claimed == tutorial_total)
+
         return {
             'total_completed': total_completed,
             'daily_completed_today': daily_completed_today,
@@ -604,5 +740,6 @@ class MissionService:
             'weekly_completed': weekly_completed,
             'weekly_total': WEEKLY_MISSIONS_COUNT,
             'tutorial_completed': tutorial_completed,
-            'tutorial_total': tutorial_total
+            'tutorial_total': tutorial_total,
+            'tutorial_all_claimed': tutorial_all_claimed
         }

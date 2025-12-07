@@ -480,13 +480,13 @@ class NFTService:
         # Check if slot is occupied
         slot_attr = f'slot_{slot}_nft_id'
         slot_timestamp_attr = f'slot_{slot}_last_modified'
-        current_nft_id = getattr(player_slots, slot_attr)
+        current_nft_id = getattr(player_slots, slot_attr, None)
 
         if current_nft_id:
             return False, f"Slot {slot} is already occupied. Unequip it first."
 
         # Check 24-hour cooldown for this slot
-        last_modified = getattr(player_slots, slot_timestamp_attr)
+        last_modified = getattr(player_slots, slot_timestamp_attr, None)
         if last_modified:
             time_since_last_change = datetime.utcnow() - last_modified
             if time_since_last_change < timedelta(hours=24):
@@ -530,13 +530,13 @@ class NFTService:
         # Get slot NFT
         slot_attr = f'slot_{slot}_nft_id'
         slot_timestamp_attr = f'slot_{slot}_last_modified'
-        nft_id = getattr(player_slots, slot_attr)
+        nft_id = getattr(player_slots, slot_attr, None)
 
         if not nft_id:
             return False, f"Slot {slot} is already empty."
 
         # Check 24-hour cooldown for this slot
-        last_modified = getattr(player_slots, slot_timestamp_attr)
+        last_modified = getattr(player_slots, slot_timestamp_attr, None)
         if last_modified:
             time_since_last_change = datetime.utcnow() - last_modified
             if time_since_last_change < timedelta(hours=24):
@@ -610,13 +610,13 @@ class NFTService:
         # Check if slot is occupied
         slot_attr = f'slot_{slot}_nft_id'
         slot_timestamp_attr = f'slot_{slot}_last_modified'
-        current_nft_id = getattr(company_slots, slot_attr)
+        current_nft_id = getattr(company_slots, slot_attr, None)
 
         if current_nft_id:
             return False, f"Slot {slot} is already occupied. Unequip it first."
 
         # Check 24-hour cooldown for this slot
-        last_modified = getattr(company_slots, slot_timestamp_attr)
+        last_modified = getattr(company_slots, slot_timestamp_attr, None)
         if last_modified:
             time_since_last_change = datetime.utcnow() - last_modified
             if time_since_last_change < timedelta(hours=24):
@@ -672,13 +672,13 @@ class NFTService:
         # Get slot NFT
         slot_attr = f'slot_{slot}_nft_id'
         slot_timestamp_attr = f'slot_{slot}_last_modified'
-        nft_id = getattr(company_slots, slot_attr)
+        nft_id = getattr(company_slots, slot_attr, None)
 
         if not nft_id:
             return False, f"Slot {slot} is already empty."
 
         # Check 24-hour cooldown for this slot
-        last_modified = getattr(company_slots, slot_timestamp_attr)
+        last_modified = getattr(company_slots, slot_timestamp_attr, None)
         if last_modified:
             time_since_last_change = datetime.utcnow() - last_modified
             if time_since_last_change < timedelta(hours=24):

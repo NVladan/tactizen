@@ -72,10 +72,18 @@ class Config:
         'script-src': [
             "'self'",
             "'unsafe-inline'",  # Required for inline <script> tags and onclick handlers
-            "https://cdn.jsdelivr.net",  # Bootstrap, Font Awesome CDN
+            "'wasm-unsafe-eval'",  # Required for WebAssembly (ZK proof generation with snarkjs)
+            "https://cdn.jsdelivr.net",  # Bootstrap, Font Awesome CDN, snarkjs
             "https://unpkg.com",  # Additional libraries
             "https://code.jquery.com",  # jQuery CDN
             "https://cdnjs.cloudflare.com"  # Cloudflare CDN
+        ],
+
+        # Workers: Allow blob/data URLs for Web Workers (snarkjs uses these for parallel proof computation)
+        'worker-src': [
+            "'self'",
+            "blob:",
+            "data:"
         ],
 
         # Styles: Allow self, inline (needed for Bootstrap), and CDNs
@@ -171,6 +179,10 @@ class Config:
 
     # Admin (reasonable for admin actions)
     RATELIMIT_ADMIN_ACTION = "100 per hour"
+
+    # Starter Protection - prevents attacking countries with only 1 region
+    # Set to False to disable protection and allow full conquest
+    STARTER_PROTECTION_ENABLED = os.environ.get('STARTER_PROTECTION_ENABLED', 'true').lower() == 'true'
 
     CACHE_TYPE = os.environ.get('CACHE_TYPE', 'SimpleCache')
     CACHE_DEFAULT_TIMEOUT = 300
