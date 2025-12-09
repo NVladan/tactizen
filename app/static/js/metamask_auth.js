@@ -64,11 +64,33 @@ window.isWalletConnecting = window.isWalletConnecting || false;
             // Check if MetaMask (or any Ethereum provider) is installed first
             if (typeof window.ethereum === 'undefined') {
                 updateWalletStatus('MetaMask not detected!', true);
-                if (typeof showWarning === 'function') {
-                    showWarning('Please install MetaMask to connect your wallet.');
+
+                // Check if on mobile device
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+                if (isMobile) {
+                    // On mobile, offer to open in MetaMask app browser
+                    const currentUrl = encodeURIComponent(window.location.href);
+                    const metamaskDeepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+
+                    showBootstrapModal(
+                        'Open in MetaMask',
+                        `<p>To connect your wallet on mobile, please open this site in the MetaMask app browser.</p>
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="${metamaskDeepLink}" class="btn btn-warning">
+                                <i class="fas fa-external-link-alt me-2"></i>Open in MetaMask App
+                            </a>
+                        </div>
+                        <p class="text-muted mt-3 small">Or open MetaMask app → Browser → navigate to tactizen.com</p>`,
+                        'warning'
+                    );
                 } else {
-                    // Show Bootstrap modal instead of alert
-                    showBootstrapModal('MetaMask Required', 'Please install MetaMask to connect your wallet.', 'warning');
+                    if (typeof showWarning === 'function') {
+                        showWarning('Please install MetaMask to connect your wallet.');
+                    } else {
+                        // Show Bootstrap modal instead of alert
+                        showBootstrapModal('MetaMask Required', 'Please install MetaMask to connect your wallet.', 'warning');
+                    }
                 }
                 return; // Stop execution if no provider
             }
