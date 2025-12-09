@@ -278,7 +278,7 @@ def cast_anonymous_vote():
     # Check nullifier hasn't been used (prevents double voting)
     existing_vote = ZKVote.query.filter_by(nullifier=nullifier).first()
     if existing_vote:
-        return jsonify({'error': 'Vote already cast (nullifier reused)'}), 400
+        return jsonify({'error': 'You have already voted in this election'}), 400
 
     # Validate election exists and is active
     if election_type in ['presidential', 'congressional']:
