@@ -28,7 +28,7 @@ class GameConstants:
     INITIAL_WELLNESS = 100.0  # Starting wellness for new users
 
     # --- New User Defaults ---
-    INITIAL_GOLD = Decimal('20.0')  # Starting gold for new users
+    INITIAL_GOLD = Decimal('0.0')  # Starting gold for new users
     INITIAL_LOCAL_CURRENCY = Decimal('100.0')  # Starting local currency for new citizens
 
     # --- Avatar Settings ---
