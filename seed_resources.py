@@ -16,29 +16,37 @@ def seed_global_resources(app):
     }
     default_volume_per_level = 200
 
+    # Resources: (name, category, icon_path, can_have_quality)
     resources_to_add_data = [
-        ('Coal', ResourceCategory.RAW_MATERIAL, 'images/resources/coal.png'),
-        ('Iron ore', ResourceCategory.RAW_MATERIAL, 'images/resources/iron-ore.png'),
-        ('Clay', ResourceCategory.RAW_MATERIAL, 'images/resources/clay.png'),
-        ('Wheat', ResourceCategory.RAW_MATERIAL, 'images/resources/wheat.png'),
-        ('Grape', ResourceCategory.RAW_MATERIAL, 'images/resources/grape.png'),
-        ('Sand', ResourceCategory.RAW_MATERIAL, 'images/resources/sand.png'),
-        ('Stone', ResourceCategory.RAW_MATERIAL, 'images/resources/stone.png'),
-        ('Oil', ResourceCategory.RAW_MATERIAL, 'images/resources/oil.png'),
-        ('Iron Bar', ResourceCategory.MANUFACTURED_GOOD, 'images/resources/iron-bar.png'),
-        ('Beer', ResourceCategory.FOOD, 'images/resources/beer.png'),
-        ('Bread', ResourceCategory.FOOD, 'images/resources/bread.png'),
-        ('Wine', ResourceCategory.FOOD, 'images/resources/wine.png'),
-        ('Steel', ResourceCategory.MANUFACTURED_GOOD, 'images/resources/steel.png'),
-        ('Electricity', ResourceCategory.ENERGY, 'images/resources/electricity.png'),
-        ('Rifle', ResourceCategory.WEAPON, 'images/resources/rifle.png'),
-        ('Tank', ResourceCategory.WEAPON, 'images/resources/tank.png'),
-        ('Helicopter', ResourceCategory.WEAPON, 'images/resources/heli.png'),
-        ('Bricks', ResourceCategory.CONSTRUCTION, 'images/resources/bricks.png'),
-        ('Concrete', ResourceCategory.CONSTRUCTION, 'images/resources/concrete.png'),
-        ('Fort', ResourceCategory.CONSTRUCTION, 'images/resources/fort.png'),
-        ('Hospital', ResourceCategory.CONSTRUCTION, 'images/resources/hospital.png'),
-        ('House', ResourceCategory.CONSTRUCTION, 'images/resources/house.png'),
+        # Raw materials - no quality
+        ('Coal', ResourceCategory.RAW_MATERIAL, 'images/resources/coal.png', False),
+        ('Iron ore', ResourceCategory.RAW_MATERIAL, 'images/resources/iron-ore.png', False),
+        ('Clay', ResourceCategory.RAW_MATERIAL, 'images/resources/clay.png', False),
+        ('Wheat', ResourceCategory.RAW_MATERIAL, 'images/resources/wheat.png', False),
+        ('Grape', ResourceCategory.RAW_MATERIAL, 'images/resources/grape.png', False),
+        ('Sand', ResourceCategory.RAW_MATERIAL, 'images/resources/sand.png', False),
+        ('Stone', ResourceCategory.RAW_MATERIAL, 'images/resources/stone.png', False),
+        ('Oil', ResourceCategory.RAW_MATERIAL, 'images/resources/oil.png', False),
+        # Manufactured goods - no quality (intermediate products)
+        ('Iron Bar', ResourceCategory.MANUFACTURED_GOOD, 'images/resources/iron-bar.png', False),
+        ('Steel', ResourceCategory.MANUFACTURED_GOOD, 'images/resources/steel.png', False),
+        # Construction materials - no quality (intermediate)
+        ('Bricks', ResourceCategory.CONSTRUCTION, 'images/resources/bricks.png', False),
+        ('Concrete', ResourceCategory.CONSTRUCTION, 'images/resources/concrete.png', False),
+        # Energy - no quality
+        ('Electricity', ResourceCategory.ENERGY, 'images/resources/electricity.png', False),
+        # Food - HAS quality (Q1-Q5)
+        ('Beer', ResourceCategory.FOOD, 'images/resources/beer.png', True),
+        ('Bread', ResourceCategory.FOOD, 'images/resources/bread.png', True),
+        ('Wine', ResourceCategory.FOOD, 'images/resources/wine.png', True),
+        # Weapons - HAS quality (Q1-Q5)
+        ('Rifle', ResourceCategory.WEAPON, 'images/resources/rifle.png', True),
+        ('Tank', ResourceCategory.WEAPON, 'images/resources/tank.png', True),
+        ('Helicopter', ResourceCategory.WEAPON, 'images/resources/heli.png', True),
+        # Construction buildings - HAS quality (Q1-Q5)
+        ('Fort', ResourceCategory.CONSTRUCTION, 'images/resources/fort.png', True),
+        ('Hospital', ResourceCategory.CONSTRUCTION, 'images/resources/hospital.png', True),
+        ('House', ResourceCategory.CONSTRUCTION, 'images/resources/house.png', True),
     ]
 
     added_count = 0
@@ -47,7 +55,7 @@ def seed_global_resources(app):
     resources_committed = False
 
     with app.app_context():
-        for name, category, icon_path in resources_to_add_data:
+        for name, category, icon_path, can_have_quality in resources_to_add_data:
             resource_slug = slugify(name)
             adjustment = adjustments.get(category, Decimal('0.1'))
             existing_resource = db.session.scalar(db.select(Resource).filter_by(slug=resource_slug))
@@ -58,18 +66,23 @@ def seed_global_resources(app):
                     category=category,
                     icon_path=icon_path,
                     threshold=default_volume_per_level,
-                    adjustment=adjustment
+                    adjustment=adjustment,
+                    can_have_quality=can_have_quality
                 )
                 db.session.add(resource)
-                print(f"  Adding Resource: {resource.name}")
+                print(f"  Adding Resource: {resource.name} (quality={can_have_quality})")
                 added_count += 1
             else:
                 updated = False
                 if existing_resource.market_volume_threshold != default_volume_per_level:
                     existing_resource.market_volume_threshold = default_volume_per_level
                     updated = True
+                # Update can_have_quality if it changed
+                if existing_resource.can_have_quality != can_have_quality:
+                    existing_resource.can_have_quality = can_have_quality
+                    updated = True
+                    print(f"  Updating Resource: {existing_resource.name} can_have_quality -> {can_have_quality}")
                 if updated:
-                    print(f"  Updating Resource: {existing_resource.name}")
                     updated_count += 1
                 else:
                     skipped_count += 1
