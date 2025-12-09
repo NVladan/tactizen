@@ -67,6 +67,9 @@ def edit_profile():
          flash('Please choose your citizenship first.', 'warning')
          return redirect(url_for('main.choose_citizenship'))
 
+    # Check if username is already set (locked after first time)
+    username_locked = bool(current_user.username)
+
     form = EditProfileForm(current_user.username) # Pass original username
 
     if form.validate_on_submit():
@@ -80,7 +83,9 @@ def edit_profile():
                 # Flash message is handled in process_avatar
                  pass # Simply proceed without setting avatar=True
 
-        current_user.username = form.username.data
+        # Only allow username change if not already set (first time setup)
+        if not username_locked:
+            current_user.username = form.username.data
         current_user.description = InputSanitizer.sanitize_description(form.description.data)
         try:
             db.session.commit()
@@ -104,7 +109,7 @@ def edit_profile():
          avatar_url = url_for('static', filename=f'uploads/avatars/{avatar_filename}', _external=False, v=cache_buster)
 
 
-    return render_template('edit_profile.html', title='Edit Your Profile', form=form, avatar_url=avatar_url)
+    return render_template('edit_profile.html', title='Edit Your Profile', form=form, avatar_url=avatar_url, username_locked=username_locked)
 
 
 # --- Public Profile View Route ---

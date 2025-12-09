@@ -203,7 +203,48 @@
         <div class="col-md-8">
             <div class="form-section">
                 <h4><i class="fas fa-edit me-2"></i>Edit Your Profile</h4>
-                {{ wtf.quick_form(form, action=url_for('main.edit_profile'), enctype='multipart/form-data', button_map={'submit': 'btn btn-primary w-100'}) }}
+                <form method="POST" action="{{ url_for('main.edit_profile') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    {# Username field - locked after first setup #}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">{{ form.username.label.text }}</label>
+                        {% if username_locked %}
+                            <input type="text" class="form-control" value="{{ form.username.data }}" readonly disabled
+                                   style="background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); cursor: not-allowed;">
+                            <input type="hidden" name="username" value="{{ form.username.data }}">
+                            <small class="text-muted"><i class="fas fa-lock me-1"></i>Username cannot be changed after initial setup</small>
+                        {% else %}
+                            {{ form.username(class="form-control") }}
+                            {% for error in form.username.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    {# Description field #}
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{{ form.description.label.text }}</label>
+                        {{ form.description(class="form-control", rows=4) }}
+                        {% for error in form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {# Avatar upload field #}
+                    <div class="mb-3">
+                        <label for="avatar" class="form-label">{{ form.avatar.label.text }}</label>
+                        {{ form.avatar(class="form-control") }}
+                        {% for error in form.avatar.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {# Submit button #}
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary w-100") }}
+                    </div>
+                </form>
             </div>
         </div>
     </div>

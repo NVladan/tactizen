@@ -25,6 +25,16 @@ def country_query():
 USERNAME_REGEX = r'^[A-Za-z0-9 _-]*$'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+# Reserved usernames that cannot be used by regular players (anti-scam)
+RESERVED_USERNAMES = [
+    'admin', 'administrator', 'moderator', 'mod', 'support', 'helpdesk',
+    'tactizen', 'system', 'official', 'staff', 'gamemaster', 'gm',
+    'developer', 'dev', 'owner', 'founder', 'ceo', 'team',
+    'customer_support', 'customersupport', 'help', 'service',
+    'security', 'bank', 'treasury', 'government', 'president',
+    'npc', 'bot', 'automod', 'root', 'superuser', 'sysadmin'
+]
+
 # --- Custom Validators for Security ---
 class NoSQLInjection:
     """Validator to check for potential SQL injection attempts."""
@@ -77,6 +87,12 @@ class EditProfileForm(FlaskForm):
         self.original_username = original_username
 
     def validate_username(self, username):
+        # Check for reserved usernames (case-insensitive, ignoring spaces/underscores/hyphens)
+        username_normalized = username.data.lower().replace(' ', '').replace('_', '').replace('-', '')
+        for reserved in RESERVED_USERNAMES:
+            if reserved in username_normalized:
+                raise ValidationError('This username is reserved and cannot be used.')
+
         if username.data != self.original_username:
             user = db.session.scalar(db.select(User).where(User.username == username.data, User.is_deleted == False))
             if user is not None:
