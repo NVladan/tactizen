@@ -18,3 +18,9 @@ python-dateutil
 pytz
 bleach
 poseidon-hash-lib-from-circom
+Flask-Cors
+bcrypt
+passlib
+cryptography
+gunicorn
+waitress

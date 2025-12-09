@@ -1,0 +1,41 @@
+# Systemd service file for Tactizen
+# Copy to: /etc/systemd/system/tactizen.service
+# Then: sudo systemctl daemon-reload && sudo systemctl enable tactizen
+
+[Unit]
+Description=Tactizen - Blockchain Nation Simulation Game
+Documentation=https://github.com/NVladan/tactizen
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+RuntimeDirectory=tactizen
+WorkingDirectory=/var/www/tactizen
+Environment="PATH=/var/www/tactizen/venv/bin"
+EnvironmentFile=/var/www/tactizen/.env
+ExecStart=/var/www/tactizen/venv/bin/gunicorn --config gunicorn.conf.py "app:create_app()"
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+Restart=always
+RestartSec=5
+KillMode=mixed
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/tactizen/app/static/uploads
+ReadWritePaths=/var/log/tactizen
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
