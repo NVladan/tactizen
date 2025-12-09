@@ -1110,7 +1110,24 @@
 
                 // If navbar button not found, handle wallet connection directly
                 if (typeof window.ethereum === 'undefined') {
-                    alert('Please install MetaMask to connect your wallet.');
+                    // Check if on mobile device
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    if (isMobile) {
+                        const metamaskDeepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+                        showAlert(
+                            `<p>To connect your wallet on mobile, please open this site in the MetaMask app browser.</p>
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="${metamaskDeepLink}" class="btn btn-warning">
+                                    <i class="fas fa-external-link-alt me-2"></i>Open in MetaMask App
+                                </a>
+                            </div>
+                            <p class="text-muted mt-3 small">Or open MetaMask app → Browser → navigate to tactizen.com</p>`,
+                            'warning',
+                            'Open in MetaMask'
+                        );
+                    } else {
+                        showAlert('Please install MetaMask to connect your wallet.', 'warning');
+                    }
                     return;
                 }
 
@@ -1194,8 +1211,23 @@
         if (addNetworkBtn) {
             addNetworkBtn.addEventListener('click', async function() {
                 if (typeof window.ethereum === 'undefined') {
-                    alert('Please install MetaMask first to add the network.');
-                    window.open('https://metamask.io/download/', '_blank');
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    if (isMobile) {
+                        const metamaskDeepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+                        showAlert(
+                            `<p>To add the network, please open this site in the MetaMask app browser.</p>
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="${metamaskDeepLink}" class="btn btn-warning">
+                                    <i class="fas fa-external-link-alt me-2"></i>Open in MetaMask App
+                                </a>
+                            </div>`,
+                            'warning',
+                            'Open in MetaMask'
+                        );
+                    } else {
+                        showAlert('Please install MetaMask first to add the network.', 'warning');
+                        window.open('https://metamask.io/download/', '_blank');
+                    }
                     return;
                 }
 
