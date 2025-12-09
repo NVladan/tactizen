@@ -490,7 +490,34 @@ class Law(db.Model):
             current_president.left_office_reason = 'impeached'
 
         # New president inherits the remaining term from the impeached president
-        term_end = original_term_end if original_term_end else datetime.utcnow() + timedelta(days=30)
+        # Or serves until the next scheduled election if there was no president
+        if original_term_end:
+            term_end = original_term_end
+        else:
+            # Calculate term end as the next 6th of the month at 9AM CET
+            from pytz import timezone as pytz_timezone
+            from dateutil.relativedelta import relativedelta
+
+            now = datetime.utcnow()
+            cet = pytz_timezone('CET')
+
+            # Start with current month's 6th
+            current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            term_end_cet = cet.localize(
+                current_month.replace(day=6, hour=9, minute=0, second=0, microsecond=0, tzinfo=None)
+            )
+            term_end = term_end_cet.astimezone(pytz_timezone('UTC')).replace(tzinfo=None)
+
+            # If we're past the 6th of this month, use next month's 6th
+            if now >= term_end:
+                next_month = current_month + relativedelta(months=1)
+                term_end_cet = cet.localize(
+                    next_month.replace(day=6, hour=9, minute=0, second=0, microsecond=0, tzinfo=None)
+                )
+                term_end = term_end_cet.astimezone(pytz_timezone('UTC')).replace(tzinfo=None)
+
+        # Determine how they became president
+        became_via = 'impeachment' if current_president else 'congressional_appointment'
 
         # Create new president record for replacement
         new_president = CountryPresident(
@@ -500,7 +527,7 @@ class Law(db.Model):
             term_start=datetime.utcnow(),
             term_end=term_end,
             is_current=True,
-            became_president_via='impeachment'
+            became_president_via=became_via
         )
         db.session.add(new_president)
 

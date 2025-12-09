@@ -556,16 +556,19 @@ class MissionService:
         leveled_up = False
         new_level = user.level
 
-        # Award gold
+        # Award gold (with Gold Rush event multiplier)
         if mission.gold_reward and mission.gold_reward > 0:
-            gold_amount = Decimal(str(mission.gold_reward))
+            from app.models.game_event import GameEvent
+            gold_multiplier = GameEvent.get_effective_multiplier('gold_drop_multiplier')
+            base_gold = float(mission.gold_reward)
+            final_gold = Decimal(str(int(base_gold * gold_multiplier)))
             success, msg, _ = CurrencyService.add_gold(
                 user.id,
-                gold_amount,
+                final_gold,
                 f'Mission reward: {mission.code}'
             )
             if success:
-                rewards['gold'] = float(mission.gold_reward)
+                rewards['gold'] = float(final_gold)
             else:
                 logger.error(f"Failed to add gold for mission {mission.code}: {msg}")
 

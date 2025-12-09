@@ -11,7 +11,7 @@
   "dependencies": {
     "circomlibjs": "^0.1.7",
     "snarkjs": "^0.7.0",
-    "zkverifyjs": "^0.7.0"
+    "zkverifyjs": "^2.1.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",

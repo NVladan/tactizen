@@ -15,7 +15,7 @@ from app.models.user import User
 wallet_bp = Blueprint('wallet', __name__, url_prefix='/api/wallet')
 
 # Web3 setup
-BLOCKCHAIN_RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen-testnet.rpc.caldera.xyz/http')
+BLOCKCHAIN_RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen.calderachain.xyz/http')
 ZEN_TOKEN_ADDRESS = os.getenv('ZEN_TOKEN_ADDRESS', None)
 
 try:
@@ -53,7 +53,7 @@ def get_zen_balance():
         return jsonify({'success': False, 'error': 'Missing address'}), 400
 
     # Reload env vars in case they weren't loaded at module init
-    rpc_url = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen-testnet.rpc.caldera.xyz/http')
+    rpc_url = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen.calderachain.xyz/http')
     zen_token_addr = os.getenv('ZEN_TOKEN_ADDRESS')
 
     if not zen_token_addr:
@@ -162,15 +162,25 @@ def verify_signature():
         return jsonify({'success': False, 'error': 'Missing required fields'}), 400
 
     if not w3:
-        # Development mode - skip actual verification
-        current_user.wallet_address = address
-        current_user.wallet_verified = True
-        db.session.commit()
-
-        return jsonify({
-            'success': True,
-            'message': 'Wallet linked (development mode - signature verification skipped)'
-        })
+        # SECURITY: In production, wallet verification is REQUIRED
+        # Only allow bypass in explicit development mode
+        import os
+        if os.getenv('FLASK_ENV') == 'development' and os.getenv('ALLOW_DEV_WALLET_BYPASS') == 'true':
+            import logging
+            logging.warning(f"[SECURITY] Development wallet bypass used for user {current_user.id}, address {address}")
+            current_user.wallet_address = address
+            current_user.wallet_verified = True
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'message': 'Wallet linked (development mode - signature verification skipped)'
+            })
+        else:
+            # Blockchain connection is required for production
+            return jsonify({
+                'success': False,
+                'error': 'Blockchain connection unavailable. Please try again later.'
+            }), 503
 
     try:
         # Recover address from signature

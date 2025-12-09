@@ -226,15 +226,22 @@ class BonusCalculator:
             base_pp_required: Base production points required
 
         Returns:
-            Final PP required after bonuses
+            Final PP required after bonuses (lower = faster production)
         """
         bonuses = NFTService.get_company_bonuses(company_id)
         speed_boost = bonuses.get('speed_boost', 0)
 
-        # Apply percentage reduction
-        final_pp = int(base_pp_required * (1 - speed_boost / 100))
+        # Apply percentage reduction from NFT bonuses
+        final_pp = base_pp_required * (1 - speed_boost / 100)
 
-        return max(1, final_pp)  # At least 1 PP
+        # Apply Production Boost event multiplier (lower multiplier = faster)
+        from app.models.game_event import GameEvent
+        production_multiplier = GameEvent.get_effective_multiplier('production_speed_multiplier')
+        # For production, the multiplier reduces required PP (e.g., 1.5x speed means 1/1.5 PP required)
+        if production_multiplier > 0:
+            final_pp = final_pp / production_multiplier
+
+        return max(1, int(final_pp))  # At least 1 PP
 
     @staticmethod
     def get_player_bonus_summary(user_id: int) -> Dict[str, any]:
@@ -350,7 +357,7 @@ class BonusCalculator:
     @staticmethod
     def get_travel_costs(user_id: int, base_gold: float, base_energy: int) -> Tuple[float, int]:
         """
-        Calculate travel costs with Travel Discount NFT bonus
+        Calculate travel costs with Travel Discount NFT bonus and Reduced Travel event
 
         Args:
             user_id: ID of the user
@@ -363,15 +370,21 @@ class BonusCalculator:
         bonuses = NFTService.get_player_bonuses(user_id)
         travel_discount = bonuses.get('travel_discount', 0)
 
-        # Apply percentage discount
+        # Apply percentage discount from NFT
         final_gold = base_gold * (1 - travel_discount / 100)
-        final_energy = int(base_energy * (1 - travel_discount / 100))
+        final_energy = base_energy * (1 - travel_discount / 100)
+
+        # Apply Reduced Travel event multiplier (e.g., 0.5 = 50% off)
+        from app.models.game_event import GameEvent
+        travel_multiplier = GameEvent.get_effective_multiplier('travel_cost_multiplier')
+        final_gold = final_gold * travel_multiplier
+        final_energy = final_energy * travel_multiplier
 
         # Q5 (100% discount) = free travel
         if travel_discount >= 100:
             return 0.0, 0
 
-        return round(final_gold, 2), max(0, final_energy)
+        return round(final_gold, 2), max(0, int(final_energy))
 
     @staticmethod
     def get_storage_capacity(user_id: int, base_capacity: int = 1000) -> int:
@@ -422,7 +435,7 @@ class BonusCalculator:
     @staticmethod
     def apply_company_tax(company_id: int, base_tax: float) -> float:
         """
-        Calculate actual tax after Tax Breaks NFT reduction
+        Calculate actual tax after Tax Breaks NFT reduction and Tax Holiday event
 
         Args:
             company_id: ID of the company
@@ -433,8 +446,13 @@ class BonusCalculator:
         """
         tax_reduction = BonusCalculator.get_tax_reduction(company_id)
 
-        # Apply percentage reduction (Q5 = 100% reduction = no tax)
+        # Apply percentage reduction from NFT (Q5 = 100% reduction = no tax)
         final_tax = base_tax * (1 - tax_reduction / 100)
+
+        # Apply Tax Holiday event multiplier (e.g., 0.5 = 50% off taxes)
+        from app.models.game_event import GameEvent
+        tax_multiplier = GameEvent.get_effective_multiplier('company_tax_multiplier')
+        final_tax = final_tax * tax_multiplier
 
         return max(0.0, final_tax)
 

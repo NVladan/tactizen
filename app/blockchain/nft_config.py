@@ -455,6 +455,34 @@ def get_nft_metadata_uri(nft_type: str, category: str, tier: int) -> str:
     return NFT_METADATA_URIS.get(nft_type, {}).get(category, {}).get(tier, '')
 
 
+def get_nft_bonus_format(category: str, bonus_value: int) -> str:
+    """
+    Get formatted bonus string for display based on category type.
+    Some NFTs give flat bonuses (per hour), others give percentage bonuses.
+    """
+    # Flat bonuses (per hour regeneration)
+    if category in ['energy_regen', PlayerNFTCategory.ENERGY_REGEN.value if hasattr(PlayerNFTCategory, 'ENERGY_REGEN') else '']:
+        return f"+{bonus_value} energy/hr"
+    elif category in ['wellness_regen', PlayerNFTCategory.WELLNESS_REGEN.value if hasattr(PlayerNFTCategory, 'WELLNESS_REGEN') else '']:
+        return f"+{bonus_value} wellness/hr"
+
+    # Storage increase (flat units)
+    elif category in ['storage_increase', PlayerNFTCategory.STORAGE_INCREASE.value if hasattr(PlayerNFTCategory, 'STORAGE_INCREASE') else '']:
+        return f"+{bonus_value:,} storage"
+
+    # Android worker (skill level, not percentage)
+    elif category in ['android_worker', CompanyNFTCategory.ANDROID_WORKER.value if hasattr(CompanyNFTCategory, 'ANDROID_WORKER') else '']:
+        return f"Skill Level {bonus_value}"
+
+    # Reduction percentages (material efficiency, upgrade discount, speed boost, tax breaks, travel discount)
+    elif category in ['material_efficiency', 'upgrade_discount', 'speed_boost', 'tax_breaks', 'travel_discount']:
+        return f"-{bonus_value}%"
+
+    # Standard percentage bonuses (combat_boost, military_tutor, production_boost)
+    else:
+        return f"+{bonus_value}%"
+
+
 def get_nft_image_url(nft_type: str, category: str, tier: int) -> str:
     """
     Get the HTTP gateway URL for the NFT image.
@@ -554,6 +582,6 @@ def get_nft_image_url(nft_type: str, category: str, tier: int) -> str:
 
     cid = IMAGE_CIDS.get(nft_type, {}).get(category, {}).get(tier, '')
     if cid:
-        # Use local proxy endpoint to avoid COEP blocking
-        return f'/api/nft/image/{cid}'
+        # Use NFT.Storage gateway (free, no rate limits)
+        return f'https://nftstorage.link/ipfs/{cid}'
     return ''

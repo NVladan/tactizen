@@ -1,0 +1,178 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-globe"></i> Country Management</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin
+        </a>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Territory Control:</strong> Manage countries, edit their stats, transfer regions, and configure tax rates.
+    </div>
+
+    <div class="row">
+        <!-- Create Country Form -->
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i> Create New Country</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.create_country') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Country Name *</label>
+                            <input type="text" class="form-control" name="name" required
+                                   placeholder="e.g., United States">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Currency Name</label>
+                            <input type="text" class="form-control" name="currency_name"
+                                   placeholder="e.g., US Dollar">
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Currency Code</label>
+                                <input type="text" class="form-control" name="currency_code"
+                                       placeholder="USD" maxlength="3">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Flag Code</label>
+                                <input type="text" class="form-control" name="flag_code"
+                                       placeholder="us" maxlength="2">
+                                <small class="text-muted">2-letter ISO code</small>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-flag me-1"></i> Create Country
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="card bg-dark mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i> Global Stats</h6>
+                </div>
+                <div class="card-body">
+                    <div class="stat-row">
+                        <span>Total Countries</span>
+                        <span class="badge bg-primary">{{ country_stats|length }}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total Citizens</span>
+                        <span class="badge bg-info">{{ country_stats|sum(attribute='citizen_count') }}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total Regions</span>
+                        <span class="badge bg-success">{{ country_stats|sum(attribute='region_count') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Countries List -->
+        <div class="col-lg-8">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i> All Countries</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Country</th>
+                                    <th>Currency</th>
+                                    <th>Citizens</th>
+                                    <th>Regions</th>
+                                    <th>Treasury</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in country_stats %}
+                                <tr>
+                                    <td>
+                                        {% if stat.country.flag_code %}
+                                        <span class="fi fi-{{ stat.country.flag_code }} me-2"></span>
+                                        {% endif %}
+                                        <strong>{{ stat.country.name }}</strong>
+                                        {% if stat.country.is_hidden %}
+                                        <span class="badge bg-secondary ms-1">Hidden</span>
+                                        {% endif %}
+                                        {% if stat.country.is_conquered %}
+                                        <span class="badge bg-danger ms-1">Conquered</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code>{{ stat.country.currency_code or 'N/A' }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ stat.citizen_count }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ stat.region_count }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-warning">{{ "{:,.0f}".format(stat.total_treasury) }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_country', country_id=stat.country.id) }}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <i class="fas fa-globe fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No countries found. Create one!</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-row:last-child {
+        border-bottom: none;
+    }
+
+    .table-dark th {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .table-dark td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}

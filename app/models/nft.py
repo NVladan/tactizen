@@ -36,7 +36,7 @@ class NFTInventory(db.Model):
 
     def to_dict(self):
         """Convert to dictionary for JSON serialization"""
-        from app.blockchain.nft_config import get_nft_name, get_nft_description, get_nft_image_url
+        from app.blockchain.nft_config import get_nft_name, get_nft_description, get_nft_image_url, get_nft_bonus_format
 
         return {
             'id': self.id,
@@ -45,6 +45,7 @@ class NFTInventory(db.Model):
             'category': self.category,
             'tier': self.tier,
             'bonus_value': self.bonus_value,
+            'bonus_formatted': get_nft_bonus_format(self.category, self.bonus_value),
             'token_id': self.token_id,
             'contract_address': self.contract_address,
             'is_equipped': self.is_equipped,

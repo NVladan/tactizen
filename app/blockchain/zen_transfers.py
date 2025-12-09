@@ -13,7 +13,7 @@ load_dotenv()
 # Treasury configuration
 TREASURY_ADDRESS = os.getenv('TREASURY_WALLET_ADDRESS')
 TREASURY_PRIVATE_KEY = os.getenv('TREASURY_PRIVATE_KEY')
-CHAIN_ID = int(os.getenv('HORIZEN_L3_CHAIN_ID', '2651420'))
+CHAIN_ID = int(os.getenv('HORIZEN_L3_CHAIN_ID', '26514'))
 
 
 def transfer_zen_to_treasury(from_address, amount_zen):

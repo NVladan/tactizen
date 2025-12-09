@@ -12,7 +12,7 @@ async function main() {
 
   // Get contract addresses from environment
   const zenTokenAddress = process.env.ZEN_TOKEN_ADDRESS;
-  const nftContractAddress = process.env.NFT_CONTRACT_ADDRESS || '0x6A20E1a6730683C1aE932d17557Df81AbB9442c6';
+  const nftContractAddress = process.env.NFT_CONTRACT_ADDRESS || '0x57e277b2d887C3C749757e36F0B6CFad32E00e8A';
   const treasuryAddress = process.env.TREASURY_ADDRESS;
 
   if (!zenTokenAddress) {

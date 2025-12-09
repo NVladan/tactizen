@@ -1,0 +1,438 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-user-clock"></i> Player Retention Dashboard</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin
+        </a>
+    </div>
+
+    <!-- Signup Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Today's Signups</h6>
+                            <h2 class="text-success mb-0">{{ signups_today }}</h2>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-25">
+                            <i class="fas fa-user-plus text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">This Week</h6>
+                            <h2 class="text-info mb-0">{{ signups_this_week }}</h2>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-25">
+                            <i class="fas fa-calendar-week text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">This Month</h6>
+                            <h2 class="text-primary mb-0">{{ signups_this_month }}</h2>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-25">
+                            <i class="fas fa-calendar-alt text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Users</h6>
+                            <h2 class="text-warning mb-0">{{ "{:,}".format(total_users) }}</h2>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-25">
+                            <i class="fas fa-users text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Users -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark stat-card h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Daily Active Users (DAU)</h6>
+                    <h1 class="display-4 text-success">{{ "{:,}".format(dau) }}</h1>
+                    <p class="text-muted mb-0">Active today</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark stat-card h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Weekly Active Users (WAU)</h6>
+                    <h1 class="display-4 text-info">{{ "{:,}".format(wau) }}</h1>
+                    <p class="text-muted mb-0">Active in last 7 days</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark stat-card h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Monthly Active Users (MAU)</h6>
+                    <h1 class="display-4 text-primary">{{ "{:,}".format(mau) }}</h1>
+                    <p class="text-muted mb-0">Active in last 30 days</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> Daily Signups (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 250px;">
+                        <canvas id="signupsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i> DAU History (Last 14 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 250px;">
+                        <canvas id="dauChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Churn Analysis -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-slash me-2 text-danger"></i> Churn Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="churn-stat p-3 rounded mb-3" style="background: rgba(239, 68, 68, 0.1);">
+                                <h6 class="text-muted">7-Day Inactive</h6>
+                                <h3 class="text-danger mb-1">{{ churned_7d }}</h3>
+                                <small class="text-muted">{{ churn_rate_7d }}% of users</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="churn-stat p-3 rounded mb-3" style="background: rgba(220, 38, 38, 0.1);">
+                                <h6 class="text-muted">30-Day Inactive</h6>
+                                <h3 class="text-danger mb-1">{{ churned_30d }}</h3>
+                                <small class="text-muted">{{ churn_rate_30d }}% of users</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-3 opacity-25">
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        7-day inactive = users who were active 7-30 days ago but not in the last 7 days.<br>
+                        30-day inactive = users who haven't been active in over 30 days.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history me-2 text-info"></i> Retention Cohorts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Signup Period</th>
+                                    <th>Cohort Size</th>
+                                    <th>Still Active</th>
+                                    <th>Retention</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cohort in retention_cohorts %}
+                                <tr>
+                                    <td>{{ cohort.period }}</td>
+                                    <td>{{ cohort.cohort_size }}</td>
+                                    <td class="text-success">{{ cohort.retained }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                <div class="progress-bar
+                                                    {% if cohort.retention_rate >= 50 %}bg-success
+                                                    {% elif cohort.retention_rate >= 25 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}"
+                                                    style="width: {{ cohort.retention_rate }}%"></div>
+                                            </div>
+                                            <span class="{% if cohort.retention_rate >= 50 %}text-success{% elif cohort.retention_rate >= 25 %}text-warning{% else %}text-danger{% endif %}">
+                                                {{ cohort.retention_rate }}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Shows what percentage of users who signed up in each period are still active (seen in last 7 days).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Distribution & Recent Signups -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-layer-group me-2 text-warning"></i> Level Distribution</h5>
+                </div>
+                <div class="card-body">
+                    {% for bracket in level_distribution %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ bracket.bracket }}</span>
+                            <span class="text-muted">{{ bracket.count }} users</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            {% set percentage = (bracket.count / total_users * 100) if total_users > 0 else 0 %}
+                            <div class="progress-bar bg-warning" style="width: {{ percentage }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2 text-success"></i> Recent Signups</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Wallet</th>
+                                    <th>Level</th>
+                                    <th>Registered</th>
+                                    <th>Last Seen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_signups %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('admin.user_activity', user_id=user.id) }}" class="text-info">
+                                            {{ user.username or 'No username' }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <code class="small">{{ user.wallet_address[:8] }}...{{ user.wallet_address[-6:] }}</code>
+                                    </td>
+                                    <td>{{ user.level }}</td>
+                                    <td>
+                                        <span class="text-muted">{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                    </td>
+                                    <td>
+                                        {% if user.last_seen %}
+                                            {% set hours_ago = ((now - user.last_seen).total_seconds() / 3600)|int %}
+                                            {% if hours_ago < 1 %}
+                                                <span class="text-success">Just now</span>
+                                            {% elif hours_ago < 24 %}
+                                                <span class="text-info">{{ hours_ago }}h ago</span>
+                                            {% else %}
+                                                <span class="text-muted">{{ (hours_ago / 24)|int }}d ago</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .stat-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .display-4 {
+        font-weight: 700;
+    }
+
+    .table-dark {
+        margin-bottom: 0;
+    }
+
+    .table-dark th {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table-dark td {
+        vertical-align: middle;
+    }
+
+    .progress {
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Current time for calculations
+    const now = new Date();
+
+    // Signups Chart
+    const signupsData = {{ daily_signups | tojson }};
+    new Chart(document.getElementById('signupsChart'), {
+        type: 'bar',
+        data: {
+            labels: signupsData.map(d => d.date.slice(5)), // MM-DD format
+            datasets: [{
+                label: 'New Signups',
+                data: signupsData.map(d => d.count),
+                backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                borderColor: 'rgb(34, 197, 94)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+
+    // DAU Chart
+    const dauData = {{ dau_history | tojson }};
+    new Chart(document.getElementById('dauChart'), {
+        type: 'line',
+        data: {
+            labels: dauData.map(d => d.date.slice(5)),
+            datasets: [{
+                label: 'Daily Active Users',
+                data: dauData.map(d => d.count),
+                fill: true,
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgb(59, 130, 246)',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

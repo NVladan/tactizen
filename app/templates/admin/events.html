@@ -1,0 +1,325 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-calendar-alt"></i> Game Events</h1>
+        <div>
+            <a href="{{ url_for('admin.global_multipliers') }}" class="btn btn-info me-2">
+                <i class="fas fa-sliders-h"></i> Multipliers
+            </a>
+            <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Admin
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Timed Events:</strong> Schedule special events like Double XP weekends, Gold Rush, and more.
+        Events automatically activate and deactivate based on their schedule.
+    </div>
+
+    <div class="row">
+        <!-- Create Event Form -->
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i> Create New Event</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.create_event') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Event Name *</label>
+                            <input type="text" class="form-control" name="name" required
+                                   placeholder="e.g., Weekend Double XP">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Event Type *</label>
+                            <select class="form-select" name="event_type" id="eventType">
+                                {% for value, label in event_types %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Multiplier</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="multiplier"
+                                       value="2.0" min="0.1" max="10" step="0.1" id="multiplierInput">
+                                <span class="input-group-text">x</span>
+                            </div>
+                            <small class="text-muted">2.0 = double, 0.5 = half</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="2"
+                                      placeholder="Optional description..."></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-7">
+                                <label class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" name="start_date" required>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Time</label>
+                                <input type="time" class="form-control" name="start_time" value="00:00">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-7">
+                                <label class="form-label">End Date *</label>
+                                <input type="date" class="form-control" name="end_date" required>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Time</label>
+                                <input type="time" class="form-control" name="end_time" value="23:59">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-calendar-plus me-1"></i> Create Event
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Templates -->
+            <div class="card bg-dark mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-magic me-2"></i> Quick Templates</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-warning btn-sm template-btn"
+                                data-type="double_xp" data-mult="2.0" data-name="Double XP Weekend">
+                            <i class="fas fa-bolt me-1"></i> Double XP Weekend
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm template-btn"
+                                data-type="gold_rush" data-mult="2.0" data-name="Gold Rush Event">
+                            <i class="fas fa-coins me-1"></i> Gold Rush Event
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm template-btn"
+                                data-type="reduced_travel" data-mult="0.5" data-name="Free Travel Day">
+                            <i class="fas fa-plane me-1"></i> Free Travel Day
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm template-btn"
+                                data-type="battle_bonus" data-mult="2.0" data-name="War Weekend">
+                            <i class="fas fa-shield-alt me-1"></i> War Weekend
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active & Upcoming Events -->
+        <div class="col-lg-8">
+            <div class="card bg-dark mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-play-circle me-2 text-success"></i> Active & Upcoming Events</h5>
+                    <span class="badge bg-success">{{ active_events|length }} events</span>
+                </div>
+                <div class="card-body">
+                    {% if active_events %}
+                    <div class="event-list">
+                        {% for event in active_events %}
+                        <div class="event-card {% if event.is_running %}running{% elif event.is_upcoming %}upcoming{% endif %}"
+                             style="border-left-color: {{ event.banner_color }};">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="event-header">
+                                        <i class="fas {{ event.icon }}" style="color: {{ event.banner_color }};"></i>
+                                        <strong>{{ event.name }}</strong>
+                                        {% if event.is_running %}
+                                        <span class="badge bg-success ms-2">LIVE</span>
+                                        {% elif event.is_upcoming %}
+                                        <span class="badge bg-warning text-dark ms-2">UPCOMING</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="event-meta">
+                                        <span class="badge bg-secondary">{{ event.event_type.replace('_', ' ').title() }}</span>
+                                        <span class="badge bg-info">{{ event.multiplier }}x</span>
+                                    </div>
+                                    {% if event.description %}
+                                    <p class="event-description">{{ event.description }}</p>
+                                    {% endif %}
+                                    <div class="event-schedule">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ event.start_time.strftime('%Y-%m-%d %H:%M') }} -
+                                        {{ event.end_time.strftime('%Y-%m-%d %H:%M') }}
+                                        <span class="text-muted">({{ "%.1f"|format(event.duration_hours) }}h)</span>
+                                    </div>
+                                </div>
+                                <div class="event-actions">
+                                    <form method="POST" action="{{ url_for('admin.toggle_event', event_id=event.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-{% if event.is_active %}warning{% else %}success{% endif %}"
+                                                title="{% if event.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                            <i class="fas fa-{% if event.is_active %}pause{% else %}play{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('admin.delete_event', event_id=event.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Delete this event?');" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No active or upcoming events. Create one!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Past Events -->
+            {% if past_events %}
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history me-2 text-muted"></i> Past Events</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Type</th>
+                                    <th>Multiplier</th>
+                                    <th>Duration</th>
+                                    <th>Ended</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in past_events %}
+                                <tr class="text-muted">
+                                    <td>
+                                        <i class="fas {{ event.icon }} me-1" style="color: {{ event.banner_color }};"></i>
+                                        {{ event.name }}
+                                    </td>
+                                    <td>{{ event.event_type.replace('_', ' ').title() }}</td>
+                                    <td>{{ event.multiplier }}x</td>
+                                    <td>{{ "%.1f"|format(event.duration_hours) }}h</td>
+                                    <td>{{ event.end_time.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('admin.delete_event', event_id=event.id) }}" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-xs btn-outline-danger"
+                                                    onclick="return confirm('Delete this event?');">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .event-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .event-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+        border-left: 4px solid #6c757d;
+    }
+
+    .event-card.running {
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .event-card.upcoming {
+        background: rgba(245, 158, 11, 0.1);
+    }
+
+    .event-header {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .event-header i {
+        margin-right: 0.5rem;
+    }
+
+    .event-meta {
+        margin-bottom: 0.5rem;
+    }
+
+    .event-description {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0.5rem 0;
+    }
+
+    .event-schedule {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .event-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-xs {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.75rem;
+    }
+
+    .input-group-text {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+</style>
+
+<script>
+// Template buttons
+document.querySelectorAll('.template-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelector('[name="event_type"]').value = this.dataset.type;
+        document.querySelector('[name="multiplier"]').value = this.dataset.mult;
+        document.querySelector('[name="name"]').value = this.dataset.name;
+    });
+});
+
+// Set default dates to today and tomorrow
+const today = new Date();
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 2);
+
+document.querySelector('[name="start_date"]').value = today.toISOString().split('T')[0];
+document.querySelector('[name="end_date"]').value = tomorrow.toISOString().split('T')[0];
+</script>
+{% endblock %}

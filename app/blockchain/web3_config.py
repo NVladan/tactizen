@@ -1,10 +1,15 @@
 """
-Web3 Configuration for Horizen L3 Testnet
+Web3 Configuration for Horizen L3
 """
 import os
 import json
 from web3 import Web3
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Ensure .env is loaded before accessing env vars (with override to handle system env vars)
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(env_path, override=True)
 
 # Configuration - these will be loaded from environment at runtime
 _w3 = None
@@ -16,10 +21,10 @@ def get_web3():
     global _w3
     if _w3 is None:
         # Load RPC_URL from environment at runtime (after Flask has loaded .env)
-        RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen-testnet.rpc.caldera.xyz/http')
+        RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen.calderachain.xyz/http')
         _w3 = Web3(Web3.HTTPProvider(RPC_URL))
         if not _w3.is_connected():
-            raise Exception(f"Failed to connect to Horizen L3 Testnet RPC at {RPC_URL}")
+            raise Exception(f"Failed to connect to Horizen L3 RPC at {RPC_URL}")
     return _w3
 
 def load_contract_abi(contract_name):

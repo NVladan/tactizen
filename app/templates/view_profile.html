@@ -1701,48 +1701,62 @@ function getCalculatedBonus(category, tier) {
 }
 
 function getBonusDisplay(nft) {
-    // Use stored bonus_value if available and non-zero, otherwise calculate from tier
+    // Use bonus_formatted from API if available (includes proper formatting for each category)
+    if (nft.bonus_formatted) {
+        return nft.bonus_formatted;
+    }
+
+    // Fallback: Use stored bonus_value if available and non-zero, otherwise calculate from tier
     let bonus = nft.bonus_value;
     if (!bonus || bonus === 0) {
         bonus = getCalculatedBonus(nft.category, nft.tier);
     }
 
     if (nft.category === 'energy_regen') {
-        return `+${bonus} energy/hour`;
+        return `+${bonus} energy/hr`;
     } else if (nft.category === 'wellness_regen') {
-        return `+${bonus} wellness/hour`;
+        return `+${bonus} wellness/hr`;
     } else if (nft.category === 'military_tutor') {
-        return `+${bonus}% rank XP`;
+        return `+${bonus}%`;
     } else if (nft.category === 'travel_discount') {
-        return bonus >= 100 ? 'Free travel' : `-${bonus}% travel cost`;
+        return bonus >= 100 ? 'Free travel' : `-${bonus}%`;
     } else if (nft.category === 'storage_increase') {
-        return `+${bonus} storage`;
+        return `+${bonus.toLocaleString()} storage`;
     } else if (nft.category === 'combat_boost') {
-        return `+${bonus}% damage`;
+        return `+${bonus}%`;
+    } else if (nft.category === 'material_efficiency' || nft.category === 'upgrade_discount' ||
+               nft.category === 'speed_boost' || nft.category === 'tax_breaks') {
+        return `-${bonus}%`;
+    } else if (nft.category === 'android_worker') {
+        return `Skill Level ${bonus}`;
     } else {
         return `+${bonus}%`;
     }
 }
 
 function getShortBonusDisplay(nft) {
-    // Short version for badge display
+    // Use bonus_formatted from API if available (includes proper formatting for each category)
+    if (nft.bonus_formatted) {
+        return nft.bonus_formatted;
+    }
+
+    // Fallback: Short version for badge display
     let bonus = nft.bonus_value;
     if (!bonus || bonus === 0) {
         bonus = getCalculatedBonus(nft.category, nft.tier);
     }
 
     if (nft.category === 'energy_regen') {
-        return `+${bonus}%`;
+        return `+${bonus}/hr`;
     } else if (nft.category === 'wellness_regen') {
-        return `+${bonus}%`;
-    } else if (nft.category === 'military_tutor') {
-        return `+${bonus}%`;
-    } else if (nft.category === 'travel_discount') {
-        return `-${bonus}%`;
+        return `+${bonus}/hr`;
     } else if (nft.category === 'storage_increase') {
-        return `+${bonus}%`;
-    } else if (nft.category === 'combat_boost') {
-        return `+${bonus}%`;
+        return `+${bonus.toLocaleString()}`;
+    } else if (nft.category === 'android_worker') {
+        return `Lvl ${bonus}`;
+    } else if (nft.category === 'material_efficiency' || nft.category === 'upgrade_discount' ||
+               nft.category === 'speed_boost' || nft.category === 'tax_breaks' || nft.category === 'travel_discount') {
+        return `-${bonus}%`;
     } else {
         return `+${bonus}%`;
     }

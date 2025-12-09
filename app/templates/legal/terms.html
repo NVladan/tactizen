@@ -1,0 +1,241 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="legal-hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-icon">
+                <i class="fas fa-file-contract"></i>
+            </div>
+            <h1>Terms of Service</h1>
+            <p class="hero-subtitle">Please read these terms carefully before using Tactizen</p>
+            <div class="hero-meta">
+                <span><i class="fas fa-calendar-alt me-1"></i>Last Updated: December 2025</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Quick Navigation -->
+            <div class="legal-nav-card">
+                <h5><i class="fas fa-compass me-2"></i>Quick Navigation</h5>
+                <div class="nav-links">
+                    <a href="#acceptance">Acceptance</a>
+                    <a href="#description">Description</a>
+                    <a href="#registration">Registration</a>
+                    <a href="#conduct">User Conduct</a>
+                    <a href="#content">User Content</a>
+                    <a href="#virtual-items">Virtual Items</a>
+                    <a href="#zk-voting">ZK Voting</a>
+                    <a href="#ip">Intellectual Property</a>
+                    <a href="#termination">Termination</a>
+                </div>
+            </div>
+
+            <div class="legal-content-card">
+                <section id="acceptance">
+                    <div class="section-header">
+                        <span class="section-number">01</span>
+                        <h2>Acceptance of Terms</h2>
+                    </div>
+                    <p>By accessing or using Tactizen ("the Game"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Game.</p>
+                </section>
+
+                <section id="description">
+                    <div class="section-header">
+                        <span class="section-number">02</span>
+                        <h2>Description of Service</h2>
+                    </div>
+                    <p>Tactizen is a blockchain-based nation simulation game where players can:</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-user"></i>Create and manage virtual citizens</li>
+                        <li><i class="fas fa-vote-yea"></i>Participate in political systems including voting and elections</li>
+                        <li><i class="fas fa-coins"></i>Engage in economic activities such as working, trading, and company management</li>
+                        <li><i class="fas fa-fist-raised"></i>Join military activities and wars</li>
+                        <li><i class="fas fa-users"></i>Interact with other players through parties, military units, and social features</li>
+                    </ul>
+                </section>
+
+                <section id="registration">
+                    <div class="section-header">
+                        <span class="section-number">03</span>
+                        <h2>Account Registration</h2>
+                    </div>
+                    <p>To use Tactizen, you must connect a compatible Web3 wallet (such as MetaMask). You are responsible for:</p>
+                    <ul class="check-list">
+                        <li>Maintaining the security of your wallet and private keys</li>
+                        <li>All activities that occur under your account</li>
+                        <li>Ensuring your account information is accurate</li>
+                    </ul>
+                    <div class="warning-box">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>We are not responsible for any loss resulting from unauthorized access to your wallet or account.</p>
+                    </div>
+                </section>
+
+                <section id="conduct">
+                    <div class="section-header">
+                        <span class="section-number">04</span>
+                        <h2>User Conduct</h2>
+                    </div>
+                    <p>You agree <strong>NOT</strong> to:</p>
+                    <ul class="prohibited-list">
+                        <li><i class="fas fa-ban"></i>Use bots, scripts, or automated tools to play the game</li>
+                        <li><i class="fas fa-ban"></i>Exploit bugs or glitches for unfair advantage</li>
+                        <li><i class="fas fa-ban"></i>Harass, threaten, or abuse other players</li>
+                        <li><i class="fas fa-ban"></i>Create multiple accounts to gain unfair advantages</li>
+                        <li><i class="fas fa-ban"></i>Impersonate other players or staff members</li>
+                        <li><i class="fas fa-ban"></i>Share or sell your account</li>
+                        <li><i class="fas fa-ban"></i>Use the Game for any illegal purposes</li>
+                        <li><i class="fas fa-ban"></i>Attempt to hack, reverse-engineer, or compromise the Game's systems</li>
+                        <li><i class="fas fa-ban"></i>Post illegal, defamatory, or harmful content in newspapers or messages</li>
+                    </ul>
+                </section>
+
+                <section id="content">
+                    <div class="section-header">
+                        <span class="section-number">05</span>
+                        <h2>User-Generated Content</h2>
+                    </div>
+                    <p>Tactizen allows users to create and share content through newspapers, articles, and private messages. You acknowledge that:</p>
+                    <div class="info-grid">
+                        <div class="info-item highlight">
+                            <i class="fas fa-user-edit"></i>
+                            <p><strong>You are solely responsible</strong> for any content you post, publish, or send to other users</p>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-eye-slash"></i>
+                            <p>Tactizen Recreation does <strong>not</strong> pre-screen, monitor, or endorse user-generated content</p>
+                        </div>
+                        <div class="info-item highlight">
+                            <i class="fas fa-shield-alt"></i>
+                            <p>We are <strong>not liable</strong> for any content created by users</p>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-trash-alt"></i>
+                            <p>We reserve the right to remove content that violates these terms or applicable laws</p>
+                        </div>
+                    </div>
+                    <p class="mt-3">If you encounter inappropriate content, please report it through our <a href="{{ url_for('support.create_ticket') }}">Support System</a>.</p>
+                </section>
+
+                <section id="virtual-items">
+                    <div class="section-header">
+                        <span class="section-number">06</span>
+                        <h2>Virtual Items and Currency</h2>
+                    </div>
+                    <p>The Game may include virtual items, currencies, and NFTs. You acknowledge that:</p>
+                    <ul class="check-list">
+                        <li>Virtual items have no real-world monetary value unless explicitly stated</li>
+                        <li>We reserve the right to modify, remove, or adjust virtual items at any time</li>
+                        <li>NFTs and blockchain-based assets are subject to network conditions and smart contract functionality</li>
+                        <li>All transactions on the blockchain are final and irreversible</li>
+                    </ul>
+                </section>
+
+                <section id="zk-voting">
+                    <div class="section-header">
+                        <span class="section-number">07</span>
+                        <h2>Zero-Knowledge Voting</h2>
+                    </div>
+                    <div class="highlight-box">
+                        <div class="highlight-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="highlight-content">
+                            <h4>Secure & Private Voting</h4>
+                            <p>Tactizen uses zkSNARK technology for anonymous voting. By participating in elections:</p>
+                            <ul>
+                                <li>You consent to your vote being cryptographically verified on the zkVerify blockchain</li>
+                                <li>Your vote remains private - only proof of validity is recorded publicly</li>
+                                <li>You acknowledge that blockchain records are permanent and immutable</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="ip">
+                    <div class="section-header">
+                        <span class="section-number">08</span>
+                        <h2>Intellectual Property</h2>
+                    </div>
+                    <p>All content in Tactizen, including but not limited to graphics, text, code, and game mechanics, is owned by Tactizen Recreation and is protected by intellectual property laws. You may not copy, modify, distribute, or create derivative works without explicit permission.</p>
+                </section>
+
+                <section id="termination">
+                    <div class="section-header">
+                        <span class="section-number">09</span>
+                        <h2>Termination</h2>
+                    </div>
+                    <p>We reserve the right to suspend or terminate your account at any time for:</p>
+                    <ul class="check-list">
+                        <li>Violation of these Terms of Service</li>
+                        <li>Cheating or exploiting the Game</li>
+                        <li>Disruptive behavior toward other players</li>
+                        <li>Any reason we deem necessary for the health of the Game community</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <div class="section-header">
+                        <span class="section-number">10</span>
+                        <h2>Disclaimer of Warranties</h2>
+                    </div>
+                    <div class="warning-box large">
+                        <p>THE GAME IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE DO NOT GUARANTEE:</p>
+                        <ul>
+                            <li>Uninterrupted or error-free service</li>
+                            <li>That defects will be corrected</li>
+                            <li>The accuracy or reliability of any information obtained through the Game</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section>
+                    <div class="section-header">
+                        <span class="section-number">11</span>
+                        <h2>Limitation of Liability</h2>
+                    </div>
+                    <p>To the maximum extent permitted by law, Tactizen Recreation shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Game.</p>
+                </section>
+
+                <section>
+                    <div class="section-header">
+                        <span class="section-number">12</span>
+                        <h2>Changes to Terms</h2>
+                    </div>
+                    <p>We may modify these Terms at any time. Continued use of the Game after changes constitutes acceptance of the new Terms. We will notify users of significant changes through in-game announcements.</p>
+                </section>
+
+                <section>
+                    <div class="section-header">
+                        <span class="section-number">13</span>
+                        <h2>Contact</h2>
+                    </div>
+                    <p>For questions about these Terms of Service, please contact us through our <a href="{{ url_for('support.create_ticket') }}">Support System</a>.</p>
+                </section>
+            </div>
+
+            <div class="legal-footer-nav">
+                <a href="{{ url_for('main.privacy_policy') }}" class="footer-nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Privacy Policy</span>
+                </a>
+                <a href="{{ url_for('main.faq') }}" class="footer-nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>FAQ</span>
+                </a>
+                <a href="{{ url_for('main.index') }}" class="footer-nav-item">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Back to Game</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'legal/_legal_styles.html' %}
+{% endblock %}

@@ -270,6 +270,6 @@ def api_zen_market_buy_zen():
         'zen_amount': float(zen_amount),
         'gold_amount': float(gold_cost),
         'tx_hash': transfer_result['tx_hash'],
-        'explorer_url': f"{os.getenv('BLOCK_EXPLORER', 'https://horizen-testnet.explorer.caldera.xyz')}/tx/{transfer_result['tx_hash']}",
+        'explorer_url': f"{os.getenv('BLOCK_EXPLORER', 'https://horizen.calderaexplorer.xyz')}/tx/{transfer_result['tx_hash']}",
         'new_gold_balance': float(current_user.gold)
     })

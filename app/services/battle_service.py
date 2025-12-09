@@ -530,14 +530,21 @@ class BattleService:
         user.energy -= FIGHT_ENERGY_COST
         user.wellness -= FIGHT_WELLNESS_COST
 
-        # Add military XP (100% of damage dealt, modified by Military Tutor NFT)
+        # Add military XP (100% of damage dealt, modified by Military Tutor NFT and Battle Bonus event)
         from app.services.bonus_calculator import BonusCalculator
+        from app.models.game_event import GameEvent
+        battle_multiplier = GameEvent.get_effective_multiplier('battle_xp_multiplier')
+        global_xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
         military_xp_multiplier = BonusCalculator.get_military_xp_multiplier(user.id)
-        military_xp_gain = int(final_damage * military_xp_multiplier)
+        # Military XP uses battle multiplier and global multiplier
+        military_xp_gain = int(final_damage * military_xp_multiplier * battle_multiplier * global_xp_multiplier)
         user.add_rank_xp(military_xp_gain)
 
         # Add player experience (2 XP per successful fight)
-        leveled_up, new_level = user.add_experience(2)
+        # Calculate XP with battle multiplier, add_experience will apply global multiplier
+        base_battle_xp = 2
+        xp_before_global = int(base_battle_xp * battle_multiplier)
+        leveled_up, new_level = user.add_experience(xp_before_global)
 
         # Create level up alert if player leveled up
         if leveled_up:
@@ -1032,6 +1039,8 @@ class BattleService:
                 AchievementService._check_and_unlock(
                     starter, 'resistance_hero_100', starter.resistance_wars_won
                 )
+                # Freedom Fighter: Won a resistance war
+                AchievementService.check_freedom_fighter(starter)
 
                 # Alert the starter
                 create_alert(
@@ -1101,6 +1110,12 @@ class BattleService:
                 user_id = top_damage.user_id
                 total_damage = top_damage.total_damage
 
+                # Calculate gold with Gold Rush event multiplier
+                from app.models.game_event import GameEvent
+                gold_multiplier = GameEvent.get_effective_multiplier('gold_drop_multiplier')
+                base_gold = 5
+                final_gold = int(base_gold * gold_multiplier)
+
                 # Create hero record
                 hero = BattleHero(
                     battle_id=battle.id,
@@ -1108,7 +1123,7 @@ class BattleService:
                     wall_type=wall_type,
                     is_attacker=is_attacker,
                     total_damage=total_damage,
-                    gold_reward=5,
+                    gold_reward=final_gold,
                     awarded_at=datetime.utcnow()
                 )
                 db.session.add(hero)
@@ -1116,7 +1131,7 @@ class BattleService:
                 # Award gold
                 user = User.query.get(user_id)
                 if user:
-                    user.gold = (user.gold or Decimal('0')) + Decimal('5')
+                    user.gold = (user.gold or Decimal('0')) + Decimal(str(final_gold))
 
                     # Create alert
                     side_name = "Attacker" if is_attacker else "Defender"
@@ -1125,7 +1140,7 @@ class BattleService:
                         user_id=user_id,
                         alert_type=AlertType.LEVEL_UP,
                         title="Battle Hero!",
-                        content=f"You are the Battle Hero for {wall_name} ({side_name} side) with {total_damage} total damage! You received 5 Gold.",
+                        content=f"You are the Battle Hero for {wall_name} ({side_name} side) with {total_damage} total damage! You received {final_gold} Gold.",
                         priority=AlertPriority.IMPORTANT
                     )
 

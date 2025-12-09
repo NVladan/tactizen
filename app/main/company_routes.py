@@ -1674,13 +1674,13 @@ def buy_inventory(company_id):
         flash(error_msg, 'error')
         return redirect(url_for('company.view_company', company_id=company_id))
 
-    # Get market item for pricing
+    # Get market item for pricing - lock row to prevent race conditions on price changes
     market_item = db.session.scalar(
         select(CountryMarketItem).filter_by(
             country_id=company.country_id,
             resource_id=resource_id,
             quality=quality
-        )
+        ).with_for_update()
     )
 
     if not market_item:

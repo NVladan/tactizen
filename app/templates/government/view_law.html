@@ -161,6 +161,36 @@
                                 <strong class="text-danger">{{ law.law_details.get('alliance_name', 'Unknown') }}</strong>
                             </p>
                             <small class="text-muted">All member congresses must approve</small>
+
+                        {% elif law.law_type.name == 'IMPEACHMENT' %}
+                            {% if law.law_details.get('no_current_president') %}
+                            <p class="text-white">
+                                <i class="fas fa-crown me-2 text-warning"></i>
+                                Appoint <strong class="text-success">{{ law.law_details.get('replacement_username', 'Unknown') }}</strong> as President
+                            </p>
+                            <small class="text-muted">No current president - will serve until next scheduled election</small>
+                            {% else %}
+                            <p class="text-white">
+                                <i class="fas fa-gavel me-2 text-danger"></i>
+                                Impeach <strong class="text-danger">{{ law.law_details.get('current_president_username', 'Unknown') }}</strong>
+                                and replace with <strong class="text-success">{{ law.law_details.get('replacement_username', 'Unknown') }}</strong>
+                            </p>
+                            <small class="text-muted">Replacement will serve the remainder of the term</small>
+                            {% endif %}
+
+                        {% elif law.law_type.name == 'EMBARGO' %}
+                            <p class="text-white">
+                                <i class="fas fa-ban me-2 text-danger"></i>
+                                Impose trade embargo on <strong class="text-danger">{{ law.law_details.get('target_country_name', 'Unknown') }}</strong>
+                            </p>
+                            <small class="text-muted">All trade between nations will be blocked</small>
+
+                        {% elif law.law_type.name == 'REMOVE_EMBARGO' %}
+                            <p class="text-white">
+                                <i class="fas fa-handshake me-2 text-success"></i>
+                                Lift trade embargo on <strong class="text-success">{{ law.law_details.get('target_country_name', 'Unknown') }}</strong>
+                            </p>
+                            <small class="text-muted">Trade will resume between nations</small>
                         {% endif %}
                     </div>
 

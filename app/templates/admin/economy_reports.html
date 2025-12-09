@@ -1,0 +1,626 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-chart-line"></i> Economy Reports</h1>
+        <div class="d-flex align-items-center gap-3">
+            <!-- Period Selector -->
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('admin.economy_reports', period=7) }}" class="btn btn-sm {% if period == 7 %}btn-primary{% else %}btn-outline-secondary{% endif %}">7 Days</a>
+                <a href="{{ url_for('admin.economy_reports', period=30) }}" class="btn btn-sm {% if period == 30 %}btn-primary{% else %}btn-outline-secondary{% endif %}">30 Days</a>
+                <a href="{{ url_for('admin.economy_reports', period=90) }}" class="btn btn-sm {% if period == 90 %}btn-primary{% else %}btn-outline-secondary{% endif %}">90 Days</a>
+            </div>
+            <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Revenue Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card revenue-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center border-end-md">
+                            <h6 class="text-muted text-uppercase mb-2">Total ZEN Revenue ({{ period }} Days)</h6>
+                            {% set nft_minting_revenue = nfts_minted * 1 %}
+                            {% set net_zen = zen_sold_amount - zen_bought_amount %}
+                            {% set total_zen_revenue = net_zen + fees_earned_zen + nft_minting_revenue %}
+                            <h1 class="display-4 {% if total_zen_revenue >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                                {% if total_zen_revenue >= 0 %}+{% endif %}{{ "{:,.4f}".format(total_zen_revenue) }}
+                            </h1>
+                            <span class="text-primary"><i class="fas fa-gem me-1"></i> ZEN</span>
+                        </div>
+                        <div class="col-md-3 text-center border-end-md">
+                            <h6 class="text-muted text-uppercase mb-2">NFT Minting Revenue</h6>
+                            <h2 class="text-success mb-0">+{{ nfts_minted }} <small class="text-muted">ZEN</small></h2>
+                            <span class="text-muted">{{ nfts_minted }} NFTs @ 1 ZEN each</span>
+                        </div>
+                        <div class="col-md-3 text-center border-end-md">
+                            <h6 class="text-muted text-uppercase mb-2">Net ZEN (Market)</h6>
+                            <h2 class="{% if net_zen >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                                {% if net_zen >= 0 %}+{% endif %}{{ "{:,.4f}".format(net_zen) }} <small class="text-muted">ZEN</small>
+                            </h2>
+                            <span class="text-muted">Buy/Sell spread</span>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h6 class="text-muted text-uppercase mb-2">NFT Trade Fees</h6>
+                            <h2 class="text-info mb-0">+{{ "{:,.4f}".format(fees_earned_zen) }} <small class="text-muted">ZEN</small></h2>
+                            <span class="text-muted">{{ marketplace_fee_percent }}% on {{ nft_trade_count }} trades</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZEN Market Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-gem me-2 text-primary"></i> ZEN Market Activity</h5>
+                    <div class="zen-prices">
+                        <span class="badge bg-danger me-2">Buy: {{ "{:.2f}".format(current_zen_buy_price) }} Gold/ZEN</span>
+                        <span class="badge bg-success">Sell: {{ "{:.2f}".format(current_zen_sell_price) }} Gold/ZEN</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="zen-flow-card outflow">
+                                <div class="flow-header">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>ZEN Outflow (Players Buy ZEN)</span>
+                                </div>
+                                <div class="flow-stats">
+                                    <div class="stat">
+                                        <span class="label">ZEN Given Out</span>
+                                        <span class="value text-danger">{{ "{:,.4f}".format(zen_bought_amount) }}</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="label">Gold Received</span>
+                                        <span class="value text-success">{{ "{:,.2f}".format(gold_spent_on_zen) }}</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="label">Transactions</span>
+                                        <span class="value">{{ zen_buy_count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="zen-flow-card inflow">
+                                <div class="flow-header">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <span>ZEN Inflow (Players Sell ZEN)</span>
+                                </div>
+                                <div class="flow-stats">
+                                    <div class="stat">
+                                        <span class="label">ZEN Received</span>
+                                        <span class="value text-success">{{ "{:,.4f}".format(zen_sold_amount) }}</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="label">Gold Paid Out</span>
+                                        <span class="value text-danger">{{ "{:,.2f}".format(gold_received_from_zen) }}</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="label">Transactions</span>
+                                        <span class="value">{{ zen_sell_count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% set net_zen_flow = zen_sold_amount - zen_bought_amount %}
+                    <div class="net-flow-banner {% if net_zen_flow >= 0 %}positive{% else %}negative{% endif %}">
+                        <span class="net-label">Net ZEN Flow:</span>
+                        <span class="net-value">
+                            {% if net_zen_flow >= 0 %}+{% endif %}{{ "{:,.4f}".format(net_zen_flow) }} ZEN
+                        </span>
+                        <span class="net-description">
+                            {% if net_zen_flow >= 0 %}
+                                <i class="fas fa-arrow-trend-up me-1"></i> More ZEN coming back than going out
+                            {% else %}
+                                <i class="fas fa-arrow-trend-down me-1"></i> More ZEN going out than coming back
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <!-- ZEN Chart -->
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">Daily ZEN Flow</h6>
+                        <div class="chart-container" style="position: relative; height: 200px;">
+                            <canvas id="zenFlowChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NFT Section -->
+    <div class="row mb-4">
+        <div class="col-md-5">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-hammer me-2 text-warning"></i> NFT Minting</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-4">
+                            <div class="nft-stat">
+                                <h3 class="text-success">{{ nfts_minted }}</h3>
+                                <small class="text-muted">Minted</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="nft-stat">
+                                <h3 class="text-info">{{ nfts_dropped }}</h3>
+                                <small class="text-muted">Dropped</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="nft-stat">
+                                <h3 class="text-warning">{{ nfts_upgraded }}</h3>
+                                <small class="text-muted">Upgraded</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted mb-3">Mints by Tier</h6>
+                    {% for tier, count in nft_by_tier.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>
+                            <span class="badge tier-badge tier-{{ loop.index }}">{{ tier }}</span>
+                        </span>
+                        <span class="text-muted">{{ count }} NFTs</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card bg-dark h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-exchange-alt me-2 text-info"></i> NFT Trading</h5>
+                    <span class="badge bg-secondary">{{ marketplace_fee_percent }}% Fee</span>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-3">
+                            <div class="nft-stat">
+                                <h3 class="text-info">{{ nft_trade_count }}</h3>
+                                <small class="text-muted">Trades</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="nft-stat">
+                                <h3 class="text-primary">{{ "{:,.2f}".format(total_trade_volume_zen) }}</h3>
+                                <small class="text-muted">Volume (ZEN)</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="nft-stat">
+                                <h3 class="text-success">{{ "{:,.4f}".format(fees_earned_zen) }}</h3>
+                                <small class="text-muted">Fees (ZEN)</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="nft-stat">
+                                <h3 class="text-warning">{{ "{:,.2f}".format(avg_trade_price) }}</h3>
+                                <small class="text-muted">Avg Price</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="marketplace-stats p-3 rounded" style="background: rgba(255, 255, 255, 0.05);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted">Active Listings:</span>
+                                <strong class="text-info ms-2">{{ active_listings }}</strong>
+                            </div>
+                            <div>
+                                <span class="text-muted">Total Listing Value:</span>
+                                <strong class="text-warning ms-2">{{ "{:,.2f}".format(total_listing_value) }} ZEN</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NFT Trade Chart -->
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">Daily Trade Volume & Fees</h6>
+                        <div class="chart-container" style="position: relative; height: 180px;">
+                            <canvas id="nftTradeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i> Recent ZEN Transactions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-dark table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>User</th>
+                                    <th>ZEN</th>
+                                    <th>Gold</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tx in recent_zen_txs %}
+                                <tr>
+                                    <td>
+                                        {% if tx.transaction_type == 'buy' %}
+                                            <span class="badge bg-success">BUY</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">SELL</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if tx.user %}
+                                            <a href="{{ url_for('admin.user_activity', user_id=tx.user_id) }}" class="text-info">
+                                                {{ tx.user.username or tx.user.wallet_address[:8] }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ "{:.4f}".format(tx.zen_amount|float) }}</td>
+                                    <td class="text-warning">{{ "{:.2f}".format(tx.gold_amount|float) }}</td>
+                                    <td class="text-muted">
+                                        {{ tx.created_at.strftime('%m/%d %H:%M') }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No transactions found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-receipt me-2"></i> Recent NFT Sales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-dark table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>NFT</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Price</th>
+                                    <th>Fee</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trade in recent_nft_trades %}
+                                <tr>
+                                    <td>
+                                        {% if trade.nft %}
+                                            <span class="badge tier-badge tier-{{ trade.nft.tier }}">Q{{ trade.nft.tier }}</span>
+                                            {{ trade.nft.category[:12] }}
+                                        {% else %}
+                                            #{{ trade.nft_id }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if trade.from_user %}
+                                            <span class="text-muted">{{ trade.from_user.username or trade.from_user.wallet_address[:6] }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if trade.to_user %}
+                                            <span class="text-info">{{ trade.to_user.username or trade.to_user.wallet_address[:6] }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-warning">
+                                        {% if trade.price_zen %}
+                                            {{ "{:.2f}".format(trade.price_zen|float) }} ZEN
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-success">
+                                        {% if trade.price_zen %}
+                                            {{ "{:.4f}".format((trade.price_zen|float) * (marketplace_fee_percent / 100)) }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No trades found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .revenue-card {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 95, 70, 0.2) 100%);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .border-end-md {
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .border-end-md {
+            border-right: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+    }
+
+    .zen-flow-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.25rem;
+        height: 100%;
+    }
+
+    .zen-flow-card.inflow {
+        border-left: 4px solid #22c55e;
+    }
+
+    .zen-flow-card.outflow {
+        border-left: 4px solid #ef4444;
+    }
+
+    .flow-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .zen-flow-card.inflow .flow-header i {
+        color: #22c55e;
+    }
+
+    .zen-flow-card.outflow .flow-header i {
+        color: #ef4444;
+    }
+
+    .flow-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .flow-stats .stat {
+        text-align: center;
+    }
+
+    .flow-stats .label {
+        display: block;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 0.25rem;
+    }
+
+    .flow-stats .value {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .net-flow-banner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .net-flow-banner.positive {
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .net-flow-banner.negative {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .net-label {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .net-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .net-flow-banner.positive .net-value {
+        color: #22c55e;
+    }
+
+    .net-flow-banner.negative .net-value {
+        color: #ef4444;
+    }
+
+    .net-description {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .nft-stat h3 {
+        margin-bottom: 0;
+        font-weight: 700;
+    }
+
+    .tier-badge {
+        font-weight: 600;
+    }
+
+    .tier-badge.tier-1 { background: #6b7280; }
+    .tier-badge.tier-2 { background: #22c55e; }
+    .tier-badge.tier-3 { background: #3b82f6; }
+    .tier-badge.tier-4 { background: #a855f7; }
+    .tier-badge.tier-5 { background: #f59e0b; }
+
+    .table-dark {
+        margin-bottom: 0;
+    }
+
+    .table-dark th {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table-dark td {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+</style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // ZEN Flow Chart
+    const zenData = {{ daily_zen_stats | tojson }};
+    new Chart(document.getElementById('zenFlowChart'), {
+        type: 'bar',
+        data: {
+            labels: zenData.map(d => d.date.slice(5)),
+            datasets: [
+                {
+                    label: 'ZEN Inflow (received)',
+                    data: zenData.map(d => d.inflow),
+                    backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                    borderColor: 'rgb(34, 197, 94)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'ZEN Outflow (given out)',
+                    data: zenData.map(d => d.outflow),
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                    borderColor: 'rgb(239, 68, 68)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+
+    // NFT Trade Chart
+    const nftData = {{ daily_nft_stats | tojson }};
+    new Chart(document.getElementById('nftTradeChart'), {
+        type: 'line',
+        data: {
+            labels: nftData.map(d => d.date.slice(5)),
+            datasets: [
+                {
+                    label: 'Volume (ZEN)',
+                    data: nftData.map(d => d.volume_zen),
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Fees Earned (ZEN)',
+                    data: nftData.map(d => d.fees_earned),
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: 'rgba(255, 255, 255, 0.7)' }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: true,
+                    grid: { drawOnChartArea: false },
+                    ticks: { color: 'rgba(34, 197, 94, 0.7)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: 'rgba(255, 255, 255, 0.7)' }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

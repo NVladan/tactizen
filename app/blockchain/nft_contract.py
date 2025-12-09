@@ -6,14 +6,20 @@ import os
 import logging
 from decimal import Decimal
 from typing import Optional, Tuple, Dict
+from pathlib import Path
+from dotenv import load_dotenv
 from web3 import Web3
 from web3.contract import Contract
 from eth_account import Account
 
+# Ensure .env is loaded before accessing env vars (with override to handle system env vars)
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(env_path, override=True)
+
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-BLOCKCHAIN_RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen-testnet.rpc.caldera.xyz/http')
+BLOCKCHAIN_RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen.calderachain.xyz/http')
 NFT_CONTRACT_ADDRESS = os.getenv('NFT_CONTRACT_ADDRESS')  # Tactizen GameNFT
 TREASURY_PRIVATE_KEY = os.getenv('TREASURY_PRIVATE_KEY', None)
 TREASURY_ADDRESS = os.getenv('TREASURY_ADDRESS', None)
@@ -103,6 +109,13 @@ GAME_NFT_ABI = [
         ],
         "name": "NFTMinted",
         "type": "event"
+    },
+    {
+        "inputs": [{"name": "tokenId", "type": "uint256"}],
+        "name": "ownerOf",
+        "outputs": [{"name": "", "type": "address"}],
+        "stateMutability": "view",
+        "type": "function"
     }
 ]
 
@@ -690,6 +703,88 @@ def get_nft_metadata_from_chain(token_id: int) -> Optional[Dict]:
         return None
 
 
+def sync_nfts_from_blockchain(user_id: int, wallet_address: str, existing_token_ids: set) -> int:
+    """
+    Sync NFTs from blockchain that exist on-chain but are missing from database.
+
+    This handles the case where blockchain transactions succeeded but database
+    updates failed (e.g., after an upgrade).
+
+    Args:
+        user_id: User's database ID
+        wallet_address: User's wallet address
+        existing_token_ids: Set of token IDs already in database
+
+    Returns:
+        Number of NFTs added to database
+    """
+    from app import db
+    from app.models.nft import NFTInventory
+    import os
+
+    nft_contract = get_nft_contract()
+    if not nft_contract:
+        logger.error("[NFT Sync] Could not get NFT contract")
+        return 0
+
+    added_count = 0
+    contract_address = os.environ.get('NFT_CONTRACT_ADDRESS', '')
+
+    try:
+        # Get total supply to know the range of token IDs to check
+        # We'll check a reasonable range (up to 1000 tokens)
+        # In production, you might use events to track this more efficiently
+        max_token_to_check = 100  # Reasonable limit for a new game
+
+        for token_id in range(1, max_token_to_check + 1):
+            # Skip if already in database
+            if token_id in existing_token_ids:
+                continue
+
+            try:
+                # Check if user owns this token
+                owner = nft_contract.functions.ownerOf(token_id).call()
+                if owner.lower() != wallet_address.lower():
+                    continue
+
+                # User owns this token but it's not in database - add it!
+                logger.info(f"[NFT Sync] Found missing NFT #{token_id} owned by {wallet_address}")
+
+                # Get metadata from chain
+                metadata = get_nft_metadata_from_chain(token_id)
+                if not metadata or not metadata.get('exists', False):
+                    logger.warning(f"[NFT Sync] Could not get metadata for token #{token_id}")
+                    continue
+
+                # Create NFT record
+                new_nft = NFTInventory(
+                    user_id=user_id,
+                    nft_type=metadata.get('nft_type', 'player'),
+                    category=metadata.get('category', 'combat_boost'),
+                    tier=metadata.get('tier', 1),
+                    bonus_value=metadata.get('bonus_value', 0),
+                    token_id=token_id,
+                    contract_address=contract_address,
+                    acquired_via='blockchain_sync'
+                )
+                db.session.add(new_nft)
+                added_count += 1
+                logger.info(f"[NFT Sync] Added NFT #{token_id} to database")
+
+            except Exception as token_err:
+                # Token doesn't exist or other error - skip
+                continue
+
+        if added_count > 0:
+            db.session.flush()
+
+        return added_count
+
+    except Exception as e:
+        logger.error(f"[NFT Sync] Error syncing from blockchain: {e}")
+        return 0
+
+
 def verify_nft_mint_transaction(tx_hash: str, expected_minter: str) -> Optional[Dict]:
     """
     Verify that an NFT mint transaction succeeded and extract NFT details
@@ -808,6 +903,175 @@ def verify_nft_mint_transaction(tx_hash: str, expected_minter: str) -> Optional[
         import traceback
         traceback.print_exc()
         return None
+
+
+def verify_all_equipped_nfts() -> Dict:
+    """
+    Verify ownership of all equipped NFTs on blockchain.
+    Unequips any NFTs that are no longer owned by the user.
+
+    This function should be called periodically (e.g., daily at day change)
+    to handle cases where users sell NFTs on external marketplaces.
+
+    Returns:
+        Dict with verification results:
+        {
+            'verified': int,  # Total NFTs verified
+            'unequipped': int,  # NFTs unequipped due to ownership change
+            'errors': int,  # Verification errors (blockchain issues)
+            'details': list  # List of unequipped NFT details
+        }
+    """
+    from app.extensions import db
+    from app.models.nft import NFTInventory, PlayerNFTSlots, CompanyNFTSlots
+    from app.models import User, Company
+
+    results = {
+        'verified': 0,
+        'unequipped': 0,
+        'errors': 0,
+        'details': []
+    }
+
+    nft_contract = get_nft_contract()
+    if not nft_contract:
+        logger.warning("[NFT Ownership Check] NFT contract not configured, skipping verification")
+        return results
+
+    # 1. Check Player NFT Slots
+    player_slots = db.session.scalars(db.select(PlayerNFTSlots)).all()
+
+    for slots in player_slots:
+        user = db.session.get(User, slots.user_id)
+        if not user:
+            continue
+
+        # Get user's wallet address
+        wallet_address = user.base_wallet_address or user.wallet_address
+        if not wallet_address:
+            continue
+
+        # Check each slot
+        for slot_num in [1, 2, 3]:
+            nft_id = getattr(slots, f'slot_{slot_num}_nft_id')
+            if not nft_id:
+                continue
+
+            nft = db.session.get(NFTInventory, nft_id)
+            if not nft:
+                continue
+
+            results['verified'] += 1
+
+            try:
+                # Verify on-chain ownership
+                is_owner = verify_nft_ownership(wallet_address, nft.token_id)
+
+                if not is_owner:
+                    # User no longer owns this NFT - unequip it
+                    logger.info(
+                        f"[NFT Ownership Check] User {user.id} ({user.username}) no longer owns "
+                        f"NFT #{nft.token_id} in slot {slot_num}. Unequipping."
+                    )
+
+                    # Clear the slot
+                    setattr(slots, f'slot_{slot_num}_nft_id', None)
+                    setattr(slots, f'slot_{slot_num}_last_modified', None)
+
+                    # Update NFT record
+                    nft.is_equipped = False
+                    nft.equipped_to_profile = False
+
+                    # Remove from user's inventory since they don't own it
+                    db.session.delete(nft)
+
+                    results['unequipped'] += 1
+                    results['details'].append({
+                        'type': 'player',
+                        'user_id': user.id,
+                        'username': user.username,
+                        'token_id': nft.token_id,
+                        'slot': slot_num,
+                        'nft_category': nft.category,
+                        'nft_tier': nft.tier
+                    })
+
+            except Exception as e:
+                logger.error(f"[NFT Ownership Check] Error checking NFT #{nft.token_id}: {e}")
+                results['errors'] += 1
+
+    # 2. Check Company NFT Slots
+    company_slots = db.session.scalars(db.select(CompanyNFTSlots)).all()
+
+    for slots in company_slots:
+        company = db.session.get(Company, slots.company_id)
+        if not company or not company.owner:
+            continue
+
+        # Get company owner's wallet address
+        wallet_address = company.owner.base_wallet_address or company.owner.wallet_address
+        if not wallet_address:
+            continue
+
+        # Check each slot
+        for slot_num in [1, 2, 3]:
+            nft_id = getattr(slots, f'slot_{slot_num}_nft_id')
+            if not nft_id:
+                continue
+
+            nft = db.session.get(NFTInventory, nft_id)
+            if not nft:
+                continue
+
+            results['verified'] += 1
+
+            try:
+                # Verify on-chain ownership
+                is_owner = verify_nft_ownership(wallet_address, nft.token_id)
+
+                if not is_owner:
+                    # Owner no longer has this NFT - unequip it
+                    logger.info(
+                        f"[NFT Ownership Check] Company {company.id} ({company.name}) owner no longer owns "
+                        f"NFT #{nft.token_id} in slot {slot_num}. Unequipping."
+                    )
+
+                    # Clear the slot
+                    setattr(slots, f'slot_{slot_num}_nft_id', None)
+                    setattr(slots, f'slot_{slot_num}_last_modified', None)
+
+                    # Update NFT record
+                    nft.is_equipped = False
+                    nft.equipped_to_company_id = None
+
+                    # Remove from inventory since they don't own it
+                    db.session.delete(nft)
+
+                    results['unequipped'] += 1
+                    results['details'].append({
+                        'type': 'company',
+                        'company_id': company.id,
+                        'company_name': company.name,
+                        'owner_id': company.owner.id,
+                        'token_id': nft.token_id,
+                        'slot': slot_num,
+                        'nft_category': nft.category,
+                        'nft_tier': nft.tier
+                    })
+
+            except Exception as e:
+                logger.error(f"[NFT Ownership Check] Error checking company NFT #{nft.token_id}: {e}")
+                results['errors'] += 1
+
+    # Commit all changes
+    if results['unequipped'] > 0:
+        db.session.commit()
+        logger.info(
+            f"[NFT Ownership Check] Completed: {results['verified']} verified, "
+            f"{results['unequipped']} unequipped, {results['errors']} errors"
+        )
+
+    return results
 
 
 def verify_nft_upgrade_transaction(tx_hash: str, expected_upgrader: str, expected_burn_token_ids: list) -> Optional[Dict]:

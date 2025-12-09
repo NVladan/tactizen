@@ -1,0 +1,546 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Active Battles - Tactizen{% endblock %}
+
+{% block head_extra %}
+{% include '_dashboard_styles.html' %}
+<style>
+    .battles-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title i {
+        color: #dc2626;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        font-size: 1rem;
+    }
+
+    .battles-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .battle-card {
+        background: linear-gradient(135deg, rgba(30, 35, 45, 0.95) 0%, rgba(20, 25, 35, 0.95) 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(100, 116, 139, 0.2);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .battle-card:hover {
+        border-color: rgba(220, 38, 38, 0.4);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .battle-card.can-fight {
+        border-left: 4px solid #22c55e;
+    }
+
+    .battle-card.spectate-only {
+        border-left: 4px solid #8b5cf6;
+    }
+
+    .battle-card-header {
+        background: url('/static/images/battle.png') center / cover no-repeat;
+        position: relative;
+        padding: 1.5rem;
+        min-height: 120px;
+    }
+
+    .battle-card-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.7) 100%);
+    }
+
+    .battle-card-header > * {
+        position: relative;
+    }
+
+    .region-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+    }
+
+    .region-name i {
+        margin-right: 0.5rem;
+        color: #dc2626;
+    }
+
+    .countries-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .country-flag {
+        height: 24px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .vs-badge {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .round-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        color: #f59e0b;
+        font-weight: 600;
+    }
+
+    .battle-card-body {
+        padding: 1.25rem;
+    }
+
+    .battle-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .battle-stat {
+        text-align: center;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .battle-stat-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .battle-stat-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+    }
+
+    .round-score {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+    }
+
+    .round-score .attacker-score {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #dc2626;
+    }
+
+    .round-score .defender-score {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #22c55e;
+    }
+
+    .round-score .score-separator {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .battle-card-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-spectate {
+        flex: 1;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        color: #a78bfa;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .btn-spectate:hover {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%);
+        color: #c4b5fd;
+    }
+
+    .btn-join {
+        flex: 1;
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        border: none;
+        color: #ffffff;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .btn-join:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+        color: #ffffff;
+    }
+
+    .your-side-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        margin-left: 0.5rem;
+    }
+
+    .your-side-badge.attacker {
+        background: rgba(220, 38, 38, 0.2);
+        color: #dc2626;
+    }
+
+    .your-side-badge.defender {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    /* No battles message */
+    .no-battles {
+        text-align: center;
+        padding: 3rem;
+        background: rgba(30, 35, 45, 0.5);
+        border-radius: 16px;
+        border: 1px dashed rgba(100, 116, 139, 0.3);
+    }
+
+    .no-battles i {
+        font-size: 3rem;
+        color: rgba(100, 116, 139, 0.4);
+        margin-bottom: 1rem;
+    }
+
+    .no-battles h3 {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 0.5rem;
+    }
+
+    .no-battles p {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Recent/Ended battles */
+    .recent-battles-section {
+        margin-top: 2rem;
+    }
+
+    .recent-battles-list {
+        background: rgba(30, 35, 45, 0.5);
+        border-radius: 12px;
+        border: 1px solid rgba(100, 116, 139, 0.2);
+        overflow: hidden;
+    }
+
+    .recent-battle-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(100, 116, 139, 0.1);
+        transition: background 0.3s ease;
+    }
+
+    .recent-battle-item:last-child {
+        border-bottom: none;
+    }
+
+    .recent-battle-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .recent-battle-info {
+        flex: 1;
+    }
+
+    .recent-battle-region {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 0.25rem;
+    }
+
+    .recent-battle-countries {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .recent-battle-result {
+        padding: 0.3rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .recent-battle-result.attacker-won {
+        background: rgba(220, 38, 38, 0.2);
+        color: #dc2626;
+    }
+
+    .recent-battle-result.defender-won {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .recent-battle-result.draw {
+        background: rgba(100, 116, 139, 0.2);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Resistance war indicator */
+    .resistance-badge {
+        background: rgba(139, 92, 246, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        color: #a78bfa;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .battles-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .battle-stats {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .battle-stat-value {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+{% include '_dashboard_wrapper.html' %}
+
+<div class="battles-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-crosshairs"></i> Active Battles
+        </h1>
+        <a href="{{ url_for('main.wars_list') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-flag me-2"></i>View All Wars
+        </a>
+    </div>
+
+    {% if battles_info %}
+    <div class="battles-grid">
+        {% for info in battles_info %}
+        <div class="battle-card {% if info.can_fight %}can-fight{% else %}spectate-only{% endif %}">
+            <div class="battle-card-header">
+                <div class="round-badge">
+                    <i class="fas fa-bolt me-1"></i>Round {{ info.battle.current_round }}/3
+                </div>
+                <div class="region-name">
+                    <i class="fas fa-map-marker-alt"></i>{{ info.battle.region.name }}
+                    {% if info.battle.war.is_resistance_war %}
+                    <span class="resistance-badge"><i class="fas fa-fist-raised"></i> Resistance</span>
+                    {% endif %}
+                </div>
+                <div class="countries-info">
+                    {% if info.battle.war.attacker_country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' + info.battle.war.attacker_country.flag_code + '.png') }}"
+                         alt="{{ info.battle.war.attacker_country.name }}" class="country-flag"
+                         title="{{ info.battle.war.attacker_country.name }}">
+                    {% endif %}
+                    <span class="vs-badge">VS</span>
+                    {% if info.battle.war.defender_country.flag_code %}
+                    <img src="{{ url_for('static', filename='images/country-flags/' + info.battle.war.defender_country.flag_code + '.png') }}"
+                         alt="{{ info.battle.war.defender_country.name }}" class="country-flag"
+                         title="{{ info.battle.war.defender_country.name }}">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="battle-card-body">
+                <div class="round-score">
+                    <span class="attacker-score">{{ info.battle.attacker_rounds_won }}</span>
+                    <span class="score-separator">-</span>
+                    <span class="defender-score">{{ info.battle.defender_rounds_won }}</span>
+                </div>
+                <div class="battle-stats">
+                    <div class="battle-stat">
+                        <div class="battle-stat-value">{{ info.participant_count }}</div>
+                        <div class="battle-stat-label">Fighters</div>
+                    </div>
+                    <div class="battle-stat">
+                        <div class="battle-stat-value">{{ "{:,.0f}".format(info.total_damage) }}</div>
+                        <div class="battle-stat-label">Damage</div>
+                    </div>
+                    <div class="battle-stat">
+                        <div class="battle-stat-value">
+                            {% if info.current_round and info.current_round.ends_at %}
+                            <span class="round-countdown" data-ends="{{ info.current_round.ends_at.isoformat() }}Z">--:--</span>
+                            {% else %}
+                            --:--
+                            {% endif %}
+                        </div>
+                        <div class="battle-stat-label">Round Ends</div>
+                    </div>
+                </div>
+                <div class="battle-card-actions">
+                    <a href="{{ url_for('main.battle_spectate', battle_id=info.battle.id) }}" class="btn-spectate">
+                        <i class="fas fa-eye me-1"></i>Spectate
+                    </a>
+                    {% if info.can_fight %}
+                    <a href="{{ url_for('main.battle_screen', battle_id=info.battle.id) }}" class="btn-join">
+                        <i class="fas fa-fist-raised me-1"></i>Fight!
+                        <span class="your-side-badge {{ info.user_side }}">{{ info.user_side|upper }}</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-battles">
+        <i class="fas fa-peace"></i>
+        <h3>No Active Battles</h3>
+        <p>Peace reigns across the world... for now. Check back later for new conflicts!</p>
+    </div>
+    {% endif %}
+
+    {% if recent_battles %}
+    <div class="recent-battles-section">
+        <h2 class="section-title">
+            <i class="fas fa-history text-muted"></i> Recently Ended Battles
+        </h2>
+        <div class="recent-battles-list">
+            {% for battle in recent_battles %}
+            <div class="recent-battle-item">
+                <div class="recent-battle-info">
+                    <div class="recent-battle-region">
+                        {{ battle.region.name }}
+                        {% if battle.war.is_resistance_war %}
+                        <span class="resistance-badge"><i class="fas fa-fist-raised"></i></span>
+                        {% endif %}
+                    </div>
+                    <div class="recent-battle-countries">
+                        {{ battle.war.attacker_country.name }} vs {{ battle.war.defender_country.name }}
+                        &bull;
+                        {% if battle.ended_at %}
+                        Ended {{ ((now - battle.ended_at).total_seconds() / 3600)|int }}h ago
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="recent-battle-result {% if battle.attacker_rounds_won > battle.defender_rounds_won %}attacker-won{% elif battle.defender_rounds_won > battle.attacker_rounds_won %}defender-won{% else %}draw{% endif %}">
+                    {% if battle.attacker_rounds_won > battle.defender_rounds_won %}
+                    Attacker Won {{ battle.attacker_rounds_won }}-{{ battle.defender_rounds_won }}
+                    {% elif battle.defender_rounds_won > battle.attacker_rounds_won %}
+                    Defender Won {{ battle.defender_rounds_won }}-{{ battle.attacker_rounds_won }}
+                    {% else %}
+                    Draw {{ battle.attacker_rounds_won }}-{{ battle.defender_rounds_won }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% include '_dashboard_wrapper_end.html' %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update all round countdowns
+    function updateCountdowns() {
+        document.querySelectorAll('.round-countdown').forEach(function(el) {
+            const endsAt = new Date(el.dataset.ends);
+            const now = new Date();
+            const diff = endsAt - now;
+
+            if (diff <= 0) {
+                el.textContent = '00:00';
+            } else {
+                const minutes = Math.floor(diff / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+
+                if (minutes >= 60) {
+                    const hours = Math.floor(minutes / 60);
+                    const mins = minutes % 60;
+                    el.textContent = `${hours}h ${mins}m`;
+                } else {
+                    el.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }
+        });
+    }
+
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+});
+</script>
+{% endblock %}

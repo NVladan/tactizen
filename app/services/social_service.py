@@ -154,10 +154,13 @@ class SocialService:
         if not referral.is_pending:
             return False  # Already completed or cancelled
 
-        # Award gold to referrer (increased from 5 to 10) with row-level locking
+        # Award gold to referrer (base 10, with Gold Rush event multiplier)
         referrer = referral.referrer
-        gold_amount = Decimal('10.0')
+        from app.models.game_event import GameEvent
         from app.services.currency_service import CurrencyService
+        gold_multiplier = GameEvent.get_effective_multiplier('gold_drop_multiplier')
+        base_gold = 10.0
+        gold_amount = Decimal(str(int(base_gold * gold_multiplier)))
         success, message, _ = CurrencyService.add_gold(
             referrer.id, gold_amount, f'Referral bonus for user {user.id}'
         )

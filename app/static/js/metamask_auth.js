@@ -67,7 +67,8 @@ window.isWalletConnecting = window.isWalletConnecting || false;
                 if (typeof showWarning === 'function') {
                     showWarning('Please install MetaMask to connect your wallet.');
                 } else {
-                    alert('Please install MetaMask to connect your wallet.');
+                    // Show Bootstrap modal instead of alert
+                    showBootstrapModal('MetaMask Required', 'Please install MetaMask to connect your wallet.', 'warning');
                 }
                 return; // Stop execution if no provider
             }
@@ -79,7 +80,8 @@ window.isWalletConnecting = window.isWalletConnecting || false;
                  if (typeof showError === 'function') {
                      showError('A required library (ethers.js) failed to load. Please refresh the page or check your connection.');
                  } else {
-                     alert('A required library (ethers.js) failed to load. Please refresh the page or check your connection.');
+                     // Show Bootstrap modal instead of alert
+                     showBootstrapModal('Library Error', 'A required library (ethers.js) failed to load. Please refresh the page or check your connection.', 'danger');
                  }
                  return; // Stop execution if library missing
             }
@@ -143,13 +145,16 @@ window.isWalletConnecting = window.isWalletConnecting || false;
 
                 updateWalletStatus('Verifying...');
 
+                // Get CSRF token from meta tag
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
                 // 4. Send address and signature to backend for verification
                 const verifyResponse = await fetch('/auth/verify_signature', { // Ensure URL is correct
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                         // Add CSRF token header IF your app uses session-based CSRF for POST
-                         // 'X-CSRFToken': getCsrfToken() // Implement if needed
+                        'X-CSRFToken': csrfToken
                     },
                     body: JSON.stringify({
                         address: signerAddress,
@@ -235,3 +240,45 @@ window.isWalletConnecting = window.isWalletConnecting || false;
     //     const csrfInput = document.querySelector('input[name="csrf_token"]'); // Adjust selector if needed
     //     return csrfInput ? csrfInput.value : null;
     // }
+
+    // Helper function to show Bootstrap modals instead of native alerts
+    function showBootstrapModal(title, message, type = 'info') {
+        const modalId = 'dynamicAlertModal';
+        // Remove existing modal if present
+        const existingModal = document.getElementById(modalId);
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const iconClass = {
+            'success': 'fa-check-circle text-success',
+            'warning': 'fa-exclamation-triangle text-warning',
+            'danger': 'fa-times-circle text-danger',
+            'info': 'fa-info-circle text-info'
+        }[type] || 'fa-info-circle text-info';
+
+        const modalHtml = `
+            <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-dark text-light">
+                        <div class="modal-header border-secondary">
+                            <h5 class="modal-title"><i class="fas ${iconClass} me-2"></i>${title}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">${message}</div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modalEl = document.getElementById(modalId);
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+            // Clean up modal element after it's hidden
+            modalEl.addEventListener('hidden.bs.modal', () => modalEl.remove());
+        }
+    }

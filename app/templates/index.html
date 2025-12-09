@@ -1204,8 +1204,8 @@
                 this.disabled = true;
 
                 try {
-                    // Horizen L3 Testnet configuration
-                    const chainId = '0x28751c'; // 2651420 in hex
+                    // Horizen L3 Mainnet configuration
+                    const chainId = '0x6792'; // 26514 in hex
 
                     // First try to switch to the network (in case it's already added)
                     try {
@@ -1228,14 +1228,14 @@
                         method: 'wallet_addEthereumChain',
                         params: [{
                             chainId: chainId,
-                            chainName: 'Horizen L3 Testnet',
+                            chainName: 'Horizen L3',
                             nativeCurrency: {
                                 name: 'Ethereum',
                                 symbol: 'ETH',
                                 decimals: 18
                             },
-                            rpcUrls: ['https://horizen-testnet.rpc.caldera.xyz/http'],
-                            blockExplorerUrls: ['https://horizen-testnet.explorer.caldera.xyz']
+                            rpcUrls: ['https://horizen.calderachain.xyz/http'],
+                            blockExplorerUrls: ['https://horizen.calderaexplorer.xyz']
                         }],
                     });
 

@@ -38,11 +38,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (urlParams.has('registered') && urlParams.get('registered') === 'true') {
         // console.log(">>> 'registered=true' found! Preparing alert.");
-        // Use modal alert if available, fallback to native alert
+        // Use modal alert if available, fallback to Bootstrap toast/modal
         if (typeof showSuccess === 'function') {
             showSuccess('Registration successful! You can now log in.');
-        } else {
-            alert('Registration successful! You can now log in.');
+        } else if (typeof bootstrap !== 'undefined') {
+            // Create and show a Bootstrap toast notification
+            const toastHtml = `
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-success text-white">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong class="me-auto">Success</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">Registration successful! You can now log in.</div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = document.querySelector('.toast-container .toast');
+            if (toastEl) {
+                setTimeout(() => toastEl.closest('.toast-container').remove(), 5000);
+            }
         }
         // Clean the URL parameter
         if (window.history.replaceState) {

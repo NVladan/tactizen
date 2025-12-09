@@ -1158,14 +1158,13 @@
 
                     <!-- Impeachment Fields -->
                     <div class="form-section" id="IMPEACHMENT_fields">
+                        {% if current_president %}
                         <div class="info-box warning">
                             <div class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></div>
                             <div class="info-box-content">
                                 <strong>Impeachment</strong> will immediately remove the current president from office and replace them with your chosen successor. This is a serious action that requires congressional approval.
                             </div>
                         </div>
-
-                        {% if current_president %}
                         <div class="current-president-info">
                             <div class="current-president-avatar">
                                 <i class="fas fa-crown"></i>
@@ -1176,10 +1175,10 @@
                             </div>
                         </div>
                         {% else %}
-                        <div class="info-box warning">
-                            <div class="info-box-icon"><i class="fas fa-info-circle"></i></div>
-                            <div class="info-box-content">
-                                There is no current president to impeach.
+                        <div class="info-box info" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);">
+                            <div class="info-box-icon" style="color: #3b82f6;"><i class="fas fa-info-circle"></i></div>
+                            <div class="info-box-content" style="color: #93c5fd;">
+                                <strong>Presidential Appointment</strong> - There is currently no president. Use this to appoint a new president with congressional approval. The appointed president will serve until the next scheduled election (6th of the month).
                             </div>
                         </div>
                         {% endif %}

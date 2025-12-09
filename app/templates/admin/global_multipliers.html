@@ -1,0 +1,327 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-sliders-h"></i> Global Multipliers</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin
+        </a>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Game Balance Controls:</strong> Adjust these multipliers to balance the game economy.
+        Active events will stack with base multipliers. Values range from 0.1x to 10.0x.
+    </div>
+
+    {% if active_events %}
+    <div class="alert alert-warning mb-4">
+        <i class="fas fa-calendar-alt me-2"></i>
+        <strong>Active Events:</strong>
+        {% for event in active_events %}
+            <span class="badge bg-dark ms-2">
+                <i class="fas {{ event.icon }} me-1"></i>
+                {{ event.name }} ({{ event.multiplier }}x)
+            </span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Base Multipliers Form -->
+        <div class="col-lg-8">
+            <div class="card bg-dark mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i> Base Multipliers</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.global_multipliers') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="row">
+                            <!-- XP Multiplier -->
+                            <div class="col-md-6 mb-4">
+                                <div class="multiplier-card">
+                                    <label class="form-label">
+                                        <i class="fas fa-star text-warning me-2"></i>
+                                        Global XP Multiplier
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="xp_multiplier"
+                                               value="{{ multipliers.xp }}" min="0.1" max="10" step="0.1">
+                                        <span class="input-group-text">x</span>
+                                    </div>
+                                    <small class="text-muted">Affects all XP gains</small>
+                                    {% if effective_multipliers.xp != multipliers.xp %}
+                                    <div class="effective-value text-success">
+                                        <i class="fas fa-bolt"></i> Effective: {{ "%.1f"|format(effective_multipliers.xp) }}x
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Gold Drop Multiplier -->
+                            <div class="col-md-6 mb-4">
+                                <div class="multiplier-card">
+                                    <label class="form-label">
+                                        <i class="fas fa-coins text-warning me-2"></i>
+                                        Gold Drop Multiplier
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="gold_drop_multiplier"
+                                               value="{{ multipliers.gold_drop }}" min="0.1" max="10" step="0.1">
+                                        <span class="input-group-text">x</span>
+                                    </div>
+                                    <small class="text-muted">Gold from work, battles, etc.</small>
+                                    {% if effective_multipliers.gold_drop != multipliers.gold_drop %}
+                                    <div class="effective-value text-success">
+                                        <i class="fas fa-bolt"></i> Effective: {{ "%.1f"|format(effective_multipliers.gold_drop) }}x
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Production Speed Multiplier -->
+                            <div class="col-md-6 mb-4">
+                                <div class="multiplier-card">
+                                    <label class="form-label">
+                                        <i class="fas fa-industry text-success me-2"></i>
+                                        Production Speed
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="production_speed_multiplier"
+                                               value="{{ multipliers.production_speed }}" min="0.1" max="10" step="0.1">
+                                        <span class="input-group-text">x</span>
+                                    </div>
+                                    <small class="text-muted">Company production speed</small>
+                                    {% if effective_multipliers.production_speed != multipliers.production_speed %}
+                                    <div class="effective-value text-success">
+                                        <i class="fas fa-bolt"></i> Effective: {{ "%.1f"|format(effective_multipliers.production_speed) }}x
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Work XP Multiplier -->
+                            <div class="col-md-6 mb-4">
+                                <div class="multiplier-card">
+                                    <label class="form-label">
+                                        <i class="fas fa-briefcase text-info me-2"></i>
+                                        Work XP Multiplier
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="work_xp_multiplier"
+                                               value="{{ multipliers.work_xp }}" min="0.1" max="10" step="0.1">
+                                        <span class="input-group-text">x</span>
+                                    </div>
+                                    <small class="text-muted">XP from working</small>
+                                    {% if effective_multipliers.work_xp != multipliers.work_xp %}
+                                    <div class="effective-value text-success">
+                                        <i class="fas fa-bolt"></i> Effective: {{ "%.1f"|format(effective_multipliers.work_xp) }}x
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Training XP Multiplier -->
+                            <div class="col-md-6 mb-4">
+                                <div class="multiplier-card">
+                                    <label class="form-label">
+                                        <i class="fas fa-dumbbell text-primary me-2"></i>
+                                        Training XP Multiplier
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="training_xp_multiplier"
+                                               value="{{ multipliers.training_xp }}" min="0.1" max="10" step="0.1">
+                                        <span class="input-group-text">x</span>
+                                    </div>
+                                    <small class="text-muted">XP from training</small>
+                                    {% if effective_multipliers.training_xp != multipliers.training_xp %}
+                                    <div class="effective-value text-success">
+                                        <i class="fas fa-bolt"></i> Effective: {{ "%.1f"|format(effective_multipliers.training_xp) }}x
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Battle XP Multiplier -->
+                            <div class="col-md-6 mb-4">
+                                <div class="multiplier-card">
+                                    <label class="form-label">
+                                        <i class="fas fa-shield-alt text-danger me-2"></i>
+                                        Battle XP Multiplier
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="battle_xp_multiplier"
+                                               value="{{ multipliers.battle_xp }}" min="0.1" max="10" step="0.1">
+                                        <span class="input-group-text">x</span>
+                                    </div>
+                                    <small class="text-muted">XP from battles</small>
+                                    {% if effective_multipliers.battle_xp != multipliers.battle_xp %}
+                                    <div class="effective-value text-success">
+                                        <i class="fas fa-bolt"></i> Effective: {{ "%.1f"|format(effective_multipliers.battle_xp) }}x
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Travel Cost Multiplier -->
+                            <div class="col-md-6 mb-4">
+                                <div class="multiplier-card">
+                                    <label class="form-label">
+                                        <i class="fas fa-plane text-info me-2"></i>
+                                        Travel Cost Multiplier
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="travel_cost_multiplier"
+                                               value="{{ multipliers.travel_cost }}" min="0.1" max="10" step="0.1">
+                                        <span class="input-group-text">x</span>
+                                    </div>
+                                    <small class="text-muted">Lower = cheaper travel</small>
+                                    {% if effective_multipliers.travel_cost != multipliers.travel_cost %}
+                                    <div class="effective-value text-success">
+                                        <i class="fas fa-bolt"></i> Effective: {{ "%.1f"|format(effective_multipliers.travel_cost) }}x
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Company Tax Multiplier -->
+                            <div class="col-md-6 mb-4">
+                                <div class="multiplier-card">
+                                    <label class="form-label">
+                                        <i class="fas fa-percentage text-warning me-2"></i>
+                                        Company Tax Multiplier
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="company_tax_multiplier"
+                                               value="{{ multipliers.company_tax }}" min="0.1" max="10" step="0.1">
+                                        <span class="input-group-text">x</span>
+                                    </div>
+                                    <small class="text-muted">Lower = lower taxes</small>
+                                    {% if effective_multipliers.company_tax != multipliers.company_tax %}
+                                    <div class="effective-value text-success">
+                                        <i class="fas fa-bolt"></i> Effective: {{ "%.1f"|format(effective_multipliers.company_tax) }}x
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save Changes
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-undo me-1"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Presets -->
+        <div class="col-lg-4">
+            <div class="card bg-dark mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-magic me-2"></i> Quick Presets</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-success preset-btn" data-preset="normal">
+                            <i class="fas fa-balance-scale me-2"></i> Normal (1.0x All)
+                        </button>
+                        <button type="button" class="btn btn-outline-warning preset-btn" data-preset="boost">
+                            <i class="fas fa-rocket me-2"></i> Weekend Boost (1.5x XP/Gold)
+                        </button>
+                        <button type="button" class="btn btn-outline-danger preset-btn" data-preset="double">
+                            <i class="fas fa-fire me-2"></i> Double Everything (2.0x)
+                        </button>
+                        <button type="button" class="btn btn-outline-info preset-btn" data-preset="newbie">
+                            <i class="fas fa-baby me-2"></i> New Player Friendly
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-plus me-2"></i> Quick Links</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin.events') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar-alt me-2"></i> Manage Events
+                        </a>
+                        <a href="{{ url_for('admin.economy_dashboard') }}" class="btn btn-outline-success">
+                            <i class="fas fa-chart-pie me-2"></i> Economy Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .multiplier-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .multiplier-card .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .multiplier-card small {
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    .effective-value {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .input-group-text {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+</style>
+
+<script>
+document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const preset = this.dataset.preset;
+        const presets = {
+            'normal': {xp: 1.0, gold: 1.0, production: 1.0, work: 1.0, training: 1.0, battle: 1.0, travel: 1.0, tax: 1.0},
+            'boost': {xp: 1.5, gold: 1.5, production: 1.0, work: 1.5, training: 1.5, battle: 1.5, travel: 1.0, tax: 1.0},
+            'double': {xp: 2.0, gold: 2.0, production: 2.0, work: 2.0, training: 2.0, battle: 2.0, travel: 0.5, tax: 0.5},
+            'newbie': {xp: 2.0, gold: 1.5, production: 1.5, work: 2.0, training: 2.0, battle: 1.0, travel: 0.5, tax: 0.5}
+        };
+
+        const values = presets[preset];
+        if (values) {
+            document.querySelector('[name="xp_multiplier"]').value = values.xp;
+            document.querySelector('[name="gold_drop_multiplier"]').value = values.gold;
+            document.querySelector('[name="production_speed_multiplier"]').value = values.production;
+            document.querySelector('[name="work_xp_multiplier"]').value = values.work;
+            document.querySelector('[name="training_xp_multiplier"]').value = values.training;
+            document.querySelector('[name="battle_xp_multiplier"]').value = values.battle;
+            document.querySelector('[name="travel_cost_multiplier"]').value = values.travel;
+            document.querySelector('[name="company_tax_multiplier"]').value = values.tax;
+        }
+    });
+});
+</script>
+{% endblock %}

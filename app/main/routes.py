@@ -910,3 +910,28 @@ def leaderboards():
                           leaderboard_data=leaderboard_data,
                           user_position=user_position,
                           per_page=per_page)
+
+
+# --- Legal Pages ---
+@bp.route('/terms')
+def terms_of_service():
+    """Terms of Service page."""
+    return render_template('legal/terms.html', title='Terms of Service')
+
+
+@bp.route('/privacy')
+def privacy_policy():
+    """Privacy Policy page."""
+    return render_template('legal/privacy.html', title='Privacy Policy')
+
+
+@bp.route('/about')
+def about():
+    """About Tactizen page."""
+    return render_template('legal/about.html', title='About Tactizen')
+
+
+@bp.route('/faq')
+def faq():
+    """Frequently Asked Questions page."""
+    return render_template('legal/faq.html', title='FAQ')

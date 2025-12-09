@@ -1,0 +1,359 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-search-dollar"></i> Wealth Investigation</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin
+        </a>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Investigation Tool:</strong> Use this page to detect potential exploiters or multi-accounters by analyzing wealth distribution.
+        Look for suspicious patterns like new accounts with high gold, or multiple accounts from the same IP.
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link {% if tab == 'players' %}active{% endif %}"
+               href="{{ url_for('admin.wealth_investigation', tab='players', sort=sort_by, order=order, search=search) }}">
+                <i class="fas fa-users me-1"></i> Players
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if tab == 'companies' %}active{% endif %}"
+               href="{{ url_for('admin.wealth_investigation', tab='companies', sort='gold', order=order, search=search) }}">
+                <i class="fas fa-building me-1"></i> Companies
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if tab == 'military' %}active{% endif %}"
+               href="{{ url_for('admin.wealth_investigation', tab='military', sort='treasury', order=order, search=search) }}">
+                <i class="fas fa-shield-alt me-1"></i> Military Units
+            </a>
+        </li>
+    </ul>
+
+    <!-- Search and Sort -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.wealth_investigation') }}" class="row g-3">
+                <input type="hidden" name="tab" value="{{ tab }}">
+                <div class="col-md-5">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search }}"
+                           placeholder="{% if tab == 'players' %}Username, wallet, or IP address...{% elif tab == 'companies' %}Company name...{% else %}Unit name...{% endif %}">
+                </div>
+                <div class="col-md-3">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select class="form-select" id="sort" name="sort">
+                        {% if tab == 'players' %}
+                            <option value="gold" {% if sort_by == 'gold' %}selected{% endif %}>Gold (Highest)</option>
+                            <option value="level" {% if sort_by == 'level' %}selected{% endif %}>Level (Highest)</option>
+                            <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Created Date</option>
+                        {% elif tab == 'companies' %}
+                            <option value="gold" {% if sort_by == 'gold' %}selected{% endif %}>Gold Balance</option>
+                            <option value="currency" {% if sort_by == 'currency' %}selected{% endif %}>Local Currency</option>
+                            <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Created Date</option>
+                        {% else %}
+                            <option value="treasury" {% if sort_by == 'treasury' %}selected{% endif %}>Treasury</option>
+                            <option value="damage" {% if sort_by == 'damage' %}selected{% endif %}>Total Damage</option>
+                            <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Created Date</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="order" class="form-label">Order</label>
+                    <select class="form-select" id="order" name="order">
+                        <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
+                        <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if tab == 'players' and players %}
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Wallet</th>
+                            <th>Level</th>
+                            <th>Gold</th>
+                            <th>Local Currency</th>
+                            <th>Last IP</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for player in players %}
+                        <tr>
+                            <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td>
+                            <td>{{ player.id }}</td>
+                            <td>
+                                {% if player.username %}
+                                    <strong>{{ player.username }}</strong>
+                                {% else %}
+                                    <em class="text-muted">No username</em>
+                                {% endif %}
+                                {% if player.is_admin %}
+                                    <span class="badge bg-danger ms-1">Admin</span>
+                                {% endif %}
+                                {% if player.is_currently_banned %}
+                                    <span class="badge bg-warning ms-1">Banned</span>
+                                {% endif %}
+                            </td>
+                            <td><code>{{ player.wallet_address[:10] }}...</code></td>
+                            <td>{{ player.level }}</td>
+                            <td class="text-warning fw-bold">{{ "%.2f"|format(player.gold|float) }}</td>
+                            <td class="text-info">{{ "%.2f"|format(player_currencies.get(player.id, 0)) }}</td>
+                            <td>
+                                {% if player.last_ip %}
+                                    <a href="{{ url_for('admin.wealth_investigation', tab='players', search=player.last_ip) }}"
+                                       class="text-warning" title="Search for this IP">
+                                        <code>{{ player.last_ip }}</code>
+                                    </a>
+                                {% else %}
+                                    <em class="text-muted">N/A</em>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ player.created_at.strftime('%Y-%m-%d') }}</small></td>
+                            <td>
+                                <a href="{{ url_for('admin.user_activity', user_id=player.id) }}"
+                                   class="btn btn-sm btn-info" title="View Activity">
+                                    <i class="fas fa-chart-line"></i>
+                                </a>
+                                {% if player.username %}
+                                <a href="{{ url_for('main.view_profile', username=player.username) }}"
+                                   class="btn btn-sm btn-secondary" title="View Profile" target="_blank">
+                                    <i class="fas fa-user"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% elif tab == 'companies' and companies %}
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Owner</th>
+                            <th>Gold Balance</th>
+                            <th>Local Currency</th>
+                            <th>Country</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for company in companies %}
+                        <tr>
+                            <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td>
+                            <td>{{ company.id }}</td>
+                            <td><strong>{{ company.name }}</strong></td>
+                            <td><span class="badge bg-secondary">{{ company.company_type.value }}</span></td>
+                            <td>
+                                {% if company.owner %}
+                                    <a href="{{ url_for('admin.wealth_investigation', tab='players', search=company.owner.username or company.owner.wallet_address[:10]) }}"
+                                       class="text-info">
+                                        {{ company.owner.username or company.owner.wallet_address[:10] }}
+                                    </a>
+                                {% else %}
+                                    <em class="text-muted">Unknown</em>
+                                {% endif %}
+                            </td>
+                            <td class="text-warning fw-bold">{{ "%.2f"|format(company.gold_balance|float) }}</td>
+                            <td class="text-info">{{ "%.2f"|format(company.currency_balance|float) }}</td>
+                            <td>{{ company.country.name if company.country else 'N/A' }}</td>
+                            <td><small>{{ company.created_at.strftime('%Y-%m-%d') }}</small></td>
+                            <td>
+                                <a href="{{ url_for('company.view_company', company_id=company.id) }}"
+                                   class="btn btn-sm btn-secondary" title="View Company" target="_blank">
+                                    <i class="fas fa-building"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% elif tab == 'military' and military_units %}
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Commander</th>
+                            <th>Treasury</th>
+                            <th>Total Damage</th>
+                            <th>Members</th>
+                            <th>Country</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for unit in military_units %}
+                        <tr>
+                            <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td>
+                            <td>{{ unit.id }}</td>
+                            <td><strong>{{ unit.name }}</strong></td>
+                            <td>
+                                {% if unit.commander %}
+                                    <a href="{{ url_for('admin.wealth_investigation', tab='players', search=unit.commander.username or unit.commander.wallet_address[:10]) }}"
+                                       class="text-info">
+                                        {{ unit.commander.username or unit.commander.wallet_address[:10] }}
+                                    </a>
+                                {% else %}
+                                    <em class="text-muted">Unknown</em>
+                                {% endif %}
+                            </td>
+                            <td class="text-warning fw-bold">{{ "%.2f"|format(unit.treasury|float) }}</td>
+                            <td class="text-success">{{ "{:,}".format(unit.total_damage) }}</td>
+                            <td>{{ unit.member_count }}</td>
+                            <td>{{ unit.country.name if unit.country else 'N/A' }}</td>
+                            <td><small>{{ unit.created_at.strftime('%Y-%m-%d') }}</small></td>
+                            <td>
+                                <a href="{{ url_for('military_unit.detail', unit_id=unit.id) }}"
+                                   class="btn btn-sm btn-secondary" title="View Unit" target="_blank">
+                                    <i class="fas fa-shield-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No results found. Try adjusting your search criteria.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Pagination -->
+            {% if pagination and pagination.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.wealth_investigation', tab=tab, sort=sort_by, order=order, search=search, page=pagination.prev_num) if pagination.has_prev else '#' }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=3) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.wealth_investigation', tab=tab, sort=sort_by, order=order, search=search, page=page_num) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.wealth_investigation', tab=tab, sort=sort_by, order=order, search=search, page=pagination.next_num) if pagination.has_next else '#' }}">
+                            Next
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .nav-tabs {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-tabs .nav-link {
+        color: rgba(255, 255, 255, 0.7);
+        border: none;
+        border-bottom: 2px solid transparent;
+        padding: 0.75rem 1.25rem;
+        margin-bottom: -2px;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #ffffff;
+        border-bottom-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #3b82f6;
+        background: transparent;
+        border-bottom-color: #3b82f6;
+    }
+
+    .table-dark {
+        color: #ffffff;
+    }
+
+    .table-dark th {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        padding: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .table-dark td {
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+
+    .btn-group-sm > .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .pagination .page-link {
+        background: #2d344a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+
+    .pagination .page-link:hover {
+        background: #3b4357;
+        color: #ffffff;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background: #1e2433;
+        color: rgba(255, 255, 255, 0.4);
+    }
+</style>
+{% endblock %}

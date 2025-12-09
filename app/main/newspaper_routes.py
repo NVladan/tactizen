@@ -20,6 +20,7 @@ from app.main.newspaper_forms import (
 from app.exceptions import InsufficientFundsError
 from app.models.currency import log_transaction
 from app.security import InputSanitizer
+from app.services.achievement_service import AchievementService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -498,6 +499,10 @@ def subscribe_newspaper(newspaper_id):
             db.session.add(subscription)
             db.session.commit()
             flash(f'Subscribed to "{newspaper.name}" successfully!', 'success')
+
+            # Check publisher achievements for the newspaper owner
+            if newspaper.owner:
+                AchievementService.check_publisher_achievements(newspaper.owner)
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error subscribing to newspaper: {e}")

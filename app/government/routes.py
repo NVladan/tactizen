@@ -1179,16 +1179,13 @@ def propose_law():
                 flash('Replacement president must be a citizen of this country.', 'danger')
                 return redirect(url_for('government.propose_law'))
 
-            # Check there is a current president to impeach
+            # Check if there is a current president (optional - can also appoint when vacant)
             from app.models import CountryPresident
             current_president_record = db.session.scalar(
                 db.select(CountryPresident)
                 .where(CountryPresident.country_id == current_user.citizenship_id)
                 .where(CountryPresident.is_current == True)
             )
-            if not current_president_record:
-                flash('There is no current president to impeach.', 'danger')
-                return redirect(url_for('government.propose_law'))
 
             # Cannot impeach yourself (unless resigning and naming successor)
             # Actually this is allowed per user requirements (President can propose as resignation)
@@ -1196,9 +1193,14 @@ def propose_law():
             law_details = {
                 'replacement_user_id': replacement_user_id,
                 'replacement_username': replacement_user.username,
-                'current_president_id': current_president_record.user_id,
-                'current_president_username': current_president_record.user.username
             }
+
+            # Include current president info if there is one
+            if current_president_record:
+                law_details['current_president_id'] = current_president_record.user_id
+                law_details['current_president_username'] = current_president_record.user.username
+            else:
+                law_details['no_current_president'] = True
 
         elif law_type == LawType.EMBARGO:
             from app.models import Embargo

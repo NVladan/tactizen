@@ -7,6 +7,57 @@
     <hr>
 
     <div class="row">
+        <!-- Game Day Settings -->
+        <div class="col-md-6">
+            <div class="card mb-4" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="card-header" style="background: rgba(245, 158, 11, 0.2); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Game Day Counter</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-white-50">
+                        Set the game start date to track <strong>Day X</strong> in the header.
+                        Day 1 = the start date, Day 2 = the next day, etc.
+                    </p>
+
+                    <div class="p-3 mb-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 8px;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <strong>Current Game Day:</strong>
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.3); color: #f59e0b; font-size: 1rem;">
+                                <i class="fas fa-calendar me-1"></i>Day {{ game_day }}
+                            </span>
+                        </div>
+                        {% if game_start_date %}
+                        <small class="text-white-50">
+                            <i class="fas fa-flag me-1"></i>Started: {{ game_start_date }}
+                        </small>
+                        {% else %}
+                        <small class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>No start date set (defaulting to Day 1)
+                        </small>
+                        {% endif %}
+                    </div>
+
+                    <form method="POST" action="{{ url_for('admin.set_game_start_date') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark text-white border-secondary">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            <input type="date" name="start_date" class="form-control bg-dark text-white border-secondary"
+                                   value="{{ game_start_date or '' }}" required>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-1"></i>Set Start Date
+                            </button>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            <i class="fas fa-info-circle me-1"></i>Changing this will recalculate the current game day for all players.
+                        </small>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Starter Protection -->
         <div class="col-md-6">
             <div class="card mb-4" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);">
                 <div class="card-header" style="background: rgba(59, 130, 246, 0.2); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">

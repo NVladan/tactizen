@@ -50,12 +50,20 @@ class SkillService:
             logger.info(f"User {user.id} insufficient energy for training: {user.energy}/{energy_cost}")
             return False, f"Not enough energy (need {energy_cost}).", False, user.level
 
-        # Perform training
+        # Perform training with Training Boost event multiplier and global XP multiplier
         user.energy -= energy_cost
-        leveled_up, new_level = user.add_experience(GameConstants.MILITARY_TRAINING_XP_GAIN)
+        from app.models.game_event import GameEvent
+        training_multiplier = GameEvent.get_effective_multiplier('training_xp_multiplier')
+        global_xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
+        base_xp = GameConstants.MILITARY_TRAINING_XP_GAIN
+        xp_before_global = int(base_xp * training_multiplier)
+        # Total XP for display (both multipliers)
+        display_xp = int(base_xp * training_multiplier * global_xp_multiplier)
+        leveled_up, new_level = user.add_experience(xp_before_global)
         user.last_trained = datetime.utcnow()
 
-        skill_gain = float(GameConstants.MILITARY_TRAINING_SKILL_GAIN)
+        base_skill_gain = float(GameConstants.MILITARY_TRAINING_SKILL_GAIN)
+        skill_gain = base_skill_gain * training_multiplier
         if skill_type == 'infantry':
             user.skill_infantry += skill_gain
         elif skill_type == 'armoured':
@@ -63,8 +71,8 @@ class SkillService:
         elif skill_type == 'aviation':
             user.skill_aviation += skill_gain
 
-        logger.info(f"User {user.id} trained {skill_type}, gained {skill_gain} skill and {GameConstants.MILITARY_TRAINING_XP_GAIN} XP")
-        return True, f"Successfully trained {skill_type.capitalize()}! Gained {skill_gain} skill and {GameConstants.MILITARY_TRAINING_XP_GAIN} XP.", leveled_up, new_level
+        logger.info(f"User {user.id} trained {skill_type}, gained {skill_gain:.2f} skill and {display_xp} XP")
+        return True, f"Successfully trained {skill_type.capitalize()}! Gained {skill_gain:.2f} skill and {display_xp} XP.", leveled_up, new_level
 
     @staticmethod
     def study_skill(user, skill_type):
@@ -100,12 +108,20 @@ class SkillService:
             logger.info(f"User {user.id} insufficient energy for study: {user.energy}/{energy_cost}")
             return False, f"Not enough energy (need {energy_cost}).", False, user.level
 
-        # Perform study
+        # Perform study with Work Bonus event multiplier and global XP multiplier
         user.energy -= energy_cost
-        leveled_up, new_level = user.add_experience(GameConstants.WORK_TRAINING_XP_GAIN)
+        from app.models.game_event import GameEvent
+        work_multiplier = GameEvent.get_effective_multiplier('work_xp_multiplier')
+        global_xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
+        base_xp = GameConstants.WORK_TRAINING_XP_GAIN
+        xp_before_global = int(base_xp * work_multiplier)
+        # Total XP for display (both multipliers)
+        display_xp = int(base_xp * work_multiplier * global_xp_multiplier)
+        leveled_up, new_level = user.add_experience(xp_before_global)
         user.last_studied = datetime.utcnow()
 
-        skill_gain = float(GameConstants.WORK_TRAINING_SKILL_GAIN)
+        base_skill_gain = float(GameConstants.WORK_TRAINING_SKILL_GAIN)
+        skill_gain = base_skill_gain * work_multiplier
         skill_name_display = GameConstants.get_skill_display_name(skill_type)
 
         if skill_type == 'resource_extraction':
@@ -115,8 +131,8 @@ class SkillService:
         elif skill_type == 'construction':
             user.skill_construction += skill_gain
 
-        logger.info(f"User {user.id} studied {skill_type}, gained {skill_gain} skill and {GameConstants.WORK_TRAINING_XP_GAIN} XP")
-        return True, f"Successfully studied {skill_name_display}! Gained {skill_gain} skill and {GameConstants.WORK_TRAINING_XP_GAIN} XP.", leveled_up, new_level
+        logger.info(f"User {user.id} studied {skill_type}, gained {skill_gain:.2f} skill and {display_xp} XP")
+        return True, f"Successfully studied {skill_name_display}! Gained {skill_gain:.2f} skill and {display_xp} XP.", leveled_up, new_level
 
     @staticmethod
     def get_skill_for_company_type(user, company_type):
@@ -176,8 +192,14 @@ class SkillService:
         if user.energy < energy_cost:
             return False, f"Insufficient energy. Need {energy_cost}, have {user.energy:.1f}", 0.0, 0, False, user.level
 
-        # Calculate skill gain (0.01 per hour)
-        skill_gain = hours * 0.01
+        # Apply Training Boost event multiplier and global XP multiplier
+        from app.models.game_event import GameEvent
+        training_multiplier = GameEvent.get_effective_multiplier('training_xp_multiplier')
+        global_xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
+
+        # Calculate skill gain (0.01 per hour, with training multiplier only)
+        base_skill_gain = hours * 0.01
+        skill_gain = base_skill_gain * training_multiplier
 
         # Apply skill gain
         if skill_type == 'infantry':
@@ -196,8 +218,12 @@ class SkillService:
         allocation.training_skill = skill_type
 
         # Add experience and check for level up
-        xp_gain = GameConstants.MILITARY_TRAINING_XP_GAIN * hours
-        leveled_up, new_level = user.add_experience(xp_gain)
+        # Calculate XP with training multiplier, add_experience will apply global multiplier
+        base_xp = GameConstants.MILITARY_TRAINING_XP_GAIN * hours
+        xp_before_global = int(base_xp * training_multiplier)
+        # Total XP for display (both multipliers)
+        xp_gain = int(base_xp * training_multiplier * global_xp_multiplier)
+        leveled_up, new_level = user.add_experience(xp_before_global)
 
         # Track training streak for achievements
         from app.services.achievement_service import AchievementService
@@ -252,8 +278,14 @@ class SkillService:
         if user.energy < energy_cost:
             return False, f"Insufficient energy. Need {energy_cost}, have {user.energy:.1f}", 0.0, 0, False, user.level
 
-        # Calculate skill gain (0.01 per hour)
-        skill_gain = hours * 0.01
+        # Apply Work Bonus event multiplier and global XP multiplier
+        from app.models.game_event import GameEvent
+        work_multiplier = GameEvent.get_effective_multiplier('work_xp_multiplier')
+        global_xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
+
+        # Calculate skill gain (0.01 per hour, with work multiplier only)
+        base_skill_gain = hours * 0.01
+        skill_gain = base_skill_gain * work_multiplier
 
         # Apply skill gain
         if skill_type == 'resource_extraction':
@@ -272,8 +304,12 @@ class SkillService:
         allocation.studying_skill = skill_type
 
         # Add experience and check for level up
-        xp_gain = GameConstants.WORK_TRAINING_XP_GAIN * hours
-        leveled_up, new_level = user.add_experience(xp_gain)
+        # Calculate XP with work multiplier, add_experience will apply global multiplier
+        base_xp = GameConstants.WORK_TRAINING_XP_GAIN * hours
+        xp_before_global = int(base_xp * work_multiplier)
+        # Total XP for display (both multipliers)
+        xp_gain = int(base_xp * work_multiplier * global_xp_multiplier)
+        leveled_up, new_level = user.add_experience(xp_before_global)
 
         # Track study streak for achievements
         from app.services.achievement_service import AchievementService

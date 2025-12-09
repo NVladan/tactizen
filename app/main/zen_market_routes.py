@@ -176,7 +176,7 @@ def zen_market_buy_zen():
 
     db.session.commit()
 
-    explorer_url = os.getenv('BLOCK_EXPLORER', 'https://horizen-testnet.explorer.caldera.xyz')
+    explorer_url = os.getenv('BLOCK_EXPLORER', 'https://horizen.calderaexplorer.xyz')
     flash(f"Successfully purchased {zen_amount} ZEN for {total_gold_cost:.2f} Gold! ZEN tokens have been sent to your wallet. <a href='{explorer_url}/tx/{tx_hash}' target='_blank'>View transaction</a>", "success")
     return redirect(url_for('main.zen_market'))
 

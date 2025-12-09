@@ -80,7 +80,8 @@ def seed_achievements():
                 description='Visit all countries in the world',
                 category=AchievementCategory.EXPLORATION.value,
                 icon='fa-globe',
-                gold_reward=5,
+                gold_reward=20,
+                free_nft_reward=1,
                 requirement_value=1,
                 is_active=True
             ),
@@ -263,6 +264,69 @@ def seed_achievements():
                 gold_reward=50,
                 free_nft_reward=3,
                 requirement_value=100,
+                is_active=True
+            ),
+
+            # Combat Achievement - Freedom Fighter
+            Achievement(
+                code='freedom_fighter',
+                name='Freedom Fighter',
+                description='Start a resistance war and win it to liberate your homeland',
+                category=AchievementCategory.COMBAT.value,
+                icon='fa-fist-raised',
+                gold_reward=10,
+                free_nft_reward=0,
+                requirement_value=1,
+                is_active=True
+            ),
+
+            # Political Achievements
+            Achievement(
+                code='elected_president',
+                name='Mr. President',
+                description='Get elected as President of a country',
+                category=AchievementCategory.POLITICAL.value,
+                icon='fa-landmark',
+                gold_reward=5,
+                free_nft_reward=0,
+                requirement_value=1,
+                is_active=True
+            ),
+
+            Achievement(
+                code='elected_congress',
+                name='Congressman',
+                description='Get elected as a Congress member',
+                category=AchievementCategory.POLITICAL.value,
+                icon='fa-university',
+                gold_reward=5,
+                free_nft_reward=0,
+                requirement_value=1,
+                is_active=True
+            ),
+
+            # Media Achievements - Newspaper Subscribers
+            Achievement(
+                code='rising_publisher',
+                name='Rising Publisher',
+                description='Reach 100 subscribers on your newspaper',
+                category=AchievementCategory.MEDIA.value,
+                icon='fa-newspaper',
+                gold_reward=5,
+                free_nft_reward=0,
+                requirement_value=100,
+                is_active=True
+            ),
+
+            Achievement(
+                code='popular_publisher',
+                name='Popular Publisher',
+                description='Reach 1000 subscribers on your newspaper',
+                category=AchievementCategory.MEDIA.value,
+                icon='fa-star',
+                gold_reward=15,
+                free_nft_reward=1,
+                requirement_value=1000,
                 is_active=True
             ),
         ]

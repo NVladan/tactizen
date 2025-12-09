@@ -183,17 +183,23 @@ class AchievementService:
             logger.warning(f"User {user.id} already has achievement {achievement.code}")
             return False
 
+        # Calculate gold with Gold Rush event multiplier
+        from app.models.game_event import GameEvent
+        from app.services.currency_service import CurrencyService
+        gold_multiplier = GameEvent.get_effective_multiplier('gold_drop_multiplier')
+        base_gold = achievement.gold_reward
+        final_gold = int(base_gold * gold_multiplier)
+
         user_achievement = UserAchievement(
             user_id=user.id,
             achievement_id=achievement.id,
-            gold_awarded=achievement.gold_reward
+            gold_awarded=final_gold
         )
         db.session.add(user_achievement)
 
         # Award gold with row-level locking
-        from app.services.currency_service import CurrencyService
         success, message, _ = CurrencyService.add_gold(
-            user.id, Decimal(str(achievement.gold_reward)), f'Achievement reward: {achievement.code}'
+            user.id, Decimal(str(final_gold)), f'Achievement reward: {achievement.code}'
         )
         if not success:
             logger.error(f"Failed to add achievement gold to user {user.id}: {message}")
@@ -205,7 +211,7 @@ class AchievementService:
             user.free_nft_mints += nft_reward
 
         # Build reward message
-        rewards = [f'{achievement.gold_reward} gold']
+        rewards = [f'{final_gold} gold']
         if nft_reward > 0:
             rewards.append(f'{nft_reward} free NFT mint{"s" if nft_reward > 1 else ""}')
         reward_text = ' and '.join(rewards)
@@ -221,7 +227,7 @@ class AchievementService:
         )
         db.session.add(alert)
 
-        logger.info(f"User {user.id} unlocked achievement {achievement.code}, awarded {achievement.gold_reward} gold, {nft_reward} free NFT mints")
+        logger.info(f"User {user.id} unlocked achievement {achievement.code}, awarded {final_gold} gold (base: {base_gold}), {nft_reward} free NFT mints")
 
         return True
 
@@ -291,13 +297,22 @@ class AchievementService:
             # Use live value if available, otherwise use stored progress
             current_value = live_values.get(achievement.code, progress.current_value if progress else 0)
 
+            # For explorer achievement, use dynamic requirement (total countries in game)
+            if achievement.code == 'explorer_all_countries':
+                requirement = live_values.get('_total_countries', achievement.requirement_value)
+            else:
+                requirement = achievement.requirement_value
+
+            # Calculate progress percentage safely
+            progress_percentage = min(100, round(current_value / requirement * 100, 1)) if requirement > 0 else 0
+
             result.append({
                 'achievement': achievement,
                 'unlocked': user_achievement is not None,
                 'unlocked_at': user_achievement.unlocked_at if user_achievement else None,
                 'current_value': current_value,
-                'requirement': achievement.requirement_value,
-                'progress_percentage': min(100, round(current_value / achievement.requirement_value * 100, 1))
+                'requirement': requirement,
+                'progress_percentage': progress_percentage
             })
 
         return result
@@ -352,9 +367,11 @@ class AchievementService:
         total_countries = db.session.scalar(
             select(db.func.count(Country.id)).where(Country.is_deleted == False)
         ) or 1
-        countries_visited = len(user.visited_countries) if hasattr(user, 'visited_countries') else 0
+        countries_visited = user.visited_countries.count() if hasattr(user, 'visited_countries') else 0
         live_values['explorer'] = countries_visited
         live_values['explorer_all_countries'] = countries_visited
+        # Store total countries for dynamic requirement display
+        live_values['_total_countries'] = total_countries
 
         # Streak achievements - all tiers share the same streak from base achievement
         # Work streak (stored under hard_worker_7)
@@ -542,3 +559,83 @@ class AchievementService:
         achievement_unlocked |= AchievementService._check_and_unlock(user, 'battle_hero_100', battle_hero_count)
 
         return achievement_unlocked
+
+    @staticmethod
+    def check_freedom_fighter(user):
+        """
+        Award Freedom Fighter achievement when user wins a resistance war they started.
+        This should be called when a resistance war is won.
+        """
+        return AchievementService._check_and_unlock(user, 'freedom_fighter', 1)
+
+    @staticmethod
+    def check_elected_president(user):
+        """
+        Award achievement when user is elected as President.
+        This should be called when election results are processed.
+        """
+        return AchievementService._check_and_unlock(user, 'elected_president', 1)
+
+    @staticmethod
+    def check_elected_congress(user):
+        """
+        Award achievement when user is elected as Congress member.
+        This should be called when election results are processed.
+        """
+        return AchievementService._check_and_unlock(user, 'elected_congress', 1)
+
+    @staticmethod
+    def check_publisher_achievements(user):
+        """
+        Check if user has unlocked publisher achievements based on newspaper subscribers.
+        """
+        from app.models.newspaper import Newspaper, NewspaperSubscription
+
+        # Get user's newspaper (if they have one)
+        newspaper = db.session.scalar(
+            select(Newspaper).where(
+                Newspaper.owner_id == user.id,
+                Newspaper.is_deleted == False
+            )
+        )
+
+        if not newspaper:
+            return False
+
+        # Count subscribers
+        subscriber_count = db.session.scalar(
+            select(db.func.count(NewspaperSubscription.id)).where(
+                NewspaperSubscription.newspaper_id == newspaper.id
+            )
+        ) or 0
+
+        # Check publisher achievement tiers
+        achievement_unlocked = False
+        achievement_unlocked |= AchievementService._check_and_unlock(user, 'rising_publisher', subscriber_count)
+        achievement_unlocked |= AchievementService._check_and_unlock(user, 'popular_publisher', subscriber_count)
+
+        return achievement_unlocked
+
+    @staticmethod
+    def check_explorer_all_countries(user):
+        """
+        Check if user has visited all countries in the world.
+        """
+        from app.models.location import Country
+
+        # Count total non-deleted, visible countries
+        total_countries = db.session.scalar(
+            select(db.func.count(Country.id)).where(
+                Country.is_deleted == False,
+                Country.is_hidden == False
+            )
+        ) or 1
+
+        # Count countries visited by user
+        countries_visited = user.visited_countries.count() if hasattr(user, 'visited_countries') else 0
+
+        # Check if user has visited all countries
+        if countries_visited >= total_countries:
+            return AchievementService._check_and_unlock(user, 'explorer_all_countries', 1)
+
+        return False

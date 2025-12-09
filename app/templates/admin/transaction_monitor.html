@@ -1,0 +1,246 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-exchange-alt"></i> Transaction Monitor</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin
+        </a>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Real-time Monitoring:</strong> Track large transactions across the game to spot unusual activity.
+        Filter by type, minimum amount, and time window.
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.transaction_monitor') }}" class="row g-3">
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Transaction Type</label>
+                    <select class="form-select" id="type" name="type">
+                        <option value="all" {% if tx_type == 'all' %}selected{% endif %}>All Transactions</option>
+                        <option value="player" {% if tx_type == 'player' %}selected{% endif %}>Player Only</option>
+                        <option value="company" {% if tx_type == 'company' %}selected{% endif %}>Company Only</option>
+                        <option value="nft" {% if tx_type == 'nft' %}selected{% endif %}>NFT Trades Only</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="min_amount" class="form-label">Minimum Amount</label>
+                    <input type="number" class="form-control" id="min_amount" name="min_amount"
+                           value="{{ min_amount }}" min="0" step="100" placeholder="0">
+                </div>
+                <div class="col-md-3">
+                    <label for="hours" class="form-label">Time Window</label>
+                    <select class="form-select" id="hours" name="hours">
+                        <option value="1" {% if hours == 1 %}selected{% endif %}>Last 1 hour</option>
+                        <option value="6" {% if hours == 6 %}selected{% endif %}>Last 6 hours</option>
+                        <option value="24" {% if hours == 24 %}selected{% endif %}>Last 24 hours</option>
+                        <option value="72" {% if hours == 72 %}selected{% endif %}>Last 3 days</option>
+                        <option value="168" {% if hours == 168 %}selected{% endif %}>Last 7 days</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark border-info">
+                <div class="card-body text-center">
+                    <h5 class="text-info"><i class="fas fa-list"></i> Total Transactions</h5>
+                    <h2>{{ total }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-warning">
+                <div class="card-body text-center">
+                    <h5 class="text-warning"><i class="fas fa-clock"></i> Time Window</h5>
+                    <h2>{{ hours }}h</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-success">
+                <div class="card-body text-center">
+                    <h5 class="text-success"><i class="fas fa-filter"></i> Min Amount</h5>
+                    <h2>{{ "%.0f"|format(min_amount) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Type</th>
+                            <th>User/Entity</th>
+                            <th>Transaction</th>
+                            <th>Amount</th>
+                            <th>Currency</th>
+                            <th>Balance After</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                        <tr class="{% if tx.amount > 10000 %}table-warning{% elif tx.amount > 50000 %}table-danger{% endif %}">
+                            <td>
+                                <small>{{ tx.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                            </td>
+                            <td>
+                                {% if tx.type == 'player' %}
+                                    <span class="badge bg-primary">Player</span>
+                                {% elif tx.type == 'company' %}
+                                    <span class="badge bg-success">Company</span>
+                                {% elif tx.type == 'nft' %}
+                                    <span class="badge bg-purple" style="background-color: #8b5cf6;">NFT</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tx.type == 'player' and tx.user %}
+                                    <a href="{{ url_for('admin.user_activity', user_id=tx.user.id) }}" class="text-info">
+                                        {{ tx.user.username or tx.user.wallet_address[:10] }}
+                                    </a>
+                                {% elif tx.type == 'company' and tx.company %}
+                                    <strong>{{ tx.company.name }}</strong>
+                                    {% if tx.user %}
+                                        <br><small class="text-muted">by {{ tx.user.username or 'Unknown' }}</small>
+                                    {% endif %}
+                                {% elif tx.type == 'nft' %}
+                                    {% if tx.from_user %}
+                                        {{ tx.from_user.username or tx.from_user.wallet_address[:10] }}
+                                    {% endif %}
+                                    <i class="fas fa-arrow-right mx-1 text-muted"></i>
+                                    {% if tx.to_user %}
+                                        {{ tx.to_user.username or tx.to_user.wallet_address[:10] }}
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td><code>{{ tx.tx_type }}</code></td>
+                            <td class="text-warning fw-bold">{{ "{:,.2f}".format(tx.amount) }}</td>
+                            <td>
+                                {% if tx.currency == 'GOLD' %}
+                                    <span class="text-warning">GOLD</span>
+                                {% elif tx.currency == 'ZEN' %}
+                                    <span class="text-info">ZEN</span>
+                                {% else %}
+                                    <span class="text-success">{{ tx.currency }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tx.balance_after is defined %}
+                                    {{ "{:,.2f}".format(tx.balance_after) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ tx.description or '-' }}</small>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No transactions found matching your criteria.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.transaction_monitor', type=tx_type, min_amount=min_amount, hours=hours, page=page-1) if page > 1 else '#' }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p <= 3 or p > total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.transaction_monitor', type=tx_type, min_amount=min_amount, hours=hours, page=p) }}">
+                                    {{ p }}
+                                </a>
+                            </li>
+                        {% elif p == 4 or p == total_pages - 2 %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.transaction_monitor', type=tx_type, min_amount=min_amount, hours=hours, page=page+1) if page < total_pages else '#' }}">
+                            Next
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .table-dark th {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        padding: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .table-dark td {
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+
+    .table-warning {
+        background-color: rgba(245, 158, 11, 0.15) !important;
+    }
+
+    .table-danger {
+        background-color: rgba(239, 68, 68, 0.15) !important;
+    }
+
+    .pagination .page-link {
+        background: #2d344a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+
+    .pagination .page-link:hover {
+        background: #3b4357;
+        color: #ffffff;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background: #1e2433;
+        color: rgba(255, 255, 255, 0.4);
+    }
+</style>
+{% endblock %}

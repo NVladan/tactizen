@@ -6,6 +6,74 @@
     <p class="text-muted">Manage soft-deleted records and administrative tasks</p>
     <hr>
 
+    <!-- Maintenance Mode Section -->
+    <div class="card mb-4 {% if maintenance_active %}border-warning{% else %}border-secondary{% endif %}">
+        <div class="card-header d-flex justify-content-between align-items-center {% if maintenance_active %}bg-warning text-dark{% else %}bg-dark{% endif %}">
+            <h5 class="mb-0">
+                <i class="fas fa-hard-hat me-2"></i>
+                Maintenance Mode
+                {% if maintenance_active %}
+                    <span class="badge bg-danger ms-2">ACTIVE</span>
+                {% else %}
+                    <span class="badge bg-success ms-2">OFF</span>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body bg-dark">
+            {% if maintenance_active %}
+                <div class="alert alert-warning mb-3">
+                    <strong><i class="fas fa-exclamation-triangle me-1"></i> Maintenance mode is ACTIVE!</strong><br>
+                    Only admins can access the site. Regular users see the maintenance page.
+                </div>
+                {% if maintenance_reason %}
+                <p><strong>Current Message:</strong> {{ maintenance_reason }}</p>
+                {% endif %}
+                {% if maintenance_eta %}
+                <p><strong>ETA:</strong> {{ maintenance_eta }}</p>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <form method="POST" action="{{ url_for('admin.update_maintenance') }}" class="mb-3">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="text" name="reason" class="form-control form-control-sm" placeholder="Update message..." value="{{ maintenance_reason or '' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" name="eta" class="form-control form-control-sm" placeholder="ETA (e.g., 30 minutes)" value="{{ maintenance_eta or '' }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-sm btn-info w-100">Update</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#disableMaintenanceModal">
+                            <i class="fas fa-power-off me-1"></i> Disable Maintenance
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-muted mb-3">Enable maintenance mode to show a "Under Maintenance" page to all non-admin users.</p>
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <input type="text" id="maintenanceReason" class="form-control" placeholder="Reason (e.g., Deploying v2.0 update)" value="Scheduled maintenance in progress">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" id="maintenanceEta" class="form-control" placeholder="ETA (e.g., 15-30 minutes)">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#enableMaintenanceModal">
+                            <i class="fas fa-hard-hat me-1"></i> Enable Maintenance
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
             <h3>Management Tools</h3>
             <div class="row mt-3 mb-4">
                 <div class="col-md-3 mb-3">
@@ -41,6 +109,63 @@
                 <div class="col-md-3 mb-3">
                     <a href="{{ url_for('admin.elections') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white;">
                         <i class="fas fa-vote-yea"></i> Elections
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.wealth_investigation') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white;">
+                        <i class="fas fa-search-dollar"></i> Wealth Investigation
+                    </a>
+                </div>
+            </div>
+
+            <h3>Anti-Cheat & Economy</h3>
+            <div class="row mt-3 mb-4">
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.transaction_monitor') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                        <i class="fas fa-exchange-alt"></i> Transaction Monitor
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.suspicious_activity') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white;">
+                        <i class="fas fa-exclamation-triangle"></i> Suspicious Activity
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.economy_dashboard') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                        <i class="fas fa-chart-pie"></i> Economy Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <h3>Analytics & Reports</h3>
+            <div class="row mt-3 mb-4">
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.player_retention') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%); color: white;">
+                        <i class="fas fa-user-clock"></i> Player Retention
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.economy_reports') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%); color: white;">
+                        <i class="fas fa-file-invoice-dollar"></i> Economy Reports
+                    </a>
+                </div>
+            </div>
+
+            <h3>Game Balance & Control</h3>
+            <div class="row mt-3 mb-4">
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.global_multipliers') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white;">
+                        <i class="fas fa-sliders-h"></i> Global Multipliers
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.events') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); color: white;">
+                        <i class="fas fa-calendar-alt"></i> Event System
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('admin.country_management') }}" class="btn btn-lg btn-block w-100" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white;">
+                        <i class="fas fa-globe"></i> Country Management
                     </a>
                 </div>
             </div>
@@ -99,5 +224,155 @@
     .admin-container {
         padding: 2rem 0;
     }
+    .modal-content.maintenance-modal {
+        background: linear-gradient(145deg, #1a1f2e 0%, #0f1419 100%);
+        border-radius: 16px;
+    }
+    .modal-content.maintenance-modal.enable {
+        border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .modal-content.maintenance-modal.disable {
+        border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+    .modal-content.maintenance-modal .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem 1.5rem;
+    }
+    .modal-content.maintenance-modal .modal-title {
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .modal-content.maintenance-modal .modal-body {
+        padding: 1.5rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .modal-content.maintenance-modal .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem 1.5rem;
+    }
+    .modal-content.maintenance-modal .warning-box {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    .modal-content.maintenance-modal .success-box {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
 </style>
+
+<!-- Enable Maintenance Modal -->
+<div class="modal fade" id="enableMaintenanceModal" tabindex="-1" aria-labelledby="enableMaintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content maintenance-modal enable">
+            <div class="modal-header">
+                <h5 class="modal-title" id="enableMaintenanceModalLabel">
+                    <i class="fas fa-hard-hat me-2" style="color: #f59e0b;"></i>Enable Maintenance Mode
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to enable maintenance mode.</p>
+
+                <div class="warning-box">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #f59e0b;"></i>
+                    <strong>This will:</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; color: rgba(255,255,255,0.8);">
+                        <li>Block all regular users from accessing the site</li>
+                        <li>Show them a maintenance page with your message</li>
+                        <li>Only admins will be able to access the full site</li>
+                    </ul>
+                </div>
+
+                <div class="mt-3">
+                    <label class="form-label">Maintenance Message</label>
+                    <input type="text" id="modalMaintenanceReason" class="form-control bg-dark text-white" placeholder="e.g., Deploying v2.0 update">
+                </div>
+                <div class="mt-3">
+                    <label class="form-label">Estimated Time (optional)</label>
+                    <input type="text" id="modalMaintenanceEta" class="form-control bg-dark text-white" placeholder="e.g., 15-30 minutes">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('admin.toggle_maintenance') }}" id="enableMaintenanceForm" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="reason" id="formMaintenanceReason">
+                    <input type="hidden" name="eta" id="formMaintenanceEta">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-hard-hat me-1"></i>Enable Maintenance Mode
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disable Maintenance Modal -->
+<div class="modal fade" id="disableMaintenanceModal" tabindex="-1" aria-labelledby="disableMaintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content maintenance-modal disable">
+            <div class="modal-header">
+                <h5 class="modal-title" id="disableMaintenanceModalLabel">
+                    <i class="fas fa-power-off me-2" style="color: #22c55e;"></i>Disable Maintenance Mode
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to disable maintenance mode and make the site live.</p>
+
+                <div class="success-box">
+                    <i class="fas fa-check-circle me-2" style="color: #22c55e;"></i>
+                    <strong>This will:</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; color: rgba(255,255,255,0.8);">
+                        <li>Allow all users to access the site again</li>
+                        <li>Remove the maintenance page</li>
+                        <li>Site will be fully operational</li>
+                    </ul>
+                </div>
+
+                <p class="mt-3 text-muted" style="font-size: 0.9rem;">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Make sure all updates and migrations are complete before going live.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('admin.toggle_maintenance') }}" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-power-off me-1"></i>Go Live
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Copy values from input fields to modal form when opening
+document.getElementById('enableMaintenanceModal').addEventListener('show.bs.modal', function () {
+    var reason = document.getElementById('maintenanceReason');
+    var eta = document.getElementById('maintenanceEta');
+
+    if (reason) {
+        document.getElementById('modalMaintenanceReason').value = reason.value;
+    }
+    if (eta) {
+        document.getElementById('modalMaintenanceEta').value = eta.value;
+    }
+});
+
+// Copy modal values to hidden form fields before submit
+document.getElementById('enableMaintenanceForm').addEventListener('submit', function() {
+    document.getElementById('formMaintenanceReason').value = document.getElementById('modalMaintenanceReason').value;
+    document.getElementById('formMaintenanceEta').value = document.getElementById('modalMaintenanceEta').value;
+});
+</script>
+
 {% endblock %}

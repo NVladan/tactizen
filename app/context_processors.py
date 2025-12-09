@@ -37,11 +37,20 @@ def get_company_image(company_type, quality_level):
     else:
         return 'images/companies/placeholder.png'
 
+def get_game_day():
+    """Get current game day from settings."""
+    try:
+        from app.models.game_settings import GameSettings
+        return GameSettings.get_game_day()
+    except Exception:
+        return 1
+
 def utility_processor():
     return dict(
         current_year=datetime.utcnow().year,
         now_utc=datetime.utcnow(),
-        get_company_image=get_company_image
+        get_company_image=get_company_image,
+        game_day=get_game_day()
     )
 
 def inject_forms():

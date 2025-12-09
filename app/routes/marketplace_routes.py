@@ -131,6 +131,25 @@ def list_nft():
                 'error': 'Missing required fields'
             }), 400
 
+        # Validate price is positive and within reasonable bounds
+        try:
+            price_zen_decimal = Decimal(str(price_zen))
+            if price_zen_decimal <= 0:
+                return jsonify({
+                    'success': False,
+                    'error': 'Price must be greater than 0'
+                }), 400
+            if price_zen_decimal > Decimal('999999999.99'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Price exceeds maximum allowed value'
+                }), 400
+        except Exception:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid price format'
+            }), 400
+
         # Validate wallet
         if not current_user.wallet_address:
             return jsonify({
@@ -322,7 +341,26 @@ def calculate_fee():
                 'error': 'Price is required'
             }), 400
 
-        fee, seller_amount = calculate_marketplace_fee(Decimal(str(price_zen)))
+        # Validate price is positive and within reasonable bounds
+        try:
+            price_zen_decimal = Decimal(str(price_zen))
+            if price_zen_decimal <= 0:
+                return jsonify({
+                    'success': False,
+                    'error': 'Price must be greater than 0'
+                }), 400
+            if price_zen_decimal > Decimal('999999999.99'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Price exceeds maximum allowed value'
+                }), 400
+        except Exception:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid price format'
+            }), 400
+
+        fee, seller_amount = calculate_marketplace_fee(price_zen_decimal)
 
         return jsonify({
             'success': True,

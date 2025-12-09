@@ -836,3 +836,233 @@ def resistance_status(slug):
             'ends_at': active_battle.ends_at.isoformat() + 'Z'
         } if active_battle else None
     })
+
+
+# =============================================================================
+# BATTLE SPECTATOR MODE
+# =============================================================================
+
+@bp.route('/battles')
+@login_required
+def battles_list():
+    """Display list of all active battles for spectating."""
+    # Get all active battles globally
+    active_battles = Battle.query.filter_by(status=BattleStatus.ACTIVE).order_by(Battle.started_at.desc()).all()
+
+    # Prepare battle info with participant counts
+    battles_info = []
+    for battle in active_battles:
+        current_round = battle.get_current_round()
+
+        # Count unique participants
+        participant_count = db.session.query(BattleParticipation.user_id).filter(
+            BattleParticipation.battle_id == battle.id
+        ).distinct().count()
+
+        # Get total damage dealt
+        total_damage = db.session.query(db.func.sum(BattleDamage.damage)).filter(
+            BattleDamage.battle_id == battle.id
+        ).scalar() or 0
+
+        # Check if user can fight in this battle
+        can_fight, is_attacker, _ = BattleService.determine_user_side(current_user, battle)
+
+        battles_info.append({
+            'battle': battle,
+            'current_round': current_round,
+            'participant_count': participant_count,
+            'total_damage': total_damage,
+            'can_fight': can_fight,
+            'user_side': 'attacker' if is_attacker else 'defender' if can_fight else None
+        })
+
+    # Get recent ended battles (last 10)
+    recent_battles = Battle.query.filter(
+        Battle.status != BattleStatus.ACTIVE
+    ).order_by(Battle.ended_at.desc()).limit(10).all()
+
+    return render_template(
+        'battle/battles_list.html',
+        battles_info=battles_info,
+        recent_battles=recent_battles,
+        now=datetime.utcnow()
+    )
+
+
+@bp.route('/battle/<int:battle_id>/spectate')
+@login_required
+def battle_spectate(battle_id):
+    """Spectate a battle without participating."""
+    battle = Battle.query.get_or_404(battle_id)
+    current_round = battle.get_current_round()
+    war = battle.war
+
+    # Determine if user can fight (to show "Join Battle" button)
+    can_fight, is_attacker, side_message = BattleService.determine_user_side(current_user, battle)
+
+    # Check if this is a resistance war
+    is_resistance_war = war.is_resistance_war
+
+    # Get leaderboards for current round
+    leaderboards = {}
+    if current_round:
+        for wall_type in WallType:
+            leaderboards[wall_type.value] = {
+                'attacker': BattleService.get_battle_leaderboard(battle_id, wall_type, True, 5),
+                'defender': BattleService.get_battle_leaderboard(battle_id, wall_type, False, 5)
+            }
+
+    # Get recent damage records
+    recent_damage = BattleService.get_recent_damage(battle_id, 30)
+
+    # Calculate wall progress percentages
+    wall_progress = {}
+    if current_round:
+        for wall_type in WallType:
+            damage_diff = current_round.get_wall_damage(wall_type)
+            progress = max(-100, min(100, (damage_diff / 500) * 100))
+            wall_progress[wall_type.value] = {
+                'damage_diff': damage_diff,
+                'progress': progress,
+                'attacker_leads': damage_diff > 0,
+                'defender_leads': damage_diff < 0
+            }
+
+    # Get total participants and damage stats
+    total_participants = db.session.query(BattleParticipation.user_id).filter(
+        BattleParticipation.battle_id == battle.id
+    ).distinct().count()
+
+    total_damage = db.session.query(db.func.sum(BattleDamage.damage)).filter(
+        BattleDamage.battle_id == battle.id
+    ).scalar() or 0
+
+    attacker_participants = db.session.query(BattleParticipation.user_id).filter(
+        BattleParticipation.battle_id == battle.id,
+        BattleParticipation.is_attacker == True
+    ).distinct().count()
+
+    defender_participants = db.session.query(BattleParticipation.user_id).filter(
+        BattleParticipation.battle_id == battle.id,
+        BattleParticipation.is_attacker == False
+    ).distinct().count()
+
+    # Regional constructions info
+    from app.models import RegionalConstruction
+    hospital = RegionalConstruction.get_region_hospital(battle.region_id)
+    fortress = RegionalConstruction.get_region_fortress(battle.region_id)
+
+    fortress_info = None
+    if fortress and not is_resistance_war:
+        fortress_info = {
+            'quality': fortress.quality,
+            'damage_reduction': fortress.quality * 5
+        }
+
+    hospital_info = None
+    if hospital and not is_resistance_war:
+        hospital_info = {
+            'quality': hospital.quality,
+            'wellness_restore': hospital.quality * 10
+        }
+
+    return render_template(
+        'battle/battle_spectate.html',
+        battle=battle,
+        current_round=current_round,
+        war=war,
+        can_fight=can_fight,
+        is_attacker=is_attacker,
+        side_message=side_message,
+        leaderboards=leaderboards,
+        recent_damage=recent_damage,
+        wall_progress=wall_progress,
+        WallType=WallType,
+        total_participants=total_participants,
+        total_damage=total_damage,
+        attacker_participants=attacker_participants,
+        defender_participants=defender_participants,
+        fortress_info=fortress_info,
+        hospital_info=hospital_info,
+        is_resistance_war=is_resistance_war,
+        resistance_country=war.resistance_country if is_resistance_war else None,
+        occupying_country=war.defender_country if is_resistance_war else None
+    )
+
+
+@bp.route('/battle/<int:battle_id>/spectate/status')
+@login_required
+def battle_spectate_status(battle_id):
+    """AJAX endpoint for spectator live updates."""
+    battle = Battle.query.get_or_404(battle_id)
+    current_round = battle.get_current_round()
+
+    # Get wall progress
+    wall_progress = {}
+    if current_round:
+        for wall_type in WallType:
+            damage_diff = current_round.get_wall_damage(wall_type)
+            progress = max(-100, min(100, (damage_diff / 500) * 100))
+            wall_progress[wall_type.value] = {
+                'damage_diff': damage_diff,
+                'progress': progress,
+                'attacker_leads': damage_diff > 0,
+                'defender_leads': damage_diff < 0
+            }
+
+    # Get leaderboards
+    leaderboards = {}
+    if current_round:
+        for wall_type in WallType:
+            attacker_board = BattleService.get_battle_leaderboard(battle_id, wall_type, True, 5)
+            defender_board = BattleService.get_battle_leaderboard(battle_id, wall_type, False, 5)
+            leaderboards[wall_type.value] = {
+                'attacker': [{
+                    'username': p.user.username or p.user.wallet_address[:8],
+                    'damage': p.total_damage,
+                    'avatar': p.user.avatar_url
+                } for p in attacker_board],
+                'defender': [{
+                    'username': p.user.username or p.user.wallet_address[:8],
+                    'damage': p.total_damage,
+                    'avatar': p.user.avatar_url
+                } for p in defender_board]
+            }
+
+    # Get recent damage
+    recent_damage = BattleService.get_recent_damage(battle_id, 20)
+    damage_feed = [{
+        'user_id': d.user_id,
+        'username': d.user.username or d.user.wallet_address[:8],
+        'damage': d.damage,
+        'wall_type': d.wall_type.value,
+        'is_attacker': d.is_attacker,
+        'dealt_at': d.dealt_at.isoformat() + 'Z',
+        'avatar_url': d.user.avatar_url
+    } for d in recent_damage]
+
+    # Get participant counts
+    attacker_count = db.session.query(BattleParticipation.user_id).filter(
+        BattleParticipation.battle_id == battle.id,
+        BattleParticipation.is_attacker == True
+    ).distinct().count()
+
+    defender_count = db.session.query(BattleParticipation.user_id).filter(
+        BattleParticipation.battle_id == battle.id,
+        BattleParticipation.is_attacker == False
+    ).distinct().count()
+
+    return jsonify({
+        'battle_status': battle.status.value,
+        'round_number': current_round.round_number if current_round else None,
+        'round_status': current_round.status.value if current_round else None,
+        'attacker_rounds_won': battle.attacker_rounds_won,
+        'defender_rounds_won': battle.defender_rounds_won,
+        'wall_progress': wall_progress,
+        'leaderboards': leaderboards,
+        'recent_damage': damage_feed,
+        'attacker_participants': attacker_count,
+        'defender_participants': defender_count,
+        'ends_at': battle.ends_at.isoformat() + 'Z' if battle.ends_at else None,
+        'round_ends_at': current_round.ends_at.isoformat() + 'Z' if current_round and current_round.ends_at else None
+    })

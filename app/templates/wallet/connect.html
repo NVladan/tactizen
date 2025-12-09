@@ -72,13 +72,13 @@
                     <div class="mt-4 p-3" style="background: rgba(34, 197, 94, 0.1); border-radius: 8px;">
                         <h6><i class="fas fa-network-wired"></i> Network Requirements</h6>
                         <ul class="mb-0 small">
-                            <li><strong>Network:</strong> Horizen L3 Testnet (Chain ID: 2651420)</li>
-                            <li><strong>RPC URL:</strong> https://horizen-testnet.rpc.caldera.xyz/http</li>
+                            <li><strong>Network:</strong> Horizen L3 Mainnet (Chain ID: 26514)</li>
+                            <li><strong>RPC URL:</strong> https://horizen.calderachain.xyz/http</li>
                             <li><strong>Currency:</strong> ETH (for gas)</li>
-                            <li><strong>Block Explorer:</strong> https://horizen-testnet.explorer.caldera.xyz</li>
+                            <li><strong>Block Explorer:</strong> https://horizen.calderaexplorer.xyz</li>
                         </ul>
                         <button id="add-network-btn" class="btn btn-sm btn-outline-success mt-2">
-                            <i class="fas fa-plus"></i> Add Horizen L3 Testnet to MetaMask
+                            <i class="fas fa-plus"></i> Add Horizen L3 to MetaMask
                         </button>
                     </div>
 
@@ -88,7 +88,7 @@
                         <ol class="small">
                             <li>Install <a href="https://metamask.io" target="_blank">MetaMask</a> browser extension</li>
                             <li>Create or import a wallet</li>
-                            <li>Switch to Horizen L3 Testnet</li>
+                            <li>Switch to Horizen L3</li>
                             <li>Connect your wallet to Tactizen</li>
                             <li>Sign a message to verify ownership</li>
                             <li>Purchase NFTs with ZEN tokens!</li>
@@ -120,9 +120,9 @@ code {
 </style>
 
 <script>
-const EXPECTED_CHAIN_ID = '0x28751c'; // 2651420 in hex (Horizen L3 Testnet)
-const CHAIN_NAME = 'Horizen L3 Testnet';
-const RPC_URL = 'https://horizen-testnet.rpc.caldera.xyz/http';
+const EXPECTED_CHAIN_ID = '0x6792'; // 26514 in hex (Horizen L3 Mainnet)
+const CHAIN_NAME = 'Horizen L3';
+const RPC_URL = 'https://horizen.calderachain.xyz/http';
 
 let currentAccount = null;
 
@@ -192,20 +192,20 @@ async function switchToHorizenL3() {
                     method: 'wallet_addEthereumChain',
                     params: [{
                         chainId: EXPECTED_CHAIN_ID,
-                        chainName: 'Horizen L3 Testnet',
+                        chainName: 'Horizen L3',
                         nativeCurrency: {
                             name: 'Ethereum',
                             symbol: 'ETH',
                             decimals: 18
                         },
-                        rpcUrls: ['https://horizen-testnet.rpc.caldera.xyz/http'],
-                        blockExplorerUrls: ['https://horizen-testnet.explorer.caldera.xyz']
+                        rpcUrls: ['https://horizen.calderachain.xyz/http'],
+                        blockExplorerUrls: ['https://horizen.calderaexplorer.xyz']
                     }],
                 });
                 return true;
             } catch (addError) {
                 console.error('Error adding network:', addError);
-                showError('Error adding Horizen L3 Testnet network');
+                showError('Error adding Horizen L3 network');
                 return false;
             }
         }

@@ -1,0 +1,379 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-chart-pie"></i> Economy Dashboard</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Admin
+        </a>
+    </div>
+
+    <!-- Gold Supply Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Gold in Circulation</h6>
+                            <h2 class="text-warning mb-0">{{ "{:,.2f}".format(total_gold) }}</h2>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-25">
+                            <i class="fas fa-coins text-warning"></i>
+                        </div>
+                    </div>
+                    <hr class="my-3 opacity-25">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <small class="text-muted">In Player Wallets</small>
+                            <p class="mb-0 text-warning">{{ "{:,.2f}".format(total_player_gold) }}</p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">In Company Vaults</small>
+                            <p class="mb-0 text-warning">{{ "{:,.2f}".format(total_company_gold) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Players</h6>
+                            <h2 class="text-info mb-0">{{ "{:,}".format(total_players) }}</h2>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-25">
+                            <i class="fas fa-users text-info"></i>
+                        </div>
+                    </div>
+                    <hr class="my-3 opacity-25">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <small class="text-muted">Active (7d)</small>
+                            <p class="mb-0 text-success">{{ "{:,}".format(active_players) }}</p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Inactive</small>
+                            <p class="mb-0 text-danger">{{ "{:,}".format(total_players - active_players) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Companies</h6>
+                            <h2 class="text-success mb-0">{{ "{:,}".format(total_companies) }}</h2>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-25">
+                            <i class="fas fa-building text-success"></i>
+                        </div>
+                    </div>
+                    <hr class="my-3 opacity-25">
+                    <div class="text-center">
+                        <small class="text-muted">Avg Gold per Company</small>
+                        <p class="mb-0 text-warning">{{ "{:,.2f}".format(total_company_gold / total_companies if total_companies > 0 else 0) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Volume -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i> Transaction Volume (Gold)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="volume-stat">
+                                <h6 class="text-muted">Last 24 Hours</h6>
+                                <h3 class="text-warning">{{ "{:,.2f}".format(tx_24h) }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="volume-stat">
+                                <h6 class="text-muted">Last 7 Days</h6>
+                                <h3 class="text-warning">{{ "{:,.2f}".format(tx_7d) }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="volume-stat">
+                                <h6 class="text-muted">Last 30 Days</h6>
+                                <h3 class="text-warning">{{ "{:,.2f}".format(tx_30d) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wealth Distribution & ZEN Markets -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i> Wealth Distribution</h5>
+                </div>
+                <div class="card-body">
+                    {% for bracket, count in wealth_brackets.items() %}
+                    <div class="wealth-bracket mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ bracket }} Gold</span>
+                            <span class="text-muted">{{ count }} players</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            {% set percentage = (count / total_players * 100) if total_players > 0 else 0 %}
+                            <div class="progress-bar
+                                {% if '100k' in bracket %}bg-danger{% elif '10k' in bracket %}bg-warning{% elif '1k-' in bracket %}bg-info{% else %}bg-success{% endif %}"
+                                role="progressbar" style="width: {{ percentage }}%">
+                                {{ "%.1f"|format(percentage) }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-gem me-2"></i> ZEN Market Rates</h5>
+                </div>
+                <div class="card-body">
+                    {% if zen_markets %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Market ID</th>
+                                    <th>Buy Price (Gold/ZEN)</th>
+                                    <th>Sell Price (Gold/ZEN)</th>
+                                    <th>Price Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for market in zen_markets %}
+                                <tr>
+                                    <td>#{{ market.id }}</td>
+                                    <td class="text-danger">{{ "{:.2f}".format(market.buy_zen_price|float) }}</td>
+                                    <td class="text-success">{{ "{:.2f}".format(market.sell_zen_price|float) }}</td>
+                                    <td>
+                                        <span class="badge {% if market.price_level > 50 %}bg-danger{% elif market.price_level > 0 %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ market.price_level }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No ZEN markets configured.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Players & Companies -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2 text-warning"></i> Top 10 Richest Players</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Player</th>
+                                    <th>Gold</th>
+                                    <th>Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for player in top_players %}
+                                <tr>
+                                    <td>
+                                        {% if loop.index == 1 %}
+                                            <i class="fas fa-crown text-warning"></i>
+                                        {% elif loop.index == 2 %}
+                                            <i class="fas fa-medal text-secondary"></i>
+                                        {% elif loop.index == 3 %}
+                                            <i class="fas fa-medal" style="color: #cd7f32;"></i>
+                                        {% else %}
+                                            {{ loop.index }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.user_activity', user_id=player.id) }}" class="text-info">
+                                            {{ player.username or player.wallet_address[:10] }}
+                                        </a>
+                                        {% if player.is_admin %}
+                                            <span class="badge bg-danger ms-1">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-warning">{{ "{:,.2f}".format(player.gold|float) }}</td>
+                                    <td>{{ player.level }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-building me-2 text-success"></i> Top 10 Richest Companies</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Company</th>
+                                    <th>Gold</th>
+                                    <th>Owner</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for company in top_companies %}
+                                <tr>
+                                    <td>
+                                        {% if loop.index == 1 %}
+                                            <i class="fas fa-crown text-warning"></i>
+                                        {% elif loop.index == 2 %}
+                                            <i class="fas fa-medal text-secondary"></i>
+                                        {% elif loop.index == 3 %}
+                                            <i class="fas fa-medal" style="color: #cd7f32;"></i>
+                                        {% else %}
+                                            {{ loop.index }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ company.name }}</td>
+                                    <td class="text-warning">{{ "{:,.2f}".format(company.gold_balance|float) }}</td>
+                                    <td>
+                                        {% if company.owner %}
+                                            <a href="{{ url_for('admin.user_activity', user_id=company.owner.id) }}" class="text-info">
+                                                {{ company.owner.username or company.owner.wallet_address[:10] }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Currency by Country -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-globe me-2"></i> Currency in Circulation by Country</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Country</th>
+                                    <th>Currency Code</th>
+                                    <th>Player Holdings</th>
+                                    <th>Company Holdings</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for country in currency_by_country %}
+                                <tr>
+                                    <td><strong>{{ country.name }}</strong></td>
+                                    <td><code>{{ country.currency_code }}</code></td>
+                                    <td class="text-info">{{ "{:,.2f}".format(country.player_holdings|float if country.player_holdings else 0) }}</td>
+                                    <td class="text-success">{{ "{:,.2f}".format(country.company_holdings|float if country.company_holdings else 0) }}</td>
+                                    <td class="text-warning">
+                                        {{ "{:,.2f}".format((country.player_holdings|float if country.player_holdings else 0) + (country.company_holdings|float if country.company_holdings else 0)) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        padding: 2rem 0;
+    }
+
+    .stat-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .volume-stat {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+
+    .wealth-bracket .progress {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .wealth-bracket .progress-bar {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .table-dark {
+        margin-bottom: 0;
+    }
+
+    .table-dark th {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table-dark td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}

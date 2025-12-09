@@ -52,6 +52,7 @@
                             <th>Wallet</th>
                             <th>Level</th>
                             <th>Gold</th>
+                            <th>Last IP</th>
                             <th>Last Seen</th>
                             <th>Admin</th>
                             <th>Actions</th>
@@ -83,6 +84,13 @@
                                 {% endif %}
                             </td>
                             <td>{{ "%.2f"|format(player.gold|float) }}</td>
+                            <td>
+                                {% if player.last_ip %}
+                                    <code class="text-warning" title="Click to search for same IP" style="cursor: pointer;" onclick="window.location.href='{{ url_for('admin.players', search=player.last_ip) }}'">{{ player.last_ip }}</code>
+                                {% else %}
+                                    <em class="text-muted">N/A</em>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if player.last_seen %}
                                     <small>{{ player.last_seen.strftime('%Y-%m-%d %H:%M') }}</small>

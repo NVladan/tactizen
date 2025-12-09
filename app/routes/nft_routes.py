@@ -3,9 +3,10 @@ NFT Routes
 API endpoints for NFT management
 """
 import os
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request, render_template, current_app
 from flask_login import login_required, current_user
 
+from app import db
 from app.services.nft_service import NFTService
 from app.services.bonus_calculator import BonusCalculator
 from app.models.nft import NFTInventory, PlayerNFTSlots, CompanyNFTSlots, NFTMarketplace
@@ -26,7 +27,7 @@ def inventory_page():
         ZEN_TOKEN_ADDRESS=os.getenv('ZEN_TOKEN_ADDRESS'),
         TREASURY_ADDRESS=os.getenv('TREASURY_ADDRESS'),
         NFT_CONTRACT_ADDRESS=os.getenv('NFT_CONTRACT_ADDRESS'),
-        HORIZEN_L3_CHAIN_ID='0x28751c',  # 2651420 in hex
+        HORIZEN_L3_CHAIN_ID='0x6792',  # 26514 in hex
         NFT_METADATA_URIS=json.dumps(NFT_METADATA_URIS)
     )
 
@@ -34,15 +35,80 @@ def inventory_page():
 @nft_bp.route('/inventory', methods=['GET'])
 @login_required
 def get_inventory():
-    """Get user's NFT inventory"""
+    """Get user's NFT inventory
+
+    Query params:
+        type: Optional filter by 'player' or 'company'
+        equipped: 'true' to show only equipped NFTs
+        verify: 'true' to verify on-chain ownership and remove NFTs no longer owned
+    """
     nft_type = request.args.get('type')  # Optional: 'player' or 'company'
     equipped_only = request.args.get('equipped', 'false').lower() == 'true'
+    verify_ownership = request.args.get('verify', 'false').lower() == 'true'
 
     nfts = NFTService.get_user_nfts(
         user_id=current_user.id,
         nft_type=nft_type,
         equipped_only=equipped_only
     )
+
+    # Optional: Verify on-chain ownership and sync missing NFTs
+    removed_count = 0
+    added_count = 0
+    if verify_ownership:
+        from app.blockchain.nft_contract import verify_nft_ownership, sync_nfts_from_blockchain
+        from app.models.nft import NFTMarketplace as MP, NFTTradeHistory
+
+        wallet_address = current_user.base_wallet_address or current_user.wallet_address
+        if wallet_address:
+            # Step 1: Remove NFTs we have in DB but don't own on-chain
+            verified_nfts = []
+            for nft in nfts:
+                try:
+                    is_owner = verify_nft_ownership(wallet_address, nft.token_id)
+                    if is_owner:
+                        verified_nfts.append(nft)
+                    else:
+                        # User no longer owns this NFT - remove from database
+                        current_app.logger.info(
+                            f"[NFT Verify] User {current_user.id} no longer owns token #{nft.token_id}, removing"
+                        )
+                        # Clean up dependent records
+                        MP.query.filter_by(nft_id=nft.id).delete()
+                        NFTTradeHistory.query.filter_by(nft_id=nft.id).delete()
+                        # Unequip if equipped
+                        nft.is_equipped = False
+                        nft.equipped_to_profile = False
+                        nft.equipped_to_company_id = None
+                        db.session.delete(nft)
+                        removed_count += 1
+                except Exception as e:
+                    current_app.logger.error(f"[NFT Verify] Error checking token #{nft.token_id}: {e}")
+                    verified_nfts.append(nft)  # Keep on error
+
+            # Step 2: Sync any NFTs owned on-chain but missing from database
+            try:
+                existing_token_ids = {nft.token_id for nft in verified_nfts}
+                added_count = sync_nfts_from_blockchain(
+                    user_id=current_user.id,
+                    wallet_address=wallet_address,
+                    existing_token_ids=existing_token_ids
+                )
+                if added_count > 0:
+                    # Reload NFTs to include newly synced ones
+                    nfts = NFTService.get_user_nfts(
+                        user_id=current_user.id,
+                        nft_type=nft_type,
+                        equipped_only=equipped_only
+                    )
+                    verified_nfts = nfts
+                    current_app.logger.info(f"[NFT Verify] Synced {added_count} NFTs from blockchain")
+            except Exception as e:
+                current_app.logger.error(f"[NFT Verify] Error syncing from blockchain: {e}")
+
+            if removed_count > 0 or added_count > 0:
+                db.session.commit()
+            nfts = verified_nfts
 
     # Get IDs of NFTs currently listed on marketplace
     listed_nft_ids = set(
@@ -56,11 +122,17 @@ def get_inventory():
         nft_dict['is_listed'] = nft.id in listed_nft_ids
         nft_list.append(nft_dict)
 
-    return jsonify({
+    result = {
         'success': True,
         'nfts': nft_list,
         'count': len(nfts)
-    })
+    }
+
+    if verify_ownership:
+        result['verified'] = True
+        result['removed_count'] = removed_count
+
+    return jsonify(result)
 
 
 @nft_bp.route('/available/company', methods=['GET'])
@@ -367,6 +439,8 @@ def unequip_from_profile():
 @login_required
 def equip_to_company():
     """Equip NFT to company"""
+    from app.models.company import Company
+
     data = request.get_json()
 
     company_id = data.get('company_id')
@@ -378,6 +452,14 @@ def equip_to_company():
             'success': False,
             'error': 'Missing required fields: company_id, nft_id, and slot'
         }), 400
+
+    # SECURITY: Early ownership validation before calling service
+    company = Company.query.get(company_id)
+    if not company or company.owner_id != current_user.id:
+        return jsonify({
+            'success': False,
+            'error': 'Company not found or you do not own this company'
+        }), 403
 
     success, error = NFTService.equip_nft_to_company(
         user_id=current_user.id,
@@ -402,6 +484,8 @@ def equip_to_company():
 @login_required
 def unequip_from_company():
     """Unequip NFT from company"""
+    from app.models.company import Company
+
     data = request.get_json()
 
     company_id = data.get('company_id')
@@ -412,6 +496,14 @@ def unequip_from_company():
             'success': False,
             'error': 'Missing required fields: company_id and slot'
         }), 400
+
+    # SECURITY: Early ownership validation before calling service
+    company = Company.query.get(company_id)
+    if not company or company.owner_id != current_user.id:
+        return jsonify({
+            'success': False,
+            'error': 'Company not found or you do not own this company'
+        }), 403
 
     success, error = NFTService.unequip_nft_from_company(
         user_id=current_user.id,

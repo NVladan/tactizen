@@ -325,6 +325,9 @@ class NFTService:
         3. Backend verifies upgrade transaction succeeded
         4. Backend updates database (removes burned NFTs, adds new NFT)
 
+        IDEMPOTENT: If tx_hash was already processed, returns the existing NFT.
+        RECOVERY: If blockchain succeeded but DB failed, can be retried safely.
+
         Args:
             user_id: ID of the user
             wallet_address: User's wallet address
@@ -336,13 +339,28 @@ class NFTService:
         """
         from app.blockchain.nft_contract import verify_nft_upgrade_transaction
 
-        # Validate input
-        if len(nft_ids) != 3:
-            return None, "Must select exactly 3 NFTs to upgrade."
-
         # Validate transaction hash
         if not tx_hash:
             return None, "Missing upgrade transaction hash."
+
+        # IDEMPOTENCY CHECK: See if this tx_hash was already processed
+        existing_burn = NFTBurnHistory.query.filter_by(transaction_hash=tx_hash).first()
+        if existing_burn:
+            # Transaction already processed - return the minted NFT
+            existing_nft = NFTInventory.query.filter_by(
+                token_id=existing_burn.minted_nft_id,
+                user_id=user_id
+            ).first()
+            if existing_nft:
+                logger.info(f"[NFT Upgrade] Transaction {tx_hash} already processed, returning existing NFT #{existing_nft.token_id}")
+                return existing_nft, None
+            else:
+                # Burn record exists but NFT doesn't - unusual state, log and continue
+                logger.warning(f"[NFT Upgrade] Burn record exists for tx {tx_hash} but NFT {existing_burn.minted_nft_id} not found")
+
+        # Validate input
+        if len(nft_ids) != 3:
+            return None, "Must select exactly 3 NFTs to upgrade."
 
         # Get NFTs from database
         nfts = NFTInventory.query.filter(
@@ -350,8 +368,10 @@ class NFTService:
             NFTInventory.user_id == user_id
         ).all()
 
-        if len(nfts) != 3:
-            return None, "Invalid NFT selection. Must own all 3 NFTs."
+        # RECOVERY MODE: If NFTs already burned (not in DB), verify on blockchain and recover
+        if len(nfts) < 3:
+            logger.info(f"[NFT Upgrade] Only found {len(nfts)}/3 NFTs in database - checking blockchain for recovery")
+            return NFTService._recover_upgrade_from_blockchain(user_id, wallet_address, tx_hash)
 
         # Check all same tier
         tiers = [nft.tier for nft in nfts]
@@ -399,45 +419,223 @@ class NFTService:
         tier = upgrade_data['tier']
         bonus_value = upgrade_data['bonus_value']
 
+        # If blockchain returns 0 bonus, use config-based bonus value
+        if bonus_value == 0:
+            from app.blockchain.nft_config import get_nft_bonus_value
+            bonus_value = get_nft_bonus_value(nft_type, category, tier)
+            logger.info(f"[NFT Upgrade] Using config bonus value: {bonus_value}%")
+
         # Double-check burned IDs match
         if set(verified_burned_ids) != set(burn_token_ids):
             return None, "Burned token IDs mismatch between database and blockchain."
 
-        # Create new NFT in database with blockchain data
-        new_nft = NFTInventory(
-            user_id=user_id,
-            nft_type=nft_type,
-            category=category,
-            tier=tier,
-            bonus_value=bonus_value,
-            token_id=new_token_id,
-            contract_address=nfts[0].contract_address,  # Same contract as burned NFTs
-            acquired_via='upgrade',
-            metadata_uri=get_nft_metadata_uri(nft_type, category, tier)
-        )
+        # Get contract address before we start deleting
+        contract_address = nfts[0].contract_address if nfts else None
 
-        db.session.add(new_nft)
-        db.session.flush()  # Get new_nft.id
+        # DATABASE UPDATE - wrapped in try/except for safety
+        # At this point, blockchain transaction is CONFIRMED successful
+        # We MUST update the database, and if it fails, we have recovery mechanisms
+        try:
+            # Create new NFT in database with blockchain data
+            new_nft = NFTInventory(
+                user_id=user_id,
+                nft_type=nft_type,
+                category=category,
+                tier=tier,
+                bonus_value=bonus_value,
+                token_id=new_token_id,
+                contract_address=contract_address,
+                acquired_via='upgrade',
+                metadata_uri=get_nft_metadata_uri(nft_type, category, tier)
+            )
 
-        # Record burn history with transaction hash for audit trail
-        burn_record = NFTBurnHistory(
-            user_id=user_id,
-            burned_nft_ids=burn_token_ids,
-            minted_nft_id=new_token_id,
-            tier_from=current_tier,
-            tier_to=tier,
-            transaction_hash=tx_hash  # Store verified tx hash for audit
-        )
-        db.session.add(burn_record)
+            db.session.add(new_nft)
+            db.session.flush()  # Get new_nft.id
 
-        # Delete old NFTs from database (already burned on blockchain)
-        for nft in nfts:
-            db.session.delete(nft)
+            # Record burn history with transaction hash for audit trail
+            # This is CRITICAL for idempotency - allows us to detect already-processed tx
+            burn_record = NFTBurnHistory(
+                user_id=user_id,
+                burned_nft_ids=burn_token_ids,
+                minted_nft_id=new_token_id,
+                tier_from=current_tier,
+                tier_to=tier,
+                transaction_hash=tx_hash  # Store verified tx hash for audit
+            )
+            db.session.add(burn_record)
 
-        db.session.commit()
+            # Delete old NFTs from database (already burned on blockchain)
+            # First, delete any dependent records that reference these NFTs
+            for nft in nfts:
+                # Delete marketplace listings for this NFT
+                NFTMarketplace.query.filter_by(nft_id=nft.id).delete()
+                # Delete trade history for this NFT
+                NFTTradeHistory.query.filter_by(nft_id=nft.id).delete()
+                db.session.delete(nft)
 
-        logger.info(f"[NFT Upgrade] SUCCESS: User {user_id} upgraded tokens {burn_token_ids} to token {new_token_id} (Q{tier})")
-        return new_nft, None
+            db.session.commit()
+
+            logger.info(f"[NFT Upgrade] SUCCESS: User {user_id} upgraded tokens {burn_token_ids} to token {new_token_id} (Q{tier})")
+            return new_nft, None
+
+        except Exception as db_error:
+            db.session.rollback()
+            logger.error(f"[NFT Upgrade] DATABASE ERROR after blockchain success: {db_error}")
+            logger.error(f"[NFT Upgrade] TX {tx_hash} succeeded on blockchain but DB update failed!")
+            logger.error(f"[NFT Upgrade] Recovery data: user={user_id}, new_token={new_token_id}, burned={burn_token_ids}")
+
+            # Return error but include recovery instructions
+            return None, f"Blockchain upgrade succeeded but database update failed. Please click 'Verify Ownership' to sync your inventory, or retry the upgrade with the same transaction. Error: {str(db_error)}"
+
+    @staticmethod
+    def _recover_upgrade_from_blockchain(
+        user_id: int,
+        wallet_address: str,
+        tx_hash: str
+    ) -> Tuple[Optional[NFTInventory], Optional[str]]:
+        """
+        Recover an upgrade when blockchain succeeded but DB update failed.
+
+        This happens when:
+        1. User burned NFTs on blockchain
+        2. Backend verification succeeded
+        3. But database update failed (network error, timeout, etc.)
+
+        This function re-verifies the blockchain transaction and creates
+        the missing database records.
+        """
+        from app.blockchain.nft_contract import verify_nft_upgrade_transaction
+        import os
+
+        logger.info(f"[NFT Upgrade Recovery] Starting recovery for user {user_id}, tx {tx_hash}")
+
+        # We don't know the expected burn token IDs since they're gone from DB
+        # So we verify the transaction with empty expected list and trust blockchain data
+        try:
+            # Get transaction receipt to extract data
+            from app.blockchain.web3_config import get_web3
+            w3 = get_web3()
+
+            receipt = w3.eth.get_transaction_receipt(tx_hash)
+            if not receipt or receipt.get('status') != 1:
+                return None, "Recovery failed: Transaction not found or failed on blockchain."
+
+            tx = w3.eth.get_transaction(tx_hash)
+            if tx['from'].lower() != wallet_address.lower():
+                return None, "Recovery failed: Transaction was not sent by your wallet."
+
+            # Parse the upgrade event from logs to get new token ID
+            # Look for Transfer events (NFT minting)
+            nft_contract_address = os.environ.get('NFT_CONTRACT_ADDRESS', '').lower()
+
+            new_token_id = None
+            burned_token_ids = []
+
+            # Parse logs for Transfer events
+            # Transfer to 0x0 = burn, Transfer from 0x0 = mint
+            TRANSFER_TOPIC = w3.keccak(text='Transfer(address,address,uint256)').hex()
+            ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+            for log in receipt['logs']:
+                if log['address'].lower() == nft_contract_address:
+                    if log['topics'][0].hex() == TRANSFER_TOPIC:
+                        from_addr = '0x' + log['topics'][1].hex()[-40:]
+                        to_addr = '0x' + log['topics'][2].hex()[-40:]
+                        token_id = int(log['topics'][3].hex(), 16)
+
+                        if to_addr.lower() == ZERO_ADDRESS.lower():
+                            # Burn event
+                            burned_token_ids.append(token_id)
+                        elif from_addr.lower() == ZERO_ADDRESS.lower():
+                            # Mint event
+                            new_token_id = token_id
+
+            if not new_token_id:
+                return None, "Recovery failed: Could not find minted token in transaction."
+
+            if len(burned_token_ids) != 3:
+                return None, f"Recovery failed: Expected 3 burned tokens, found {len(burned_token_ids)}."
+
+            logger.info(f"[NFT Upgrade Recovery] Found: burned={burned_token_ids}, minted={new_token_id}")
+
+            # Check if the new token is already in DB
+            existing_nft = NFTInventory.query.filter_by(token_id=new_token_id, user_id=user_id).first()
+            if existing_nft:
+                logger.info(f"[NFT Upgrade Recovery] NFT #{new_token_id} already exists in database")
+                # Clean up any burned NFTs still in DB
+                for burned_id in burned_token_ids:
+                    burned_nft = NFTInventory.query.filter_by(token_id=burned_id, user_id=user_id).first()
+                    if burned_nft:
+                        NFTMarketplace.query.filter_by(nft_id=burned_nft.id).delete()
+                        NFTTradeHistory.query.filter_by(nft_id=burned_nft.id).delete()
+                        db.session.delete(burned_nft)
+                db.session.commit()
+                return existing_nft, None
+
+            # Get NFT metadata from blockchain
+            from app.blockchain.nft_contract import get_nft_metadata_from_chain
+            metadata = get_nft_metadata_from_chain(new_token_id)
+
+            if not metadata:
+                return None, "Recovery failed: Could not fetch NFT metadata from blockchain."
+
+            # Determine tier from burned NFTs (new tier = old tier + 1)
+            # Since we burned 3 of same tier, new tier is next level
+            # We'll infer from the metadata or default based on typical upgrade pattern
+            new_tier = metadata.get('tier', 2)  # Default to Q2 if unknown
+            nft_type = metadata.get('nft_type', 'player')
+            category = metadata.get('category', 'combat_boost')
+
+            # Get bonus value from config if blockchain returns 0
+            bonus_value = metadata.get('bonus_value', 0)
+            if bonus_value == 0:
+                from app.blockchain.nft_config import get_nft_bonus_value
+                bonus_value = get_nft_bonus_value(nft_type, category, new_tier)
+                logger.info(f"[NFT Upgrade Recovery] Using config bonus value: {bonus_value}%")
+
+            # Create the new NFT
+            new_nft = NFTInventory(
+                user_id=user_id,
+                nft_type=nft_type,
+                category=category,
+                tier=new_tier,
+                bonus_value=bonus_value,
+                token_id=new_token_id,
+                contract_address=nft_contract_address,
+                acquired_via='upgrade',
+                metadata_uri=metadata.get('metadata_uri', '')
+            )
+
+            db.session.add(new_nft)
+
+            # Record burn history
+            burn_record = NFTBurnHistory(
+                user_id=user_id,
+                burned_nft_ids=burned_token_ids,
+                minted_nft_id=new_token_id,
+                tier_from=new_tier - 1,
+                tier_to=new_tier,
+                transaction_hash=tx_hash
+            )
+            db.session.add(burn_record)
+
+            # Remove any burned NFTs still in database
+            for burned_id in burned_token_ids:
+                burned_nft = NFTInventory.query.filter_by(token_id=burned_id, user_id=user_id).first()
+                if burned_nft:
+                    NFTMarketplace.query.filter_by(nft_id=burned_nft.id).delete()
+                    NFTTradeHistory.query.filter_by(nft_id=burned_nft.id).delete()
+                    db.session.delete(burned_nft)
+
+            db.session.commit()
+
+            logger.info(f"[NFT Upgrade Recovery] SUCCESS: Recovered NFT #{new_token_id} for user {user_id}")
+            return new_nft, None
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"[NFT Upgrade Recovery] FAILED: {e}")
+            return None, f"Recovery failed: {str(e)}"
 
     @staticmethod
     def equip_nft_to_profile(user_id: int, nft_id: int, slot: int) -> Tuple[bool, Optional[str]]:

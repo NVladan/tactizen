@@ -56,15 +56,17 @@ def log_activity(activity_type, details=None, user_id=None):
 
 
 def track_login(user):
+    from flask import request
     try:
         user.last_login = datetime.utcnow()
         user.last_seen = datetime.utcnow()
+        user.last_ip = request.remote_addr  # Track IP on login
         user.login_count = (user.login_count or 0) + 1
 
         log_activity(
             activity_type=ActivityType.LOGIN,
             user_id=user.id,
-            details={'username': user.username or 'N/A'}
+            details={'username': user.username or 'N/A', 'ip': request.remote_addr}
         )
 
         db.session.commit()

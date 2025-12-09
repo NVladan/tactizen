@@ -1,5 +1,5 @@
 """
-Smart Contract Deployment Script for Horizen L3 Testnet
+Smart Contract Deployment Script for Horizen L3
 """
 import os
 import sys
@@ -18,7 +18,7 @@ load_dotenv()
 
 # Configuration
 RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL')
-CHAIN_ID = int(os.getenv('HORIZEN_L3_CHAIN_ID', '2651420'))
+CHAIN_ID = int(os.getenv('HORIZEN_L3_CHAIN_ID', '26514'))
 PRIVATE_KEY = os.getenv('DEPLOYER_PRIVATE_KEY')
 DEPLOYER_ADDRESS = os.getenv('DEPLOYER_ADDRESS')
 
@@ -27,9 +27,9 @@ w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
 # Check connection
 if not w3.is_connected():
-    raise Exception("Failed to connect to Horizen L3 Testnet RPC")
+    raise Exception("Failed to connect to Horizen L3 RPC")
 
-print(f"✅ Connected to Horizen L3 Testnet")
+print(f"✅ Connected to Horizen L3")
 print(f"📍 Chain ID: {w3.eth.chain_id}")
 print(f"🔑 Deployer Address: {DEPLOYER_ADDRESS}")
 print(f"💰 Balance: {w3.from_wei(w3.eth.get_balance(DEPLOYER_ADDRESS), 'ether')} ETH")

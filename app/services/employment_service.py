@@ -501,8 +501,25 @@ class EmploymentService:
         except Exception as e:
             logger.error(f"Error tracking work mission for user {user.id}: {e}")
 
-        # Build success message (worker-friendly: hours, costs, earnings)
+        # Award XP for working (1 XP per hour)
+        # Apply work-specific multiplier first, then global XP multiplier is applied in add_experience
+        from app.models.game_event import GameEvent
+        work_multiplier = GameEvent.get_effective_multiplier('work_xp_multiplier')
+        global_xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
+        base_work_xp = hours  # 1 XP per hour worked
+        # Calculate total XP with both multipliers for display
+        work_xp = int(base_work_xp * work_multiplier * global_xp_multiplier)
+        # Pass the work-multiplied XP to add_experience, which will apply global multiplier
+        leveled_up, new_level = user.add_experience(int(base_work_xp * work_multiplier))
+
+        # Send level up alert if player leveled up
+        if leveled_up:
+            from app.alert_helpers import send_level_up_alert
+            send_level_up_alert(user.id, new_level)
+            logger.info(f"User {user.id} leveled up to {new_level} while working at {company.name}")
+
+        # Build success message (worker-friendly: hours, costs, earnings, XP)
         hour_word = "hour" if hours == 1 else "hours"
-        message = f"Worked {hours} {hour_word} at {company.name}. Used {energy_cost} energy and {wellness_cost} wellness. Earned {worker_receives:.2f} {company.country.currency_code} (paid {work_tax_amount:.2f} tax)."
+        message = f"Worked {hours} {hour_word} at {company.name}. Used {energy_cost} energy and {wellness_cost} wellness. Earned {worker_receives:.2f} {company.country.currency_code} (paid {work_tax_amount:.2f} tax). Gained {work_xp} XP."
 
         return True, message, production_points, worker_receives, energy_cost, wellness_cost

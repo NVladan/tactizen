@@ -31,6 +31,16 @@ from app.mixins import SoftDeleteMixin
 
 logger = logging.getLogger(__name__)
 
+
+# Association table for tracking countries a user has visited
+user_visited_countries = db.Table(
+    'user_visited_countries',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('country_id', db.Integer, db.ForeignKey('country.id'), primary_key=True),
+    db.Column('first_visited_at', db.DateTime, default=datetime.utcnow, nullable=False)
+)
+
+
 class User(SoftDeleteMixin, UserMixin, db.Model):
     """Represents a player in the game."""
     id = db.Column(db.Integer, primary_key=True)
@@ -99,6 +109,8 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
     # Activity Tracking
     last_login = db.Column(db.DateTime, nullable=True, index=True)  # Last successful login
     last_seen = db.Column(db.DateTime, nullable=True, index=True)  # Last page view/activity
+    last_ip = db.Column(db.String(45), nullable=True, index=True)  # Last known IP address (IPv6 support)
+    registration_ip = db.Column(db.String(45), nullable=True, index=True)  # IP at registration
     login_count = db.Column(db.Integer, default=0, nullable=False)  # Total login count
     page_views = db.Column(db.Integer, default=0, nullable=False)  # Total page views
 
@@ -149,6 +161,9 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
     # Company relationships
     companies = db.relationship('Company', back_populates='owner', lazy='dynamic')
     employments = db.relationship('Employment', back_populates='user', lazy='dynamic')
+
+    # Visited countries for Explorer achievement
+    visited_countries = db.relationship('Country', secondary=user_visited_countries, backref='visitors', lazy='dynamic')
 
     # --- Table Constraints ---
     __table_args__ = (
@@ -455,9 +470,13 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
                 logger.info(f"Temporary ban expired for user {self.id}")
                 return True
         return False
-    def add_experience(self, amount):
+    def add_experience(self, amount, apply_global_multiplier=True):
         """
         Add experience points to the user and award gold if they level up.
+
+        Args:
+            amount: Base XP amount to add
+            apply_global_multiplier: If True, applies global XP event multiplier
 
         Returns:
             tuple: (leveled_up: bool, new_level: int)
@@ -466,6 +485,12 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
         """
         if amount <= 0:
             return False, self.level
+
+        # Apply global XP multiplier from events (Double XP weekend, etc.)
+        if apply_global_multiplier:
+            from app.models.game_event import GameEvent
+            xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
+            amount = int(amount * xp_multiplier)
 
         # Store the old level before adding experience
         old_level = self.level
@@ -478,9 +503,12 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
         leveled_up = new_level > old_level
 
         if leveled_up:
-            # Award 1 Gold for leveling up with row-level locking
+            # Award 1 Gold for leveling up with Gold Rush event multiplier
             from app.services.currency_service import CurrencyService
-            CurrencyService.add_gold(self.id, 1, 'Level up reward')
+            from app.models.game_event import GameEvent
+            gold_multiplier = GameEvent.get_effective_multiplier('gold_drop_multiplier')
+            level_gold = int(1 * gold_multiplier)
+            CurrencyService.add_gold(self.id, level_gold, 'Level up reward')
 
         # Check if user reached level 10 and award referral bonus
         self.check_and_award_referral_bonus()
@@ -519,12 +547,20 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
             logger.info(f"User {self.id} insufficient energy for training: {self.energy}/{energy_cost}")
             return False, f"Not enough energy (need {energy_cost}).", False, self.level
 
-        # Perform training
+        # Perform training with Training Boost event multiplier and global XP multiplier
         self.energy -= energy_cost
-        leveled_up, new_level = self.add_experience(GameConstants.MILITARY_TRAINING_XP_GAIN)
+        from app.models.game_event import GameEvent
+        training_multiplier = GameEvent.get_effective_multiplier('training_xp_multiplier')
+        global_xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
+        base_xp = GameConstants.MILITARY_TRAINING_XP_GAIN
+        xp_before_global = int(base_xp * training_multiplier)
+        # Total XP for display (both multipliers)
+        display_xp = int(base_xp * training_multiplier * global_xp_multiplier)
+        leveled_up, new_level = self.add_experience(xp_before_global)
         self.last_trained = datetime.utcnow()
 
-        skill_gain = float(GameConstants.MILITARY_TRAINING_SKILL_GAIN)
+        base_skill_gain = float(GameConstants.MILITARY_TRAINING_SKILL_GAIN)
+        skill_gain = base_skill_gain * training_multiplier
         if skill_type == 'infantry':
             self.skill_infantry += skill_gain
         elif skill_type == 'armoured':
@@ -532,8 +568,8 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
         elif skill_type == 'aviation':
             self.skill_aviation += skill_gain
 
-        logger.info(f"User {self.id} trained {skill_type}, gained {skill_gain} skill and {GameConstants.MILITARY_TRAINING_XP_GAIN} XP")
-        return True, f"Successfully trained {skill_type.capitalize()}! Gained {skill_gain} skill and {GameConstants.MILITARY_TRAINING_XP_GAIN} XP.", leveled_up, new_level
+        logger.info(f"User {self.id} trained {skill_type}, gained {skill_gain:.2f} skill and {display_xp} XP")
+        return True, f"Successfully trained {skill_type.capitalize()}! Gained {skill_gain:.2f} skill and {display_xp} XP.", leveled_up, new_level
 
     def study_skill(self, skill_type):
         """
@@ -567,12 +603,20 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
             logger.info(f"User {self.id} insufficient energy for study: {self.energy}/{energy_cost}")
             return False, f"Not enough energy (need {energy_cost}).", False, self.level
 
-        # Perform study
+        # Perform study with Work Bonus event multiplier and global XP multiplier
         self.energy -= energy_cost
-        leveled_up, new_level = self.add_experience(GameConstants.WORK_TRAINING_XP_GAIN)
+        from app.models.game_event import GameEvent
+        work_multiplier = GameEvent.get_effective_multiplier('work_xp_multiplier')
+        global_xp_multiplier = GameEvent.get_effective_multiplier('xp_multiplier')
+        base_xp = GameConstants.WORK_TRAINING_XP_GAIN
+        xp_before_global = int(base_xp * work_multiplier)
+        # Total XP for display (both multipliers)
+        display_xp = int(base_xp * work_multiplier * global_xp_multiplier)
+        leveled_up, new_level = self.add_experience(xp_before_global)
         self.last_studied = datetime.utcnow()
 
-        skill_gain = float(GameConstants.WORK_TRAINING_SKILL_GAIN)
+        base_skill_gain = float(GameConstants.WORK_TRAINING_SKILL_GAIN)
+        skill_gain = base_skill_gain * work_multiplier
         skill_name_display = GameConstants.get_skill_display_name(skill_type)
 
         if skill_type == 'resource_extraction':
@@ -582,8 +626,8 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
         elif skill_type == 'construction':
             self.skill_construction += skill_gain
 
-        logger.info(f"User {self.id} studied {skill_type}, gained {skill_gain} skill and {GameConstants.WORK_TRAINING_XP_GAIN} XP")
-        return True, f"Successfully studied {skill_name_display}! Gained {skill_gain} skill and {GameConstants.WORK_TRAINING_XP_GAIN} XP.", leveled_up, new_level
+        logger.info(f"User {self.id} studied {skill_type}, gained {skill_gain:.2f} skill and {display_xp} XP")
+        return True, f"Successfully studied {skill_name_display}! Gained {skill_gain:.2f} skill and {display_xp} XP.", leveled_up, new_level
 
     def travel_to(self, destination_region_id, payment_method='gold'):
         """
@@ -656,6 +700,19 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
                     logger.info(f"User {self.id} traveled free (Travel Discount NFT)")
 
             self.current_region_id = destination_region_id
+
+            # Track visited country for Explorer achievement
+            destination_country = destination_region.current_owner
+            if destination_country:
+                # Check if already visited using efficient query
+                already_visited = self.visited_countries.filter_by(id=destination_country.id).first() is not None
+                if not already_visited:
+                    self.visited_countries.append(destination_country)
+                    logger.info(f"User {self.id} discovered new country: {destination_country.name}")
+
+                    # Check for Explorer achievement
+                    from app.services.achievement_service import AchievementService
+                    AchievementService.check_explorer_all_countries(self)
 
             logger.info(f"User {self.id} traveled to region {destination_region_id} ({destination_region.name})")
             return True, f"Successfully traveled to {destination_region.name}."

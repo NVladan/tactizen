@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, '.env'))
+# Use override=True to ensure .env values override any system environment variables
+load_dotenv(os.path.join(basedir, '.env'), override=True)
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
@@ -54,7 +55,8 @@ class Config:
         'Cross-Origin-Resource-Policy': 'same-origin',
 
         # Prevent embedding in cross-origin contexts
-        'Cross-Origin-Embedder-Policy': 'require-corp',
+        # Use 'credentialless' to allow cross-origin images (IPFS gateways) without CORP headers
+        'Cross-Origin-Embedder-Policy': 'credentialless',
     }
 
     # Content Security Policy Configuration
@@ -113,9 +115,10 @@ class Config:
             "blob:"  # Blob URLs (for file uploads preview)
         ],
 
-        # AJAX/WebSocket connections: Only allow same origin
+        # AJAX/WebSocket connections: Allow same origin and CDN source maps
         'connect-src': [
-            "'self'"
+            "'self'",
+            "https://cdn.jsdelivr.net"  # Source maps for debugging
         ],
 
         # Frames: Disallow all frame embedding

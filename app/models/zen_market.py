@@ -27,6 +27,8 @@ class ZenMarket(db.Model):
 
     MARKET_SPREAD_PERCENT = Decimal('0.05')  # 5% spread
     MINIMUM_EXCHANGE_RATE_UNIT = Decimal('0.01')
+    MAX_PRICE_LEVEL = 10000  # Maximum price level to prevent overflow exploits
+    MIN_PRICE_LEVEL = -100   # Minimum price level
 
     @property
     def current_base_rate_for_one_zen(self):
@@ -94,15 +96,22 @@ class ZenMarket(db.Model):
             self.progress_within_level += zen_amount_int
             while self.progress_within_level >= self.volume_per_level:
                 self.progress_within_level -= self.volume_per_level
-                self.price_level += 1
+                # Prevent price level from exceeding maximum
+                if self.price_level < self.MAX_PRICE_LEVEL:
+                    self.price_level += 1
+                else:
+                    # At max level, cap progress to prevent further increases
+                    self.progress_within_level = self.volume_per_level - 1
+                    break
         else:
             # Selling ZEN decreases price
             self.progress_within_level -= zen_amount_int
             while self.progress_within_level < 0:
-                if self.price_level > -100:  # Prevent going too negative
+                if self.price_level > self.MIN_PRICE_LEVEL:
                     self.price_level -= 1
                     self.progress_within_level += self.volume_per_level
                 else:
+                    # At min level, cap progress to prevent further decreases
                     self.progress_within_level = 0
                     break
 

@@ -12,7 +12,7 @@ from web3.contract import Contract
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-BLOCKCHAIN_RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen-testnet.rpc.caldera.xyz/http')
+BLOCKCHAIN_RPC_URL = os.getenv('BLOCKCHAIN_RPC_URL', 'https://horizen.calderachain.xyz/http')
 MARKETPLACE_CONTRACT_ADDRESS = os.getenv('MARKETPLACE_CONTRACT_ADDRESS', None)
 TREASURY_PRIVATE_KEY = os.getenv('TREASURY_PRIVATE_KEY', None)
 TREASURY_ADDRESS = os.getenv('TREASURY_ADDRESS', None)

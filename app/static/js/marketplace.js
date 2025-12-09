@@ -7,9 +7,12 @@ let nftContract;
 let userAccount;
 let currentUserId = null;
 
-const MARKETPLACE_CONTRACT_ADDRESS = '0x8668466ae57Fc64799B1321eA592Cd8ae24c3Ee9';
+const MARKETPLACE_CONTRACT_ADDRESS = '0x82F89212432Ae4675C8B84Cb2bE992E9B1dC0E3b';
 const NFT_CONTRACT_ADDRESS = '0x57e277b2d887C3C749757e36F0B6CFad32E00e8A';  // Tactizen Game NFT
 const ZEN_TOKEN_ADDRESS = '0x070040A826B586b58569750ED43cb5979b171e8d';
+
+// Horizen L3 has very low gas fees - use 0.001 gwei
+const L3_GAS_PRICE = '1000000';  // 0.001 gwei in wei
 
 // Category names mapping
 const CATEGORY_NAMES = {
@@ -59,18 +62,23 @@ function showSuccess(message) {
     // Clean up any existing modal
     const existingModal = bootstrap.Modal.getInstance(modalEl);
     if (existingModal) {
-        existingModal.dispose();
+        try { existingModal.dispose(); } catch (e) { /* ignore */ }
     }
     cleanupModalBackdrops();
 
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
+    try {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    } catch (e) {
+        console.error('Error showing success modal:', e);
+        return;
+    }
 
     // Add cleanup handler
     modalEl.addEventListener('hidden.bs.modal', function() {
         cleanupModalBackdrops();
         const instance = bootstrap.Modal.getInstance(modalEl);
-        if (instance) instance.dispose();
+        if (instance) { try { instance.dispose(); } catch (e) { /* ignore */ } }
         setTimeout(() => cleanupModalBackdrops(), 100);
         setTimeout(() => cleanupModalBackdrops(), 300);
     }, { once: true });
@@ -83,18 +91,23 @@ function showError(message) {
     // Clean up any existing modal
     const existingModal = bootstrap.Modal.getInstance(modalEl);
     if (existingModal) {
-        existingModal.dispose();
+        try { existingModal.dispose(); } catch (e) { /* ignore */ }
     }
     cleanupModalBackdrops();
 
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
+    try {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    } catch (e) {
+        console.error('Error showing error modal:', e);
+        return;
+    }
 
     // Add cleanup handler
     modalEl.addEventListener('hidden.bs.modal', function() {
         cleanupModalBackdrops();
         const instance = bootstrap.Modal.getInstance(modalEl);
-        if (instance) instance.dispose();
+        if (instance) { try { instance.dispose(); } catch (e) { /* ignore */ } }
         setTimeout(() => cleanupModalBackdrops(), 100);
         setTimeout(() => cleanupModalBackdrops(), 300);
     }, { once: true });
@@ -107,18 +120,23 @@ function showInfo(message) {
     // Clean up any existing modal
     const existingModal = bootstrap.Modal.getInstance(modalEl);
     if (existingModal) {
-        existingModal.dispose();
+        try { existingModal.dispose(); } catch (e) { /* ignore */ }
     }
     cleanupModalBackdrops();
 
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
+    try {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    } catch (e) {
+        console.error('Error showing info modal:', e);
+        return;
+    }
 
     // Add cleanup handler
     modalEl.addEventListener('hidden.bs.modal', function() {
         cleanupModalBackdrops();
         const instance = bootstrap.Modal.getInstance(modalEl);
-        if (instance) instance.dispose();
+        if (instance) { try { instance.dispose(); } catch (e) { /* ignore */ } }
         setTimeout(() => cleanupModalBackdrops(), 100);
         setTimeout(() => cleanupModalBackdrops(), 300);
     }, { once: true });
@@ -274,7 +292,7 @@ function createListingCard(listing, nft) {
                 <div class="d-flex align-items-center justify-content-center px-2 py-2 rounded mb-3" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05)); border: 1.5px solid rgba(34, 197, 94, 0.4);">
                     <i class="fas fa-bolt text-success me-2"></i>
                     <span class="text-success" style="font-size: 0.95rem; font-weight: 700;">
-                        +${nft.bonus_value}% Bonus
+                        ${nft.bonus_formatted} Bonus
                     </span>
                 </div>
 
@@ -353,7 +371,7 @@ async function buyNFT(listingId, tokenId, priceZen) {
         const approvalTx = await zenContract.methods.approve(MARKETPLACE_CONTRACT_ADDRESS, priceWei)
             .send({
                 from: userAccount,
-                gas: 100000  // Reasonable gas limit for ERC20 approve
+                gasPrice: L3_GAS_PRICE
             });
 
         console.log('ZEN approved, tx hash:', approvalTx.transactionHash);
@@ -375,7 +393,7 @@ async function buyNFT(listingId, tokenId, priceZen) {
         const tx = await marketplaceContract.methods.buyNFT(tokenId)
             .send({
                 from: userAccount,
-                gas: 400000  // Reasonable gas limit for buying (transfer NFT + ZEN)
+                gasPrice: L3_GAS_PRICE
             });
 
         // Send transaction hash to backend for verification
@@ -455,33 +473,67 @@ function displayMyNFTs(nfts) {
         col.className = 'col';
 
         const tierClass = `tier-${nft.tier}`;
+        const tierColors = {
+            1: { bg: 'rgba(107, 114, 128, 0.2)', border: 'rgba(107, 114, 128, 0.5)', text: '#9ca3af' },
+            2: { bg: 'rgba(16, 185, 129, 0.2)', border: 'rgba(16, 185, 129, 0.5)', text: '#34d399' },
+            3: { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgba(59, 130, 246, 0.5)', text: '#60a5fa' },
+            4: { bg: 'rgba(168, 85, 247, 0.2)', border: 'rgba(168, 85, 247, 0.5)', text: '#c084fc' },
+            5: { bg: 'rgba(245, 158, 11, 0.2)', border: 'rgba(245, 158, 11, 0.5)', text: '#fbbf24' }
+        };
+        const colors = tierColors[nft.tier] || tierColors[1];
         const typeIcon = nft.nft_type === 'player' ? 'fa-user' : 'fa-building';
 
         col.innerHTML = `
-            <div class="nft-card h-100">
-                <div class="card-body position-relative d-flex flex-column">
-                    <i class="fas ${typeIcon} nft-type-icon"></i>
-                    <div class="nft-tier-badge ${tierClass}">
-                        ${TIER_NAMES[nft.tier]}
-                    </div>
+            <div class="list-nft-card" style="
+                background: linear-gradient(135deg, ${colors.bg} 0%, rgba(15, 20, 25, 0.9) 100%);
+                border: 1px solid ${colors.border};
+                border-radius: 12px;
+                overflow: hidden;
+                transition: all 0.3s ease;
+                cursor: pointer;
+                height: 100%;
+            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.4)';"
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                <!-- Image Container -->
+                <div style="position: relative; width: 100%; padding-top: 140%; background: linear-gradient(180deg, rgba(15,20,25,0.3) 0%, rgba(15,20,25,0.8) 100%);">
                     ${nft.image_url ? `
                         <img src="${nft.image_url}"
                              alt="${nft.name}"
-                             class="nft-card-image"
-                             style="width: 90px; height: 160px; object-fit: cover; border-radius: 8px;
-                                    border: 2px solid rgba(34, 197, 94, 0.3); background: #0a0e1a;
-                                    display: block; margin: 1rem auto 0; transition: all 0.3s ease; cursor: pointer;"
-                             onerror="this.style.display='none'"
-                             onclick="window.open('https://horizen-testnet.explorer.caldera.xyz/token/${nft.contract_address}?a=${nft.token_id}', '_blank'); event.stopPropagation();"
-                             title="View on Horizen Explorer (click) or hover to zoom">
-                    ` : ''}
-                    <h6 class="card-title mt-3 mb-1">${nft.name}</h6>
-                    <p class="text-muted small mb-2">${CATEGORY_NAMES[nft.category]}</p>
-                    <p class="text-success mb-3">
-                        <i class="fas fa-bolt"></i> +${nft.bonus_value}%
+                             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
+                             onerror="this.parentElement.innerHTML='<div style=\\'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;\\'><i class=\\'fas ${typeIcon}\\' style=\\'font-size:3rem;opacity:0.3;\\'></i></div>'">
+                    ` : `
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                            <i class="fas ${typeIcon}" style="font-size: 3rem; opacity: 0.3;"></i>
+                        </div>
+                    `}
+                    <!-- Tier Badge -->
+                    <div class="nft-tier-badge ${tierClass}" style="position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 0.75rem;">
+                        ${TIER_NAMES[nft.tier]}
+                    </div>
+                    <!-- Token ID Badge -->
+                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">
+                        #${nft.token_id}
+                    </div>
+                </div>
+                <!-- Info Section -->
+                <div style="padding: 12px;">
+                    <h6 style="font-size: 0.85rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${nft.name}">
+                        ${nft.name}
+                    </h6>
+                    <p style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 8px;">
+                        ${CATEGORY_NAMES[nft.category] || nft.category}
                     </p>
-                    <button class="btn btn-primary w-100 mt-auto" onclick="showPriceModal(${nft.id}, ${nft.token_id})">
-                        <i class="fas fa-tag me-1"></i> Set Price
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="color: ${colors.text}; font-weight: bold; font-size: 0.85rem;">
+                            <i class="fas fa-bolt"></i> ${nft.bonus_formatted}
+                        </span>
+                        <span style="font-size: 0.7rem; color: #6b7280;">
+                            <i class="fas ${typeIcon}"></i> ${nft.nft_type === 'player' ? 'Player' : 'Company'}
+                        </span>
+                    </div>
+                    <button class="btn btn-sm w-100" style="background: linear-gradient(135deg, #22c55e, #16a34a); border: none; font-size: 0.8rem; padding: 8px;"
+                            onclick="showPriceModal(${nft.id}, ${nft.token_id}); event.stopPropagation();">
+                        <i class="fas fa-tag me-1"></i> List for Sale
                     </button>
                 </div>
             </div>
@@ -497,11 +549,18 @@ function showPriceModal(nftId, tokenId) {
     document.getElementById('listingPrice').value = '';
     document.getElementById('feeCalculation').style.display = 'none';
 
-    const listModal = bootstrap.Modal.getInstance(document.getElementById('listNFTModal'));
-    listModal.hide();
+    const listModalEl = document.getElementById('listNFTModal');
+    const listModal = bootstrap.Modal.getInstance(listModalEl);
+    if (listModal) {
+        try { listModal.hide(); } catch (e) { /* ignore */ }
+    }
 
-    const priceModal = new bootstrap.Modal(document.getElementById('setPriceModal'));
-    priceModal.show();
+    try {
+        const priceModal = new bootstrap.Modal(document.getElementById('setPriceModal'));
+        priceModal.show();
+    } catch (e) {
+        console.error('Error showing price modal:', e);
+    }
 }
 
 // Calculate and display fee
@@ -600,7 +659,7 @@ document.getElementById('confirmListingBtn')?.addEventListener('click', async fu
             const cancelTx = await marketplaceContract.methods.cancelListing(nft.token_id)
                 .send({
                     from: userAccount,
-                    gas: 300000
+                    gasPrice: L3_GAS_PRICE
                 });
 
             console.log('Previous listing cancelled:', cancelTx.transactionHash);
@@ -639,7 +698,7 @@ document.getElementById('confirmListingBtn')?.addEventListener('click', async fu
             const approvalTx = await nftContract.methods.setApprovalForAll(MARKETPLACE_CONTRACT_ADDRESS, true)
                 .send({
                     from: userAccount,
-                    gas: 50000  // Gas limit for setApprovalForAll
+                    gasPrice: L3_GAS_PRICE
                 });
 
             console.log('Approval set, tx hash:', approvalTx.transactionHash);
@@ -667,7 +726,7 @@ document.getElementById('confirmListingBtn')?.addEventListener('click', async fu
         const tx = await marketplaceContract.methods.listNFT(nft.token_id, priceWei)
             .send({
                 from: userAccount,
-                gas: 150000  // Gas limit for listing (transfer NFT to escrow)
+                gasPrice: L3_GAS_PRICE
             });
 
         // Send transaction hash to backend for verification
@@ -689,7 +748,9 @@ document.getElementById('confirmListingBtn')?.addEventListener('click', async fu
         if (data.success) {
             showSuccess('NFT listed successfully! It is now available for purchase.');
             const modal = bootstrap.Modal.getInstance(document.getElementById('setPriceModal'));
-            modal.hide();
+            if (modal) {
+                try { modal.hide(); } catch (e) { /* ignore */ }
+            }
             loadListings(); // Refresh listings
         } else {
             showError('Error: ' + data.error);
@@ -767,7 +828,7 @@ function displayMyListings(listings) {
                     <h6 class="card-title mt-4 mb-1">${nft.name}</h6>
                     <p class="text-muted small mb-2">${CATEGORY_NAMES[nft.category]}</p>
                     <p class="text-success mb-2">
-                        <i class="fas fa-bolt"></i> +${nft.bonus_value}%
+                        <i class="fas fa-bolt"></i> ${nft.bonus_formatted}
                     </p>
                     <hr class="my-2">
                     <div class="d-flex align-items-center justify-content-between mb-3">
@@ -811,7 +872,7 @@ async function cancelListing(listingId, tokenId) {
         const tx = await marketplaceContract.methods.cancelListing(tokenId)
             .send({
                 from: userAccount,
-                gas: 300000  // Reasonable gas limit for cancelling (return NFT from escrow)
+                gasPrice: L3_GAS_PRICE
             });
 
         // Send transaction hash to backend for verification

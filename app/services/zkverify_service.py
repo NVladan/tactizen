@@ -24,8 +24,9 @@ class ZKVerifyService:
     """
 
     def __init__(self):
-        self.rpc_ws = os.getenv('ZKVERIFY_RPC_WS', 'wss://zkverify-volta-rpc.zkverify.io')
-        self.explorer = os.getenv('ZKVERIFY_EXPLORER', 'https://zkverify-testnet.subscan.io/')
+        self.rpc_ws = os.getenv('ZKVERIFY_RPC_WS', 'wss://zkverify-rpc.zkverify.io')
+        self.explorer = os.getenv('ZKVERIFY_EXPLORER', 'https://zkverify.subscan.io/')
+        self.use_mainnet = os.getenv('ZKVERIFY_MAINNET', 'true').lower() == 'true'
         self.seed_phrase = os.getenv('ZKVERIFY_SEED_PHRASE')
 
         # Project root (where node_modules is located)
@@ -58,17 +59,19 @@ const {{ zkVerifySession, Library, CurveType, ZkVerifyEvents }} = require('zkver
 async function verifyProof() {{
     let session;
     try {{
-        // Start session with zkVerify testnet
+        // Start session with zkVerify {'mainnet' if self.use_mainnet else 'testnet'}
         session = await zkVerifySession.start()
-            .Testnet()
+            .{'zkVerify' if self.use_mainnet else 'Volta'}()
             .withAccount('{self.seed_phrase}');
 
         console.log(JSON.stringify({{ status: 'connected' }}));
 
         // Submit proof for verification
-        // Note: groth16() takes two separate params, not an object
         const {{ events, transactionResult }} = await session.verify()
-            .groth16(Library.snarkjs, CurveType.bn128)
+            .groth16({{
+                library: Library.snarkjs,
+                curve: CurveType.bn128
+            }})
             .execute({{
                 proofData: {{
                     vk: {json.dumps(verification_key)},

@@ -3,7 +3,7 @@
 Game Settings model for storing dynamic game configuration that can be toggled by admins.
 """
 
-from datetime import datetime
+from datetime import datetime, date
 from app.extensions import db
 
 
@@ -25,6 +25,17 @@ class GameSettings(db.Model):
 
     # Setting keys as constants
     STARTER_PROTECTION_ENABLED = 'starter_protection_enabled'
+    GAME_START_DATE = 'game_start_date'  # Format: YYYY-MM-DD
+
+    # Global Multiplier keys
+    XP_MULTIPLIER = 'xp_multiplier'  # Default: 1.0
+    GOLD_DROP_MULTIPLIER = 'gold_drop_multiplier'  # Default: 1.0
+    PRODUCTION_SPEED_MULTIPLIER = 'production_speed_multiplier'  # Default: 1.0
+    WORK_XP_MULTIPLIER = 'work_xp_multiplier'  # Default: 1.0
+    TRAINING_XP_MULTIPLIER = 'training_xp_multiplier'  # Default: 1.0
+    BATTLE_XP_MULTIPLIER = 'battle_xp_multiplier'  # Default: 1.0
+    TRAVEL_COST_MULTIPLIER = 'travel_cost_multiplier'  # Default: 1.0 (lower = cheaper)
+    COMPANY_TAX_MULTIPLIER = 'company_tax_multiplier'  # Default: 1.0
 
     @classmethod
     def get_value(cls, key, default=None):
@@ -75,5 +86,100 @@ class GameSettings(db.Model):
         # Fall back to config value
         return current_app.config.get('STARTER_PROTECTION_ENABLED', True)
 
+    @classmethod
+    def get_game_day(cls):
+        """
+        Get the current game day (days since game started).
+        Returns day 1 on the start date, day 2 on the next day, etc.
+        """
+        start_date_str = cls.get_value(cls.GAME_START_DATE)
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                today = date.today()
+                days_elapsed = (today - start_date).days
+                return max(1, days_elapsed + 1)  # Day 1 on start date
+            except (ValueError, TypeError):
+                pass
+        # Default: return day 1 if no start date set
+        return 1
+
+    @classmethod
+    def get_game_start_date(cls):
+        """Get the game start date as a date object."""
+        start_date_str = cls.get_value(cls.GAME_START_DATE)
+        if start_date_str:
+            try:
+                return datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                pass
+        return None
+
     def __repr__(self):
         return f'<GameSettings {self.key}={self.value}>'
+
+    # --- Global Multiplier Methods ---
+    @classmethod
+    def get_multiplier(cls, key, default=1.0):
+        """Get a multiplier value, ensuring it's a float."""
+        value = cls.get_value(key)
+        if value is not None:
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                pass
+        return default
+
+    @classmethod
+    def get_xp_multiplier(cls):
+        """Get global XP multiplier (affects all XP gains)."""
+        return cls.get_multiplier(cls.XP_MULTIPLIER, 1.0)
+
+    @classmethod
+    def get_gold_drop_multiplier(cls):
+        """Get gold drop multiplier (affects gold from work, battles, etc)."""
+        return cls.get_multiplier(cls.GOLD_DROP_MULTIPLIER, 1.0)
+
+    @classmethod
+    def get_production_speed_multiplier(cls):
+        """Get production speed multiplier (higher = faster production)."""
+        return cls.get_multiplier(cls.PRODUCTION_SPEED_MULTIPLIER, 1.0)
+
+    @classmethod
+    def get_work_xp_multiplier(cls):
+        """Get work XP multiplier."""
+        return cls.get_multiplier(cls.WORK_XP_MULTIPLIER, 1.0)
+
+    @classmethod
+    def get_training_xp_multiplier(cls):
+        """Get training XP multiplier."""
+        return cls.get_multiplier(cls.TRAINING_XP_MULTIPLIER, 1.0)
+
+    @classmethod
+    def get_battle_xp_multiplier(cls):
+        """Get battle XP multiplier."""
+        return cls.get_multiplier(cls.BATTLE_XP_MULTIPLIER, 1.0)
+
+    @classmethod
+    def get_travel_cost_multiplier(cls):
+        """Get travel cost multiplier (lower = cheaper travel)."""
+        return cls.get_multiplier(cls.TRAVEL_COST_MULTIPLIER, 1.0)
+
+    @classmethod
+    def get_company_tax_multiplier(cls):
+        """Get company tax multiplier."""
+        return cls.get_multiplier(cls.COMPANY_TAX_MULTIPLIER, 1.0)
+
+    @classmethod
+    def get_all_multipliers(cls):
+        """Get all multipliers as a dictionary."""
+        return {
+            'xp': cls.get_xp_multiplier(),
+            'gold_drop': cls.get_gold_drop_multiplier(),
+            'production_speed': cls.get_production_speed_multiplier(),
+            'work_xp': cls.get_work_xp_multiplier(),
+            'training_xp': cls.get_training_xp_multiplier(),
+            'battle_xp': cls.get_battle_xp_multiplier(),
+            'travel_cost': cls.get_travel_cost_multiplier(),
+            'company_tax': cls.get_company_tax_multiplier(),
+        }

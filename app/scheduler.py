@@ -168,6 +168,17 @@ def init_scheduler(app):
         replace_existing=True
     )
 
+    # NFT ownership verification at day change (midnight UTC)
+    scheduler.add_job(
+        func=lambda: verify_equipped_nft_ownership(app),
+        trigger="cron",
+        hour=0,
+        minute=0,
+        id='verify_nft_ownership',
+        name='Verify equipped NFT ownership at day change',
+        replace_existing=True
+    )
+
     scheduler.start()
     logger.info("Election scheduler started successfully")
 
@@ -659,6 +670,7 @@ def calculate_election_results(election):
     )
     from app.models.zk_voting import ZKVote
     from app.alert_helpers import send_election_win_alert
+    from app.services.achievement_service import AchievementService
 
     # Determine election type string for ZK votes
     zk_election_type = 'presidential' if election.election_type == ElectionType.PRESIDENTIAL else 'congressional'
@@ -800,6 +812,12 @@ def calculate_election_results(election):
             )
             logger.info(f"Sent presidential election win alert to user {winner.user_id}")
 
+            # Check and award Elected President achievement
+            winner_user = db.session.get(User, winner.user_id)
+            if winner_user:
+                AchievementService.check_elected_president(winner_user)
+                logger.info(f"Checked president achievement for user {winner.user_id}")
+
     else:  # CONGRESSIONAL
         # Congressional: Top 20 win seats
         winners = candidates_sorted[:20]
@@ -838,6 +856,12 @@ def calculate_election_results(election):
                 position="Congress Member"
             )
             logger.info(f"Sent congressional election win alert to user {candidate.user_id}")
+
+            # Check and award Elected Congress achievement
+            congress_user = db.session.get(User, candidate.user_id)
+            if congress_user:
+                AchievementService.check_elected_congress(congress_user)
+                logger.info(f"Checked congress achievement for user {candidate.user_id}")
 
         logger.info(
             f"Congressional election {election.id}: "
@@ -1694,3 +1718,44 @@ def expire_old_missions(app):
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error expiring old missions: {e}", exc_info=True)
+
+
+def verify_equipped_nft_ownership(app):
+    """
+    Verify that all equipped NFTs are still owned by their respective users.
+
+    This handles the case where users sell NFTs on external marketplaces
+    (like OpenSea) without going through the in-game marketplace.
+    NFTs that are no longer owned will be unequipped and removed from inventory.
+    """
+    with app.app_context():
+        from app.blockchain.nft_contract import verify_all_equipped_nfts
+
+        try:
+            results = verify_all_equipped_nfts()
+
+            if results['verified'] > 0 or results['unequipped'] > 0:
+                logger.info(
+                    f"NFT ownership verification complete: "
+                    f"{results['verified']} NFTs checked, "
+                    f"{results['unequipped']} unequipped due to ownership change, "
+                    f"{results['errors']} errors"
+                )
+
+                # Log details of unequipped NFTs
+                for detail in results['details']:
+                    if detail['type'] == 'player':
+                        logger.info(
+                            f"  - Player {detail['username']} (ID {detail['user_id']}): "
+                            f"NFT #{detail['token_id']} ({detail['nft_category']} Q{detail['nft_tier']}) "
+                            f"removed from slot {detail['slot']}"
+                        )
+                    else:
+                        logger.info(
+                            f"  - Company {detail['company_name']} (ID {detail['company_id']}): "
+                            f"NFT #{detail['token_id']} ({detail['nft_category']} Q{detail['nft_tier']}) "
+                            f"removed from slot {detail['slot']}"
+                        )
+
+        except Exception as e:
+            logger.error(f"Error verifying NFT ownership: {e}", exc_info=True)

@@ -83,6 +83,8 @@ from .game_update import GameUpdate, UpdateCategory
 from .mission import Mission, UserMission, MissionType, MissionCategory
 # Import game settings model
 from .game_settings import GameSettings
+# Import game event model
+from .game_event import GameEvent, EventType
 # Import ZK voting models (anonymous elections)
 from .zk_voting import VoterCommitment, MerkleTree, ZKVote, ZKElectionConfig
 
@@ -234,6 +236,9 @@ __all__ = [
     'MissionCategory',         # Imported from mission.py
     # Game Settings models
     'GameSettings',            # Imported from game_settings.py
+    # Game Event models
+    'GameEvent',               # Imported from game_event.py
+    'EventType',               # Imported from game_event.py
     # ZK Voting models (anonymous elections)
     'VoterCommitment',         # Imported from zk_voting.py
     'MerkleTree',              # Imported from zk_voting.py

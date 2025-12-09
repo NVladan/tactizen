@@ -6,22 +6,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title ZENToken
- * @dev ERC20 token for CyberRepublik in-game currency
+ * @dev ERC20 token for Tactizen game economy on Horizen L3
+ *
+ * Token Details:
+ * - Name: Horizen
+ * - Symbol: ZEN
+ * - Total Supply: 21,000,000 ZEN (fixed, no additional minting)
+ * - Decimals: 18
  */
 contract ZENToken is ERC20, Ownable {
 
-    constructor() ERC20("Zenith Token", "ZEN") Ownable(msg.sender) {
-        // Mint initial supply to deployer (1 million ZEN)
-        _mint(msg.sender, 1000000 * 10**18);
-    }
+    uint256 public constant MAX_SUPPLY = 21_000_000 * 10**18;
 
-    /**
-     * @dev Mint new tokens (only owner can mint)
-     * @param to Address to receive tokens
-     * @param amount Amount of tokens to mint (in wei, 18 decimals)
-     */
-    function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount);
+    constructor() ERC20("Horizen", "ZEN") Ownable(msg.sender) {
+        // Mint entire max supply to deployer (treasury)
+        _mint(msg.sender, MAX_SUPPLY);
     }
 
     /**
@@ -30,6 +29,16 @@ contract ZENToken is ERC20, Ownable {
      */
     function burn(uint256 amount) public {
         _burn(msg.sender, amount);
+    }
+
+    /**
+     * @dev Burn tokens from a specific address (requires allowance)
+     * @param account Address to burn from
+     * @param amount Amount of tokens to burn
+     */
+    function burnFrom(address account, uint256 amount) public {
+        _spendAllowance(account, msg.sender, amount);
+        _burn(account, amount);
     }
 
     /**

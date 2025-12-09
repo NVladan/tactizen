@@ -19,6 +19,8 @@ class AchievementCategory(str, enum.Enum):
     SOCIAL = 'social'
     EXPLORATION = 'exploration'
     ECONOMIC = 'economic'
+    POLITICAL = 'political'
+    MEDIA = 'media'
 
 
 class Achievement(db.Model):

@@ -30,6 +30,10 @@
                         <i class="fas fa-sync-alt"></i>
                         <span>Refresh</span>
                     </button>
+                    <button class="nft-action-btn verify" onclick="verifyOwnership()" title="Verify on-chain ownership of all NFTs">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Verify Ownership</span>
+                    </button>
                     <button id="freeNFTBtn" class="nft-action-btn free" onclick="openFreeNFTModal()" title="Claim free NFTs earned through tasks">
                         <i class="fas fa-gift"></i>
                         <span>Free NFTs</span>
@@ -520,6 +524,17 @@
 .nft-action-btn.refresh:hover {
     background: rgba(255, 255, 255, 0.15);
     color: #ffffff;
+}
+
+.nft-action-btn.verify {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.nft-action-btn.verify:hover {
+    background: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
 }
 
 .nft-action-btn.free {
@@ -1783,8 +1798,15 @@ async function loadFreeMintCount() {
 // Open free NFT modal
 function openFreeNFTModal() {
     loadFreeMintCount();
-    const modal = new bootstrap.Modal(document.getElementById('freeNFTModal'));
-    modal.show();
+    try {
+        const modalEl = document.getElementById('freeNFTModal');
+        if (modalEl) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    } catch (e) {
+        console.error('Error opening free NFT modal:', e);
+    }
 }
 
 // Claim free NFT (server-side mint - no gas cost for user!)
@@ -1815,7 +1837,7 @@ async function claimFreeNFT() {
         const data = await response.json();
 
         if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('freeNFTModal')).hide();
+            safeCloseModal('freeNFTModal');
             showAlert(`Free ${data.nft.nft_type} NFT claimed successfully! You have ${data.remaining_free_mints} free mints remaining.`, 'success');
             loadNFTInventory();
             loadFreeMintCount();
@@ -1853,6 +1875,35 @@ async function refreshInventory() {
     }
 
     showAlert('Inventory refreshed!', 'success');
+}
+
+// Verify on-chain ownership of all NFTs
+async function verifyOwnership() {
+    const verifyBtn = document.querySelector('button[onclick="verifyOwnership()"]');
+    if (verifyBtn) {
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<i class="fas fa-shield-alt fa-spin"></i> Verifying...';
+    }
+
+    // Clear selected NFTs since data may change
+    selectedForUpgrade = [];
+    updateUpgradeSection();
+
+    const previousCount = playerNFTs.length + companyNFTs.length;
+    await loadNFTInventory(true);  // Pass verify=true
+    const newCount = playerNFTs.length + companyNFTs.length;
+
+    if (verifyBtn) {
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verify Ownership';
+    }
+
+    if (newCount < previousCount) {
+        const removed = previousCount - newCount;
+        showAlert(`Ownership verified! ${removed} NFT(s) removed (no longer owned on-chain).`, 'warning');
+    } else {
+        showAlert('Ownership verified! All NFTs confirmed on-chain.', 'success');
+    }
 }
 
 // Auto-refresh when page gains focus (user switches back to tab)
@@ -1910,8 +1961,12 @@ async function showAlert(message, type = 'info') {
     // Hide and dispose of existing modal instance if any
     const existingModal = bootstrap.Modal.getInstance(modalEl);
     if (existingModal) {
-        existingModal.hide();
-        existingModal.dispose();
+        try {
+            existingModal.hide();
+            existingModal.dispose();
+        } catch (e) {
+            // Modal may be in bad state, ignore
+        }
     }
 
     // Force hide the modal element itself
@@ -1927,8 +1982,14 @@ async function showAlert(message, type = 'info') {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     // Show modal with fresh instance
-    const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
-    modal.show();
+    let modal;
+    try {
+        modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+        modal.show();
+    } catch (e) {
+        console.error('Error showing alert modal:', e);
+        return;
+    }
 
     // Clean up backdrops when modal is hidden
     modalEl.addEventListener('hidden.bs.modal', function() {
@@ -1937,7 +1998,7 @@ async function showAlert(message, type = 'info') {
         // Dispose modal instance to fully clean up
         const instance = bootstrap.Modal.getInstance(modalEl);
         if (instance) {
-            instance.dispose();
+            try { instance.dispose(); } catch (e) { /* ignore */ }
         }
         // Extra cleanup after short delays to catch any delayed DOM changes
         setTimeout(() => cleanupModalBackdrops(), 100);
@@ -1955,7 +2016,7 @@ async function showAlert(message, type = 'info') {
             cleanupModalBackdrops();
             const instance = bootstrap.Modal.getInstance(modalEl);
             if (instance) {
-                instance.dispose();
+                try { instance.dispose(); } catch (e) { /* ignore */ }
             }
         }, 150);
         // Additional cleanup calls
@@ -2005,6 +2066,27 @@ function cleanupModalBackdrops() {
     document.documentElement.style.overflowY = 'auto';
 }
 
+// Safe modal close helper - prevents "Cannot read properties of null" errors
+function safeCloseModal(modalId) {
+    const modalEl = document.getElementById(modalId);
+    if (!modalEl) return;
+
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) {
+        try {
+            modalInstance.hide();
+        } catch (e) {
+            // Modal may already be hidden or in bad state, force cleanup
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            modalEl.removeAttribute('aria-modal');
+            modalEl.setAttribute('aria-hidden', 'true');
+        }
+    }
+    // Always clean up backdrops
+    cleanupModalBackdrops();
+}
+
 // Helper function to show confirm modal
 function showConfirm(message, callback) {
     const modalEl = document.getElementById('confirmModal');
@@ -2017,8 +2099,10 @@ function showConfirm(message, callback) {
     // Clean up any existing modal instances
     const existingModal = bootstrap.Modal.getInstance(modalEl);
     if (existingModal) {
-        existingModal.hide();
-        existingModal.dispose();
+        try {
+            existingModal.hide();
+            existingModal.dispose();
+        } catch (e) { /* ignore */ }
     }
     cleanupModalBackdrops();
 
@@ -2032,8 +2116,10 @@ function showConfirm(message, callback) {
     newConfirmBtn.addEventListener('click', function() {
         const modal = bootstrap.Modal.getInstance(modalEl);
         if (modal) {
-            modal.hide();
-            modal.dispose();
+            try {
+                modal.hide();
+                modal.dispose();
+            } catch (e) { /* ignore */ }
         }
         cleanupModalBackdrops();
         setTimeout(() => {
@@ -2043,15 +2129,21 @@ function showConfirm(message, callback) {
     });
 
     // Show modal
-    const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
-    modal.show();
+    let modal;
+    try {
+        modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+        modal.show();
+    } catch (e) {
+        console.error('Error showing confirm modal:', e);
+        return;
+    }
 
     // Clean up when modal is hidden (including cancel button)
     modalEl.addEventListener('hidden.bs.modal', function() {
         cleanupModalBackdrops();
         const instance = bootstrap.Modal.getInstance(modalEl);
         if (instance) {
-            instance.dispose();
+            try { instance.dispose(); } catch (e) { /* ignore */ }
         }
         setTimeout(() => {
             cleanupModalBackdrops();
@@ -2193,11 +2285,12 @@ function initializeNFTTabs() {
     });
 }
 
-async function loadNFTInventory() {
-    console.log('[DEBUG] loadNFTInventory() called');
+async function loadNFTInventory(verify = false) {
+    console.log('[DEBUG] loadNFTInventory() called, verify:', verify);
     try {
-        console.log('[DEBUG] Fetching /api/nft/inventory');
-        const response = await fetch('/api/nft/inventory');
+        const url = verify ? '/api/nft/inventory?verify=true' : '/api/nft/inventory';
+        console.log('[DEBUG] Fetching', url);
+        const response = await fetch(url);
         console.log('[DEBUG] Response status:', response.status);
         const data = await response.json();
         console.log('[DEBUG] Response data:', data);
@@ -2241,7 +2334,7 @@ function renderNFTList(containerId, nfts) {
         <div class="nft-card ${nft.is_equipped ? 'equipped' : ''} ${nft.is_listed ? 'listed' : ''}" data-nft-id="${nft.id}">
             <div class="nft-card-inner">
                 ${nft.image_url ? `
-                    <a href="https://horizen-testnet.explorer.caldera.xyz/token/${nft.contract_address}?a=${nft.token_id}"
+                    <a href="https://horizen.calderaexplorer.xyz/token/${nft.contract_address}?a=${nft.token_id}"
                        target="_blank"
                        onclick="event.stopPropagation()"
                        title="View on Horizen Explorer"
@@ -2252,7 +2345,7 @@ function renderNFTList(containerId, nfts) {
                 <div class="nft-card-content">
                     <div class="nft-card-header">
                         <span class="nft-tier-badge tier-${nft.tier}">Q${nft.tier}</span>
-                        <span class="badge bg-success">+${nft.bonus_value}%</span>
+                        <span class="badge bg-success">${nft.bonus_formatted}</span>
                     </div>
                     <h6 class="nft-card-title">${nft.name.split(' - ')[0]}</h6>
                     <div class="nft-card-badges">
@@ -2281,29 +2374,47 @@ function renderNFTList(containerId, nfts) {
 
 
 async function purchaseNFT() {
-    // Close the purchase modal immediately to prevent backdrop stacking
+    // Close the purchase modal safely
     const purchaseModalEl = document.getElementById('purchaseNFTModal');
-    const purchaseModal = bootstrap.Modal.getInstance(purchaseModalEl);
-    if (purchaseModal) {
-        purchaseModal.hide();
-        purchaseModal.dispose();
+    if (purchaseModalEl) {
+        const purchaseModal = bootstrap.Modal.getInstance(purchaseModalEl);
+        if (purchaseModal) {
+            // Wait for the modal to fully hide before disposing
+            try {
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => resolve(), 500); // Timeout fallback
+                    purchaseModalEl.addEventListener('hidden.bs.modal', () => {
+                        clearTimeout(timeout);
+                        resolve();
+                    }, { once: true });
+                    purchaseModal.hide();
+                });
+            } catch (e) {
+                // Modal hide failed, force cleanup
+                purchaseModalEl.classList.remove('show');
+                purchaseModalEl.style.display = 'none';
+            }
+            // Small delay before dispose to ensure animation completes
+            await new Promise(resolve => setTimeout(resolve, 50));
+            try {
+                purchaseModal.dispose();
+            } catch (e) {
+                // Modal may already be disposed, ignore
+            }
+        }
     }
     // Clean up all backdrops
     cleanupModalBackdrops();
 
-    // Small delay to ensure modal is fully closed
+    // Small delay to ensure everything is cleaned up
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Track current step for better error messages
     let currentStep = 1;
 
-    // Randomly select NFT type (player or company)
-    const types = ['player', 'company'];
-    const type = types[Math.floor(Math.random() * types.length)];
-
     const tier = parseInt(document.getElementById('purchase-tier').value);
 
-    // Select random category based on NFT type
+    // Category definitions (randomization happens AFTER approval to prevent gaming)
     const playerCategories = ['combat_boost', 'energy_regen', 'wellness_regen', 'military_tutor', 'travel_discount', 'storage_increase'];
     const companyCategories = ['production_boost', 'material_efficiency', 'upgrade_discount', 'speed_boost', 'android_worker', 'tax_breaks'];
 
@@ -2327,12 +2438,9 @@ async function purchaseNFT() {
         }
     };
 
-    let category;
-    if (type === 'player') {
-        category = playerCategories[Math.floor(Math.random() * playerCategories.length)];
-    } else {
-        category = companyCategories[Math.floor(Math.random() * companyCategories.length)];
-    }
+    // NOTE: Type and category randomization is deferred until AFTER the approval transaction
+    // This prevents users from seeing what NFT they'll get and canceling if they don't like it
+    let type, category;
 
     try {
         // Check if MetaMask is available
@@ -2354,7 +2462,7 @@ async function purchaseNFT() {
         const NFT_CONTRACT_ADDRESS = '{{ NFT_CONTRACT_ADDRESS if NFT_CONTRACT_ADDRESS else "" }}';
         // NFT_METADATA_URIS is now a global constant
         const PRICE_ZEN = 1; // All NFTs cost 1 ZEN
-        const CHAIN_ID = '{{ HORIZEN_L3_CHAIN_ID if HORIZEN_L3_CHAIN_ID else "0x28751c" }}'; // Horizen L3 Testnet chain ID (2651420 in hex)
+        const CHAIN_ID = '{{ HORIZEN_L3_CHAIN_ID if HORIZEN_L3_CHAIN_ID else "0x6792" }}'; // Horizen L3 chain ID (26514 in hex)
 
         // Validate blockchain configuration
         if (!ZEN_TOKEN_ADDRESS || !NFT_CONTRACT_ADDRESS) {
@@ -2389,18 +2497,30 @@ async function purchaseNFT() {
 
         const zenContract = new web3.eth.Contract(approveABI, ZEN_TOKEN_ADDRESS);
 
-        // Get current gas price
-        const gasPrice = await web3.eth.getGasPrice();
+        // Horizen L3 has very low gas fees - use fixed low gas price
+        const L3_GAS_PRICE = '1000000';  // 0.001 gwei in wei
 
         const approveTx = await zenContract.methods.approve(NFT_CONTRACT_ADDRESS, amountWei).send({
             from: userWallet,
-            gas: 100000,  // Reasonable gas limit for ERC20 approve
-            maxPriorityFeePerGas: web3.utils.toWei('0.001', 'gwei'),  // Low priority fee for L2
-            maxFeePerGas: gasPrice  // Use current network gas price
+            gasPrice: L3_GAS_PRICE
         });
 
+        // ===== RANDOMIZATION HAPPENS HERE =====
+        // After approval is confirmed, user is committed to the purchase
+        // Now we randomly determine what NFT they'll receive
+        // This prevents users from seeing the result and canceling
+        const types = ['player', 'company'];
+        type = types[Math.floor(Math.random() * types.length)];
+
+        if (type === 'player') {
+            category = playerCategories[Math.floor(Math.random() * playerCategories.length)];
+        } else {
+            category = companyCategories[Math.floor(Math.random() * companyCategories.length)];
+        }
+        // ===== END RANDOMIZATION =====
+
         currentStep = 2;
-        showAlert('Step 2/2: Minting NFT with payment...', 'info');
+        showAlert('Step 2/2: Minting your random NFT...', 'info');
 
         // Step 2: Call mintNFT() on the contract
         // The contract will verify payment and mint atomically
@@ -2425,7 +2545,7 @@ async function purchaseNFT() {
 
         // Get the correct bonus value based on type, category, and tier
         const bonusValue = BONUS_VALUES[type]?.[category]?.[tier] || 0;
-        console.log(`Minting ${type} ${category} Q${tier} with bonus: ${bonusValue}%`);
+        // NOTE: Not logging NFT details here to prevent users from canceling based on the result
 
         // Call mintNFT with randomly selected type and category
         const mintTx = await nftContract.methods.mintNFT(
@@ -2436,9 +2556,7 @@ async function purchaseNFT() {
             metadataURI
         ).send({
             from: userWallet,
-            gas: 500000,  // Reasonable gas limit for NFT mint with payment
-            maxPriorityFeePerGas: web3.utils.toWei('0.001', 'gwei'),  // Low priority fee for L2
-            maxFeePerGas: gasPrice  // Use current network gas price
+            gasPrice: L3_GAS_PRICE
         });
 
         const txHash = mintTx.transactionHash;
@@ -2477,12 +2595,16 @@ async function purchaseNFT() {
             }
         }
     } catch (error) {
-        console.error('Error purchasing NFT:', error);
-
         // Parse error message for user-friendly display
         const errorMsg = error.message || error.toString() || '';
+        const isUserCancellation = error.code === 4001 || errorMsg.includes('User denied') || errorMsg.includes('user rejected');
 
-        if (error.code === 4001 || errorMsg.includes('User denied') || errorMsg.includes('user rejected')) {
+        // Only log real errors, not user cancellations
+        if (!isUserCancellation) {
+            console.error('Error purchasing NFT:', error);
+        }
+
+        if (isUserCancellation) {
             if (currentStep === 1) {
                 showAlert('Transaction cancelled. You rejected the approval in MetaMask. No ZEN was spent.', 'warning');
             } else {
@@ -2798,8 +2920,8 @@ async function upgradeNFTs() {
 
             const nftContract = new web3.eth.Contract(upgradeNFTABI, NFT_CONTRACT_ADDRESS);
 
-            // Get current gas price
-            const gasPrice = await web3.eth.getGasPrice();
+            // Horizen L3 has very low gas fees - use fixed low gas price
+            const L3_GAS_PRICE = '1000000';  // 0.001 gwei in wei
 
             // Get the real metadata URI for the upgraded NFT from IPFS
             const metadataURI = NFT_METADATA_URIS[nftType]?.[category]?.[newTier] || `ipfs://placeholder/${nftType}_${category}_q${newTier}.json`;
@@ -2813,9 +2935,7 @@ async function upgradeNFTs() {
                 metadataURI
             ).send({
                 from: userWallet,
-                gas: 600000,  // Higher gas limit for burning + minting
-                maxPriorityFeePerGas: web3.utils.toWei('0.001', 'gwei'),
-                maxFeePerGas: gasPrice
+                gasPrice: L3_GAS_PRICE
             });
 
             const txHash = upgradeTx.transactionHash;

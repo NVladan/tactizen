@@ -624,7 +624,7 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>...';
 
         try {
-            const targetChainId = '0x28751c';
+            const targetChainId = '0x6792';
             const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
 
             if (currentChainId !== targetChainId) {
@@ -636,11 +636,11 @@
                 } catch (switchError) {
                     if (switchError.code === 4902) {
                         showModal('Network Not Found',
-                            `<p>Please add Horizen L3 Testnet to MetaMask:</p>
+                            `<p>Please add Horizen L3 to MetaMask:</p>
                             <ul class="text-start small">
-                                <li><strong>Network:</strong> Horizen L3 Testnet</li>
-                                <li><strong>RPC:</strong> https://horizen-testnet.rpc.caldera.xyz/http</li>
-                                <li><strong>Chain ID:</strong> 2651420</li>
+                                <li><strong>Network:</strong> Horizen L3</li>
+                                <li><strong>RPC:</strong> https://horizen.calderachain.xyz/http</li>
+                                <li><strong>Chain ID:</strong> 26514</li>
                             </ul>`, false);
                         return;
                     }
@@ -694,7 +694,7 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>...';
 
         try {
-            const targetChainId = '0x28751c';
+            const targetChainId = '0x6792';
             const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
 
             if (currentChainId !== targetChainId) {

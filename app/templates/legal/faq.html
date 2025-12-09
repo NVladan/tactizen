@@ -1,0 +1,499 @@
+{% extends "layouts/base.html" %}
+
+{% block app_content %}
+<div class="legal-hero faq-hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h1>Frequently Asked Questions</h1>
+            <p class="hero-subtitle">Find answers to common questions about Tactizen</p>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Quick Navigation -->
+            <div class="legal-nav-card">
+                <h5><i class="fas fa-compass me-2"></i>Categories</h5>
+                <div class="nav-links">
+                    <a href="#getting-started">Getting Started</a>
+                    <a href="#gameplay">Gameplay</a>
+                    <a href="#economy">Economy</a>
+                    <a href="#politics">Politics</a>
+                    <a href="#technical">Technical</a>
+                    <a href="#security">Security</a>
+                    <a href="#nfts">NFTs</a>
+                </div>
+            </div>
+
+            <div class="legal-content-card">
+                <!-- Getting Started -->
+                <div class="faq-category" id="getting-started">
+                    <div class="category-header">
+                        <i class="fas fa-rocket"></i>
+                        <h3>Getting Started</h3>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            <span>How do I create an account?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq1">
+                            <div class="faq-answer">
+                                <p>Tactizen uses Web3 wallet authentication - no traditional account creation needed!</p>
+                                <ol>
+                                    <li>Install MetaMask or any Web3-compatible wallet browser extension</li>
+                                    <li>Click "Connect Wallet" on the Tactizen homepage</li>
+                                    <li>Approve the connection in your wallet</li>
+                                    <li>Sign the authentication message (this proves you own the wallet)</li>
+                                    <li>Create your citizen profile with a username</li>
+                                </ol>
+                                <p>That's it! Your wallet address is your account - no passwords to remember.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            <span>What is a Web3 wallet and why do I need one?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq2">
+                            <div class="faq-answer">
+                                <p>A Web3 wallet (like MetaMask) is a secure digital wallet that:</p>
+                                <ul>
+                                    <li>Stores your blockchain credentials securely</li>
+                                    <li>Allows you to sign in without passwords</li>
+                                    <li>Enables you to own NFTs and in-game assets</li>
+                                    <li>Lets you participate in blockchain-verified voting</li>
+                                </ul>
+                                <p>We recommend <a href="https://metamask.io" target="_blank">MetaMask</a> for beginners - it's free and easy to set up.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            <span>How do I choose my starting country?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq3">
+                            <div class="faq-answer">
+                                <p>When creating your citizen, you'll be asked to choose a country. Consider:</p>
+                                <ul>
+                                    <li><strong>Population:</strong> Larger countries have more active communities</li>
+                                    <li><strong>Resources:</strong> Different regions have different natural resources</li>
+                                    <li><strong>Economy:</strong> Check the job market and company presence</li>
+                                    <li><strong>Politics:</strong> Some countries are more politically active</li>
+                                </ul>
+                                <p>Don't worry too much - you can always travel or change citizenship later!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gameplay -->
+                <div class="faq-category" id="gameplay">
+                    <div class="category-header">
+                        <i class="fas fa-gamepad"></i>
+                        <h3>Gameplay</h3>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            <span>What should I do every day?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq4">
+                            <div class="faq-answer">
+                                <p>Daily activities to maximize your progress:</p>
+                                <ul>
+                                    <li><strong>Train:</strong> Increases your strength (important for battles)</li>
+                                    <li><strong>Study:</strong> Improves your knowledge and skills</li>
+                                    <li><strong>Work:</strong> Earn currency at your job</li>
+                                    <li><strong>Check Missions:</strong> Complete daily missions for bonus rewards</li>
+                                    <li><strong>Vote:</strong> Participate in any active elections</li>
+                                </ul>
+                                <p>Most actions have daily limits that reset at midnight (server time).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                            <span>How do I earn money?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq5">
+                            <div class="faq-answer">
+                                <p>There are several ways to earn currency:</p>
+                                <ul>
+                                    <li><strong>Work for a company:</strong> Get a job and work daily for wages</li>
+                                    <li><strong>Start your own company:</strong> Hire workers and sell products</li>
+                                    <li><strong>Trade on the marketplace:</strong> Buy low, sell high</li>
+                                    <li><strong>Complete missions:</strong> Daily and weekly missions offer rewards</li>
+                                    <li><strong>Political positions:</strong> Government roles come with salaries</li>
+                                    <li><strong>Military bounties:</strong> Complete bounty missions for rewards</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                            <span>How does combat/fighting work?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq6">
+                            <div class="faq-answer">
+                                <p>Combat occurs in active wars between countries:</p>
+                                <ul>
+                                    <li>Go to the Wars page to see active battles</li>
+                                    <li>Choose a side and click Fight</li>
+                                    <li>Your damage depends on your strength and equipment</li>
+                                    <li>Each fight costs energy (regenerates over time)</li>
+                                    <li>Battles have rounds - the side with most damage wins</li>
+                                </ul>
+                                <p>Join a military unit for coordinated attacks and better rewards!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Economy -->
+                <div class="faq-category" id="economy">
+                    <div class="category-header">
+                        <i class="fas fa-coins"></i>
+                        <h3>Economy & Companies</h3>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                            <span>How do I start a company?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq7">
+                            <div class="faq-answer">
+                                <p>To create a company:</p>
+                                <ol>
+                                    <li>Go to My Places → Companies</li>
+                                    <li>Click "Create Company"</li>
+                                    <li>Choose the industry type (food, weapons, raw materials, etc.)</li>
+                                    <li>Select a region with appropriate resources</li>
+                                    <li>Pay the creation fee</li>
+                                </ol>
+                                <p>You'll need to hire workers and buy raw materials to produce goods. Location matters - some regions have resource bonuses!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                            <span>What's the difference between currencies?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq8">
+                            <div class="faq-answer">
+                                <p>Tactizen has multiple currencies:</p>
+                                <ul>
+                                    <li><strong>Local Currency:</strong> Each country has its own currency (earned from jobs, used in local marketplace)</li>
+                                    <li><strong>ZEN:</strong> Premium currency for special items and features</li>
+                                    <li><strong>Gold:</strong> Universal trading currency</li>
+                                </ul>
+                                <p>You can exchange currencies on the Currency Market page.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Politics -->
+                <div class="faq-category" id="politics">
+                    <div class="category-header">
+                        <i class="fas fa-landmark"></i>
+                        <h3>Politics & Voting</h3>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                            <span>How do elections work?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq9">
+                            <div class="faq-answer">
+                                <p>There are two types of elections:</p>
+                                <ul>
+                                    <li><strong>Presidential:</strong> One leader is elected per country. Candidates run individually.</li>
+                                    <li><strong>Congressional:</strong> Multiple seats filled based on party votes. Join a party to run!</li>
+                                </ul>
+                                <p>Elections have phases: Registration → Voting → Results. Check the Elections page to see what's active.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq10">
+                            <span>What is Zero-Knowledge (ZK) Voting?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq10">
+                            <div class="faq-answer">
+                                <p>Tactizen uses advanced cryptography for voting:</p>
+                                <ul>
+                                    <li><strong>Your vote is secret:</strong> No one can see who you voted for</li>
+                                    <li><strong>Verified on blockchain:</strong> The zkVerify blockchain confirms your vote is valid</li>
+                                    <li><strong>No double voting:</strong> Cryptographic nullifiers prevent voting twice</li>
+                                    <li><strong>Transparent yet private:</strong> Anyone can verify the election is fair without seeing individual votes</li>
+                                </ul>
+                                <p>This is real democratic technology - your vote truly matters and is truly secret!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Issues -->
+                <div class="faq-category" id="technical">
+                    <div class="category-header">
+                        <i class="fas fa-wrench"></i>
+                        <h3>Technical Issues</h3>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq11">
+                            <span>I can't connect my wallet - what should I do?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq11">
+                            <div class="faq-answer">
+                                <p>Try these troubleshooting steps:</p>
+                                <ol>
+                                    <li>Make sure MetaMask (or your wallet) is installed and unlocked</li>
+                                    <li>Refresh the page and try again</li>
+                                    <li>Check if your browser blocks pop-ups (wallet needs to open)</li>
+                                    <li>Try a different browser (Chrome works best with MetaMask)</li>
+                                    <li>Clear your browser cache and cookies</li>
+                                    <li>Disable other wallet extensions that might conflict</li>
+                                </ol>
+                                <p>Still having issues? <a href="{{ url_for('support.create_ticket') }}">Submit a support ticket</a>.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq12">
+                            <span>My transaction/action failed - why?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq12">
+                            <div class="faq-answer">
+                                <p>Common reasons for failed actions:</p>
+                                <ul>
+                                    <li><strong>Insufficient funds:</strong> Check if you have enough currency</li>
+                                    <li><strong>Daily limit reached:</strong> Some actions have daily caps</li>
+                                    <li><strong>Low energy:</strong> Combat and work require energy</li>
+                                    <li><strong>Session expired:</strong> Try refreshing the page and reconnecting</li>
+                                    <li><strong>Server maintenance:</strong> Check for announcements</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account & Safety -->
+                <div class="faq-category" id="security">
+                    <div class="category-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Account & Safety</h3>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq13">
+                            <span>Is my account safe?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq13">
+                            <div class="faq-answer">
+                                <p>We take security seriously:</p>
+                                <ul>
+                                    <li>Web3 authentication - no passwords to steal</li>
+                                    <li>Session fingerprinting to detect suspicious activity</li>
+                                    <li>All connections are encrypted (HTTPS)</li>
+                                    <li>We never store or access your private keys</li>
+                                </ul>
+                                <p>Your security depends on keeping your wallet seed phrase safe. Never share it with anyone!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq14">
+                            <span>Can I have multiple accounts?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq14">
+                            <div class="faq-answer">
+                                <p><strong>No.</strong> Multiple accounts (multi-accounting) is against our Terms of Service.</p>
+                                <ul>
+                                    <li>One player = One account</li>
+                                    <li>Using multiple wallets to gain advantages is prohibited</li>
+                                    <li>Violations can result in all accounts being banned</li>
+                                </ul>
+                                <p>This rule ensures fair gameplay for everyone.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NFTs & Blockchain -->
+                <div class="faq-category" id="nfts">
+                    <div class="category-header">
+                        <i class="fas fa-gem"></i>
+                        <h3>NFTs & Blockchain</h3>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq15">
+                            <span>What are NFTs in Tactizen?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq15">
+                            <div class="faq-answer">
+                                <p>NFTs (Non-Fungible Tokens) are unique digital items you truly own:</p>
+                                <ul>
+                                    <li>Special equipment, weapons, and cosmetics</li>
+                                    <li>Stored on the blockchain - you own them even outside the game</li>
+                                    <li>Can be traded on our NFT marketplace</li>
+                                    <li>Some provide in-game bonuses or exclusive features</li>
+                                </ul>
+                                <p>Check your NFT Inventory under Community menu.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq16">
+                            <span>Do I need cryptocurrency to play?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="collapse" id="faq16">
+                            <div class="faq-answer">
+                                <p><strong>No!</strong> You can play Tactizen completely free:</p>
+                                <ul>
+                                    <li>Wallet connection is free (just signing messages)</li>
+                                    <li>Core gameplay doesn't require any crypto</li>
+                                    <li>ZK voting is gas-free for players</li>
+                                    <li>NFTs and blockchain features are optional enhancements</li>
+                                </ul>
+                                <p>Cryptocurrency is only needed if you want to buy/sell NFTs on external marketplaces.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Still have questions -->
+            <div class="faq-help-card">
+                <div class="help-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="help-content">
+                    <h4>Still have questions?</h4>
+                    <p>Can't find what you're looking for? Our support team is here to help!</p>
+                    <div class="help-buttons">
+                        <a href="{{ url_for('support.create_ticket') }}" class="btn btn-primary">
+                            <i class="fas fa-ticket-alt me-2"></i>Submit a Ticket
+                        </a>
+                        <a href="{{ url_for('main.game_guide') }}" class="btn btn-outline-light">
+                            <i class="fas fa-book-open me-2"></i>Game Guide
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="legal-footer-nav">
+                <a href="{{ url_for('main.about') }}" class="footer-nav-item">
+                    <i class="fas fa-info-circle"></i>
+                    <span>About</span>
+                </a>
+                <a href="{{ url_for('main.terms_of_service') }}" class="footer-nav-item">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Terms</span>
+                </a>
+                <a href="{{ url_for('main.index') }}" class="footer-nav-item">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Back to Game</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'legal/_legal_styles.html' %}
+
+<style>
+    /* FAQ Help Card */
+    .faq-help-card {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .help-icon {
+        width: 70px;
+        height: 70px;
+        min-width: 70px;
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .help-icon i {
+        font-size: 1.75rem;
+        color: #60a5fa;
+    }
+
+    .help-content h4 {
+        color: #ffffff;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .help-content p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 1rem;
+    }
+
+    .help-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .help-buttons .btn {
+        padding: 0.6rem 1.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .faq-help-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .help-buttons {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

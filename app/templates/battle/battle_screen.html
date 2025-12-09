@@ -103,6 +103,7 @@
         padding: 0.5rem 2rem 1rem 2rem;
         position: relative;
         z-index: 1;
+        overflow: visible;
     }
 
     .wall-card {
@@ -112,6 +113,9 @@
         border: 2px solid rgba(100, 116, 139, 0.3);
         padding: 1rem 1.5rem;
         transition: all 0.3s ease;
+        position: relative;
+        overflow: visible;
+        isolation: isolate;
     }
 
     .wall-card.selected {
@@ -740,34 +744,42 @@
         position: relative;
     }
 
+    .wall-card.has-animation {
+        z-index: 10;
+    }
+
     .last-hit {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        border-radius: 8px;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
         animation: lastHitAppear 2s ease-out forwards;
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        z-index: 10;
-        overflow: hidden;
+        z-index: 1000;
         white-space: nowrap;
+        backdrop-filter: blur(8px);
+        pointer-events: none;
     }
 
     .last-hit.defender {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.2) 100%);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.5) 0%, rgba(34, 197, 94, 0.3) 100%);
         border: 2px solid #22c55e;
-        box-shadow: 0 0 25px rgba(34, 197, 94, 0.6);
-        right: calc(100% + 15px);
+        box-shadow: 0 0 30px rgba(34, 197, 94, 0.7), inset 0 0 20px rgba(34, 197, 94, 0.2);
+        left: 0;
+        transform: translateY(-50%) translateX(-105%);
         flex-direction: row-reverse;
     }
 
     .last-hit.attacker {
-        background: linear-gradient(135deg, rgba(220, 38, 38, 0.4) 0%, rgba(220, 38, 38, 0.2) 100%);
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.5) 0%, rgba(220, 38, 38, 0.3) 100%);
         border: 2px solid #dc2626;
-        box-shadow: 0 0 25px rgba(220, 38, 38, 0.6);
-        left: calc(100% + 15px);
+        box-shadow: 0 0 30px rgba(220, 38, 38, 0.7), inset 0 0 20px rgba(220, 38, 38, 0.2);
+        right: 0;
+        transform: translateY(-50%) translateX(105%);
+        flex-direction: row;
     }
 
     .last-hit::before {
@@ -789,61 +801,53 @@
     @keyframes lastHitAppear {
         0% {
             opacity: 0;
-            transform: translateY(-50%) scale(0.5);
         }
         15% {
             opacity: 1;
-            transform: translateY(-50%) scale(1.1);
-        }
-        25% {
-            transform: translateY(-50%) scale(1);
         }
         80% {
             opacity: 1;
-            transform: translateY(-50%) scale(1);
         }
         100% {
             opacity: 0;
-            transform: translateY(-70%) scale(0.8);
         }
     }
 
     .last-hit-avatar {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        border: 2px solid #fff;
+        border: 3px solid #fff;
         object-fit: cover;
+        flex-shrink: 0;
     }
 
     .last-hit-info {
         display: flex;
         flex-direction: column;
-    }
-
-    .last-hit.defender .last-hit-info {
-        text-align: right;
+        gap: 0.1rem;
     }
 
     .last-hit-name {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         color: #ffffff;
         font-weight: 600;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     }
 
     .last-hit-damage {
-        font-size: 1.1rem;
+        font-size: 1.3rem;
         font-weight: 900;
     }
 
     .last-hit.defender .last-hit-damage {
-        color: #22c55e;
-        text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        color: #4ade80;
+        text-shadow: 0 0 15px rgba(34, 197, 94, 0.8);
     }
 
     .last-hit.attacker .last-hit-damage {
-        color: #dc2626;
-        text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        color: #f87171;
+        text-shadow: 0 0 15px rgba(220, 38, 38, 0.8);
     }
 
     @media (max-width: 1200px) {
@@ -1206,6 +1210,13 @@
     </div>
 
     <!-- Three Walls (stacked vertically: Aviation, Armoured, Infantry) -->
+    {# Determine battle invader vs defender based on who started this battle #}
+    {% set battle_invader_is_war_attacker = (battle.started_by_country_id == battle.war.attacker_country_id) %}
+    {% set invader_country = battle.war.attacker_country if battle_invader_is_war_attacker else battle.war.defender_country %}
+    {% set defender_country = battle.war.defender_country if battle_invader_is_war_attacker else battle.war.attacker_country %}
+    {# For leaderboards: invader_board_key is 'attacker' if war attacker started battle, else 'defender' #}
+    {% set invader_board_key = 'attacker' if battle_invader_is_war_attacker else 'defender' %}
+    {% set defender_board_key = 'defender' if battle_invader_is_war_attacker else 'attacker' %}
     <div class="walls-container">
         <!-- Aviation Wall -->
         <div class="wall-card aviation" id="wall-aviation">
@@ -1220,10 +1231,10 @@
                 </span>
             </div>
             <div class="wall-content">
-                <!-- Defender Side -->
+                <!-- Defender Side (country defending this battle) -->
                 <div class="wall-side defender">
-                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> Defenders</div>
-                    {% for entry in leaderboards.get('aviation', {}).get('defender', [])[:3] %}
+                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> {{ defender_country.name }}</div>
+                    {% for entry in leaderboards.get('aviation', {}).get(defender_board_key, [])[:3] %}
                     <div class="top-fighter">
                         <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
                         <div class="top-fighter-info">
@@ -1239,18 +1250,20 @@
                     <div class="progress-bar-container">
                         <div class="progress-indicator"></div>
                         {% set progress = wall_progress.get('aviation', {}).get('progress', 0) %}
-                        {% if progress > 0 %}
-                        <div class="progress-fill attacker" style="width: {{ (progress / 2)|abs }}%;"></div>
-                        {% elif progress < 0 %}
-                        <div class="progress-fill defender" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {# Flip progress direction if war defender started this battle #}
+                        {% set display_progress = progress if battle_invader_is_war_attacker else -progress %}
+                        {% if display_progress > 0 %}
+                        <div class="progress-fill attacker" style="width: {{ (display_progress / 2)|abs }}%;"></div>
+                        {% elif display_progress < 0 %}
+                        <div class="progress-fill defender" style="width: {{ (display_progress / 2)|abs }}%;"></div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Attacker Side -->
+                <!-- Invader Side (country that started this battle) -->
                 <div class="wall-side attacker">
-                    <div class="wall-side-label">Attackers <i class="fas fa-crosshairs"></i></div>
-                    {% for entry in leaderboards.get('aviation', {}).get('attacker', [])[:3] %}
+                    <div class="wall-side-label">{{ invader_country.name }} <i class="fas fa-crosshairs"></i></div>
+                    {% for entry in leaderboards.get('aviation', {}).get(invader_board_key, [])[:3] %}
                     <div class="top-fighter">
                         <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
                         <div class="top-fighter-info">
@@ -1276,10 +1289,10 @@
                 </span>
             </div>
             <div class="wall-content">
-                <!-- Defender Side -->
+                <!-- Defender Side (country defending this battle) -->
                 <div class="wall-side defender">
-                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> Defenders</div>
-                    {% for entry in leaderboards.get('armoured', {}).get('defender', [])[:3] %}
+                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> {{ defender_country.name }}</div>
+                    {% for entry in leaderboards.get('armoured', {}).get(defender_board_key, [])[:3] %}
                     <div class="top-fighter">
                         <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
                         <div class="top-fighter-info">
@@ -1295,18 +1308,20 @@
                     <div class="progress-bar-container">
                         <div class="progress-indicator"></div>
                         {% set progress = wall_progress.get('armoured', {}).get('progress', 0) %}
-                        {% if progress > 0 %}
-                        <div class="progress-fill attacker" style="width: {{ (progress / 2)|abs }}%;"></div>
-                        {% elif progress < 0 %}
-                        <div class="progress-fill defender" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {# Flip progress direction if war defender started this battle #}
+                        {% set display_progress = progress if battle_invader_is_war_attacker else -progress %}
+                        {% if display_progress > 0 %}
+                        <div class="progress-fill attacker" style="width: {{ (display_progress / 2)|abs }}%;"></div>
+                        {% elif display_progress < 0 %}
+                        <div class="progress-fill defender" style="width: {{ (display_progress / 2)|abs }}%;"></div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Attacker Side -->
+                <!-- Invader Side (country that started this battle) -->
                 <div class="wall-side attacker">
-                    <div class="wall-side-label">Attackers <i class="fas fa-crosshairs"></i></div>
-                    {% for entry in leaderboards.get('armoured', {}).get('attacker', [])[:3] %}
+                    <div class="wall-side-label">{{ invader_country.name }} <i class="fas fa-crosshairs"></i></div>
+                    {% for entry in leaderboards.get('armoured', {}).get(invader_board_key, [])[:3] %}
                     <div class="top-fighter">
                         <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
                         <div class="top-fighter-info">
@@ -1332,10 +1347,10 @@
                 </span>
             </div>
             <div class="wall-content">
-                <!-- Defender Side -->
+                <!-- Defender Side (country defending this battle) -->
                 <div class="wall-side defender">
-                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> Defenders</div>
-                    {% for entry in leaderboards.get('infantry', {}).get('defender', [])[:3] %}
+                    <div class="wall-side-label"><i class="fas fa-shield-alt"></i> {{ defender_country.name }}</div>
+                    {% for entry in leaderboards.get('infantry', {}).get(defender_board_key, [])[:3] %}
                     <div class="top-fighter">
                         <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
                         <div class="top-fighter-info">
@@ -1351,18 +1366,20 @@
                     <div class="progress-bar-container">
                         <div class="progress-indicator"></div>
                         {% set progress = wall_progress.get('infantry', {}).get('progress', 0) %}
-                        {% if progress > 0 %}
-                        <div class="progress-fill attacker" style="width: {{ (progress / 2)|abs }}%;"></div>
-                        {% elif progress < 0 %}
-                        <div class="progress-fill defender" style="width: {{ (progress / 2)|abs }}%;"></div>
+                        {# Flip progress direction if war defender started this battle #}
+                        {% set display_progress = progress if battle_invader_is_war_attacker else -progress %}
+                        {% if display_progress > 0 %}
+                        <div class="progress-fill attacker" style="width: {{ (display_progress / 2)|abs }}%;"></div>
+                        {% elif display_progress < 0 %}
+                        <div class="progress-fill defender" style="width: {{ (display_progress / 2)|abs }}%;"></div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Attacker Side -->
+                <!-- Invader Side (country that started this battle) -->
                 <div class="wall-side attacker">
-                    <div class="wall-side-label">Attackers <i class="fas fa-crosshairs"></i></div>
-                    {% for entry in leaderboards.get('infantry', {}).get('attacker', [])[:3] %}
+                    <div class="wall-side-label">{{ invader_country.name }} <i class="fas fa-crosshairs"></i></div>
+                    {% for entry in leaderboards.get('infantry', {}).get(invader_board_key, [])[:3] %}
                     <div class="top-fighter">
                         <img src="{{ entry.avatar_url or url_for('static', filename='images/default_avatar_placeholder.png') }}" alt="" class="top-fighter-avatar">
                         <div class="top-fighter-info">
@@ -1429,10 +1446,13 @@
             ({{ resistance_country.name if is_attacker else occupying_country.name }})
         </div>
         {% else %}
-        <div class="your-side {% if is_attacker %}attacker{% else %}defender{% endif %}">
-            You are fighting for the
-            <strong>{% if is_attacker %}ATTACKER{% else %}DEFENDER{% endif %}</strong> side
-            ({{ battle.war.attacker_country.name if is_attacker else battle.war.defender_country.name }})
+        {# Determine if user's side started this battle #}
+        {% set user_country = battle.war.attacker_country if is_attacker else battle.war.defender_country %}
+        {% set user_started_battle = (battle.started_by_country_id == user_country.id) %}
+        <div class="your-side {% if user_started_battle %}attacker{% else %}defender{% endif %}">
+            You are fighting for
+            <strong>{{ user_country.name }}</strong>
+            {% if user_started_battle %}(Invading){% else %}(Defending){% endif %}
         </div>
         {% endif %}
 
@@ -1704,7 +1724,10 @@ function triggerBarHit(wallType) {
  */
 function showLastHit(wallType, isAttacker, username, damage, avatarUrl) {
     const card = document.getElementById('wall-' + wallType);
-    if (!card) return;
+    if (!card) {
+        console.error('Wall card not found for type:', wallType);
+        return;
+    }
 
     const sideClass = isAttacker ? 'attacker' : 'defender';
 
@@ -1713,6 +1736,9 @@ function showLastHit(wallType, isAttacker, username, damage, avatarUrl) {
     if (existingHit) {
         existingHit.remove();
     }
+
+    // Add class to elevate this card's stacking context
+    card.classList.add('has-animation');
 
     // Create the last hit element
     const lastHit = document.createElement('div');
@@ -1735,6 +1761,10 @@ function showLastHit(wallType, isAttacker, username, damage, avatarUrl) {
     setTimeout(() => {
         if (lastHit.parentNode) {
             lastHit.remove();
+        }
+        // Remove the elevated stacking class if no more animations on this card
+        if (!card.querySelector('.last-hit')) {
+            card.classList.remove('has-animation');
         }
     }, 2000);
 }
@@ -1767,6 +1797,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const weaponInfo = document.getElementById('weapon-info');
 
     function updateWeaponSelector(wallType, preserveSelection = true) {
+        // Skip if weapon selector doesn't exist (observer mode)
+        if (!weaponSelect) return;
+
         const weapons = availableWeapons[wallType] || [];
         const weaponName = weaponNames[wallType] || 'Weapon';
         const currentSelection = preserveSelection ? weaponSelect.value : '';
@@ -1776,8 +1809,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (weapons.length === 0) {
             weaponSelect.innerHTML = '<option value="">No Weapon</option>';
-            weaponInfo.textContent = '';
-            weaponQualityInput.value = '';
+            if (weaponInfo) weaponInfo.textContent = '';
+            if (weaponQualityInput) weaponQualityInput.value = '';
         } else {
             weapons.forEach(w => {
                 const option = document.createElement('option');
@@ -1785,29 +1818,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.textContent = `Q${w.quality} ${weaponName} (${w.quantity} left)`;
                 weaponSelect.appendChild(option);
             });
-            weaponInfo.textContent = '';
+            if (weaponInfo) weaponInfo.textContent = '';
 
             // Restore selection if it still exists
             if (currentSelection) {
                 const stillExists = weapons.some(w => w.quality == currentSelection);
                 if (stillExists) {
                     weaponSelect.value = currentSelection;
-                    weaponQualityInput.value = currentSelection;
+                    if (weaponQualityInput) weaponQualityInput.value = currentSelection;
                 } else {
                     // Previously selected quality is now gone, select first available
                     weaponSelect.value = weapons[0].quality;
-                    weaponQualityInput.value = weapons[0].quality;
+                    if (weaponQualityInput) weaponQualityInput.value = weapons[0].quality;
                 }
             }
         }
     }
 
-    // Initialize weapon selector for default wall (infantry)
-    updateWeaponSelector('infantry', false);
-    // Select first weapon if available
-    if (availableWeapons['infantry'] && availableWeapons['infantry'].length > 0) {
-        weaponSelect.value = availableWeapons['infantry'][0].quality;
-        weaponQualityInput.value = availableWeapons['infantry'][0].quality;
+    // Initialize weapon selector for default wall (infantry) - only if fight form exists
+    if (weaponSelect) {
+        updateWeaponSelector('infantry', false);
+        // Select first weapon if available
+        if (availableWeapons['infantry'] && availableWeapons['infantry'].length > 0) {
+            weaponSelect.value = availableWeapons['infantry'][0].quality;
+            if (weaponQualityInput) weaponQualityInput.value = availableWeapons['infantry'][0].quality;
+        }
     }
 
     wallBtns.forEach(btn => {
@@ -1815,14 +1850,14 @@ document.addEventListener('DOMContentLoaded', function() {
             wallBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const wall = this.dataset.wall;
-            wallTypeInput.value = wall;
+            if (wallTypeInput) wallTypeInput.value = wall;
 
             // Update weapon selector for this wall (don't preserve selection when switching walls)
             updateWeaponSelector(wall, false);
             // Select first weapon if available
-            if (availableWeapons[wall] && availableWeapons[wall].length > 0) {
+            if (weaponSelect && availableWeapons[wall] && availableWeapons[wall].length > 0) {
                 weaponSelect.value = availableWeapons[wall][0].quality;
-                weaponQualityInput.value = availableWeapons[wall][0].quality;
+                if (weaponQualityInput) weaponQualityInput.value = availableWeapons[wall][0].quality;
             }
 
             // Highlight selected wall card
@@ -1832,9 +1867,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Update hidden input when weapon quality changes
-    weaponSelect.addEventListener('change', function() {
-        weaponQualityInput.value = this.value;
-    });
+    if (weaponSelect) {
+        weaponSelect.addEventListener('change', function() {
+            if (weaponQualityInput) weaponQualityInput.value = this.value;
+        });
+    }
 
     // Cooldown timer
     let cooldownSeconds = {{ cooldown_remaining|default(0) }};
@@ -1881,8 +1918,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     fightBtn.classList.add('hitting');
                     setTimeout(() => fightBtn.classList.remove('hitting'), 300);
 
+                    // Determine display side: flip if war defender started this battle
+                    // If war attacker started battle, isAttacker maps directly
+                    // If war defender started battle, we flip it so their hits show on attacker/red side
+                    const displayIsAttacker = battleInvaderIsWarAttacker ? data.is_attacker : !data.is_attacker;
+
                     // Show floating damage number
-                    showFloatingDamage(damage, data.is_attacker, isCritical);
+                    showFloatingDamage(damage, displayIsAttacker, isCritical);
 
                     // Trigger progress bar hit effect
                     triggerBarHit(data.wall_type);
@@ -1893,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Show last hit on the wall
-                    showLastHit(data.wall_type, data.is_attacker, currentUsername, damage, currentUserAvatar);
+                    showLastHit(data.wall_type, displayIsAttacker, currentUsername, damage, currentUserAvatar);
 
                     // Immediately update wall leaderboards after fight
                     if (data.leaderboards) {
@@ -1950,6 +1992,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let roundEndsAt = {% if current_round and current_round.ends_at %}new Date('{{ current_round.ends_at.isoformat() }}Z'){% else %}null{% endif %};
     let battleEndsAt = {% if battle.ends_at %}new Date('{{ battle.ends_at.isoformat() }}Z'){% else %}null{% endif %};
 
+    // Whether the war attacker started this battle (used to flip display)
+    const battleInvaderIsWarAttacker = {{ 'true' if battle.started_by_country_id == battle.war.attacker_country_id else 'false' }};
+
     function formatTime(ms) {
         if (ms <= 0) return '00:00:00';
         const totalSeconds = Math.floor(ms / 1000);
@@ -1987,11 +2032,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateWallLeaderboards(leaderboards) {
         const defaultAvatar = "{{ url_for('static', filename='images/default_avatar_placeholder.png') }}";
 
+        // Determine which data key to use for each display side based on who started the battle
+        const invaderDataKey = battleInvaderIsWarAttacker ? 'attacker' : 'defender';
+        const defenderDataKey = battleInvaderIsWarAttacker ? 'defender' : 'attacker';
+
         for (const [wallType, sides] of Object.entries(leaderboards)) {
             const card = document.getElementById('wall-' + wallType);
             if (!card) continue;
 
-            // Update defender side
+            // Update defender side (left/green) - shows battle defender's fighters
             const defenderSide = card.querySelector('.wall-side.defender');
             if (defenderSide) {
                 // Keep the label, remove existing fighters
@@ -1999,8 +2048,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const existingFighters = defenderSide.querySelectorAll('.top-fighter');
                 existingFighters.forEach(f => f.remove());
 
-                // Add updated fighters
-                sides.defender.forEach(entry => {
+                // Add updated fighters (use the correct data key based on who started battle)
+                const defenderData = sides[defenderDataKey] || [];
+                defenderData.forEach(entry => {
                     const fighter = document.createElement('div');
                     fighter.className = 'top-fighter';
                     fighter.innerHTML = `
@@ -2014,7 +2064,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            // Update attacker side
+            // Update invader side (right/red) - shows battle invader's fighters
             const attackerSide = card.querySelector('.wall-side.attacker');
             if (attackerSide) {
                 // Keep the label, remove existing fighters
@@ -2022,8 +2072,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const existingFighters = attackerSide.querySelectorAll('.top-fighter');
                 existingFighters.forEach(f => f.remove());
 
-                // Add updated fighters
-                sides.attacker.forEach(entry => {
+                // Add updated fighters (use the correct data key based on who started battle)
+                const invaderData = sides[invaderDataKey] || [];
+                invaderData.forEach(entry => {
                     const fighter = document.createElement('div');
                     fighter.className = 'top-fighter';
                     fighter.innerHTML = `
@@ -2052,11 +2103,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         const existingFill = container.querySelector('.progress-fill');
                         if (existingFill) existingFill.remove();
 
-                        const progress = status.progress;
-                        if (progress !== 0) {
+                        // Flip progress if war defender started this battle
+                        const displayProgress = battleInvaderIsWarAttacker ? status.progress : -status.progress;
+                        if (displayProgress !== 0) {
                             const fill = document.createElement('div');
-                            fill.className = 'progress-fill ' + (progress > 0 ? 'attacker' : 'defender');
-                            fill.style.width = Math.abs(progress / 2) + '%';
+                            fill.className = 'progress-fill ' + (displayProgress > 0 ? 'attacker' : 'defender');
+                            fill.style.width = Math.abs(displayProgress / 2) + '%';
                             container.appendChild(fill);
                         }
                     }
@@ -2067,8 +2119,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateWallLeaderboards(data.leaderboards);
                 }
 
-                // Update available weapons
-                if (data.available_weapons) {
+                // Update available weapons (only if fight form exists)
+                if (data.available_weapons && wallTypeInput) {
                     for (const [wall, weapons] of Object.entries(data.available_weapons)) {
                         availableWeapons[wall] = weapons;
                     }
@@ -2105,7 +2157,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     newHits.slice(0, 3).forEach((hit, index) => {
                         // Stagger animations slightly
                         setTimeout(() => {
-                            showLastHit(hit.wall_type, hit.is_attacker, hit.username, hit.damage, hit.avatar_url);
+                            // Flip display side if war defender started this battle
+                            const displayIsAttacker = battleInvaderIsWarAttacker ? hit.is_attacker : !hit.is_attacker;
+                            showLastHit(hit.wall_type, displayIsAttacker, hit.username, hit.damage, hit.avatar_url);
                             triggerBarHit(hit.wall_type);
                         }, index * 200);
                     });

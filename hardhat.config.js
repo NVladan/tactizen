@@ -19,9 +19,9 @@ module.exports = {
       chainId: 84532
     },
     horizenL3: {
-      url: "https://horizen-testnet.rpc.caldera.xyz/http",
+      url: "https://horizen.calderachain.xyz/http",
       accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
-      chainId: 2651420
+      chainId: 26514
     }
   },
   etherscan: {
@@ -40,10 +40,10 @@ module.exports = {
       },
       {
         network: "horizenL3",
-        chainId: 2651420,
+        chainId: 26514,
         urls: {
-          apiURL: "https://horizen-testnet.explorer.caldera.xyz/api",
-          browserURL: "https://horizen-testnet.explorer.caldera.xyz"
+          apiURL: "https://horizen.calderaexplorer.xyz/api",
+          browserURL: "https://horizen.calderaexplorer.xyz"
         }
       }
     ]

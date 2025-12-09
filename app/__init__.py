@@ -111,6 +111,42 @@ def create_app(config_class=Config):
     app.context_processor(inject_forms)
     app.context_processor(utility_processor) # Register the new processor here
 
+    # Check maintenance mode before each request
+    @app.before_request
+    def check_maintenance_mode():
+        from flask import request, render_template
+        import os
+
+        # Check if maintenance mode is enabled (via file or env var)
+        maintenance_file = os.path.join(app.root_path, '..', 'MAINTENANCE_MODE')
+        is_maintenance = os.path.exists(maintenance_file) or os.environ.get('MAINTENANCE_MODE', '').lower() == 'true'
+
+        if is_maintenance:
+            # Allow certain paths through (admin, login, static files)
+            allowed_paths = ['/admin', '/auth/login', '/static', '/favicon.ico']
+            if any(request.path.startswith(p) for p in allowed_paths):
+                return None
+
+            # Allow admins through
+            if current_user.is_authenticated and current_user.is_admin:
+                return None
+
+            # Read maintenance message if available
+            reason = None
+            eta = None
+            if os.path.exists(maintenance_file):
+                try:
+                    with open(maintenance_file, 'r') as f:
+                        lines = f.read().strip().split('\n')
+                        if len(lines) >= 1 and lines[0]:
+                            reason = lines[0]
+                        if len(lines) >= 2 and lines[1]:
+                            eta = lines[1]
+                except:
+                    pass
+
+            return render_template('maintenance.html', reason=reason, eta=eta), 503
+
     # Track user activity and check bans before each request
     @app.before_request
     def track_activity():
