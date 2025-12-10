@@ -129,7 +129,9 @@ def view_profile(username):
     # Friendship status and friends data
     friendship_status = None
     friendship_id = None
-    friends_list = []
+
+    # Get user's friends list (visible to everyone)
+    friends_list = user.get_friends()
 
     if current_user.is_authenticated:
         if current_user.id != user.id:
@@ -151,9 +153,6 @@ def view_profile(username):
                 )
                 if friendship:
                     friendship_id = friendship.id
-
-        # Get user's friends list (visible on their own profile or for all)
-        friends_list = user.get_friends()
 
     # Check if user is online (active within last 5 minutes)
     from datetime import datetime, timedelta

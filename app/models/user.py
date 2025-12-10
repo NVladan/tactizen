@@ -1388,7 +1388,8 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
                 Friendship, Friendship.receiver_id == User.id
             ).where(
                 Friendship.requester_id == self.id,
-                Friendship.status == FriendshipStatus.ACCEPTED
+                Friendship.status == FriendshipStatus.ACCEPTED,
+                User.is_deleted == False
             )
         ).all()
 
@@ -1398,7 +1399,8 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
                 Friendship, Friendship.requester_id == User.id
             ).where(
                 Friendship.receiver_id == self.id,
-                Friendship.status == FriendshipStatus.ACCEPTED
+                Friendship.status == FriendshipStatus.ACCEPTED,
+                User.is_deleted == False
             )
         ).all()
 
