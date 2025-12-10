@@ -19,34 +19,34 @@ def seed_global_resources(app):
     # Resources: (name, category, icon_path, can_have_quality)
     resources_to_add_data = [
         # Raw materials - no quality
-        ('Coal', ResourceCategory.RAW_MATERIAL, 'images/resources/coal.png', False),
-        ('Iron ore', ResourceCategory.RAW_MATERIAL, 'images/resources/iron-ore.png', False),
-        ('Clay', ResourceCategory.RAW_MATERIAL, 'images/resources/clay.png', False),
-        ('Wheat', ResourceCategory.RAW_MATERIAL, 'images/resources/wheat.png', False),
-        ('Grape', ResourceCategory.RAW_MATERIAL, 'images/resources/grape.png', False),
-        ('Sand', ResourceCategory.RAW_MATERIAL, 'images/resources/sand.png', False),
-        ('Stone', ResourceCategory.RAW_MATERIAL, 'images/resources/stone.png', False),
-        ('Oil', ResourceCategory.RAW_MATERIAL, 'images/resources/oil.png', False),
+        ('Coal', ResourceCategory.RAW_MATERIAL, 'images/resources/coal.webp', False),
+        ('Iron ore', ResourceCategory.RAW_MATERIAL, 'images/resources/iron-ore.webp', False),
+        ('Clay', ResourceCategory.RAW_MATERIAL, 'images/resources/clay.webp', False),
+        ('Wheat', ResourceCategory.RAW_MATERIAL, 'images/resources/wheat.webp', False),
+        ('Grape', ResourceCategory.RAW_MATERIAL, 'images/resources/grape.webp', False),
+        ('Sand', ResourceCategory.RAW_MATERIAL, 'images/resources/sand.webp', False),
+        ('Stone', ResourceCategory.RAW_MATERIAL, 'images/resources/stone.webp', False),
+        ('Oil', ResourceCategory.RAW_MATERIAL, 'images/resources/oil.webp', False),
         # Manufactured goods - no quality (intermediate products)
-        ('Iron Bar', ResourceCategory.MANUFACTURED_GOOD, 'images/resources/iron-bar.png', False),
-        ('Steel', ResourceCategory.MANUFACTURED_GOOD, 'images/resources/steel.png', False),
+        ('Iron Bar', ResourceCategory.MANUFACTURED_GOOD, 'images/resources/iron-bar.webp', False),
+        ('Steel', ResourceCategory.MANUFACTURED_GOOD, 'images/resources/steel.webp', False),
         # Construction materials - no quality (intermediate)
-        ('Bricks', ResourceCategory.CONSTRUCTION, 'images/resources/bricks.png', False),
-        ('Concrete', ResourceCategory.CONSTRUCTION, 'images/resources/concrete.png', False),
+        ('Bricks', ResourceCategory.CONSTRUCTION, 'images/resources/bricks.webp', False),
+        ('Concrete', ResourceCategory.CONSTRUCTION, 'images/resources/concrete.webp', False),
         # Energy - no quality
-        ('Electricity', ResourceCategory.ENERGY, 'images/resources/electricity.png', False),
+        ('Electricity', ResourceCategory.ENERGY, 'images/resources/electricity.webp', False),
         # Food - HAS quality (Q1-Q5)
-        ('Beer', ResourceCategory.FOOD, 'images/resources/beer.png', True),
-        ('Bread', ResourceCategory.FOOD, 'images/resources/bread.png', True),
-        ('Wine', ResourceCategory.FOOD, 'images/resources/wine.png', True),
+        ('Beer', ResourceCategory.FOOD, 'images/resources/beer.webp', True),
+        ('Bread', ResourceCategory.FOOD, 'images/resources/bread.webp', True),
+        ('Wine', ResourceCategory.FOOD, 'images/resources/wine.webp', True),
         # Weapons - HAS quality (Q1-Q5)
-        ('Rifle', ResourceCategory.WEAPON, 'images/resources/rifle.png', True),
-        ('Tank', ResourceCategory.WEAPON, 'images/resources/tank.png', True),
-        ('Helicopter', ResourceCategory.WEAPON, 'images/resources/heli.png', True),
+        ('Rifle', ResourceCategory.WEAPON, 'images/resources/rifle.webp', True),
+        ('Tank', ResourceCategory.WEAPON, 'images/resources/tank.webp', True),
+        ('Helicopter', ResourceCategory.WEAPON, 'images/resources/heli.webp', True),
         # Construction buildings - HAS quality (Q1-Q5)
-        ('Fort', ResourceCategory.CONSTRUCTION, 'images/resources/fort.png', True),
-        ('Hospital', ResourceCategory.CONSTRUCTION, 'images/resources/hospital.png', True),
-        ('House', ResourceCategory.CONSTRUCTION, 'images/resources/house.png', True),
+        ('Fort', ResourceCategory.CONSTRUCTION, 'images/resources/fort.webp', True),
+        ('Hospital', ResourceCategory.CONSTRUCTION, 'images/resources/hospital.webp', True),
+        ('House', ResourceCategory.CONSTRUCTION, 'images/resources/house.webp', True),
     ]
 
     added_count = 0

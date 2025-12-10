@@ -486,9 +486,9 @@
                             <div class="construction-item {{ construction.construction_type }}">
                                 <div class="construction-icon {{ construction.construction_type }}">
                                     {% if construction.construction_type == 'hospital' %}
-                                    <img src="{{ url_for('static', filename='images/resources/hospital.png') }}" alt="Hospital" class="construction-img">
+                                    <img src="{{ url_for('static', filename='images/resources/hospital.webp') }}" alt="Hospital" class="construction-img">
                                     {% elif construction.construction_type == 'fortress' %}
-                                    <img src="{{ url_for('static', filename='images/resources/fort.png') }}" alt="Fortress" class="construction-img">
+                                    <img src="{{ url_for('static', filename='images/resources/fort.webp') }}" alt="Fortress" class="construction-img">
                                     {% endif %}
                                 </div>
                                 <div class="construction-info">
@@ -529,7 +529,7 @@
                             {% for deposit in regional_resources %}
                             <div class="resource-item">
                                 <div class="resource-icon">
-                                    <img src="{{ url_for('static', filename='images/resources/' + deposit.resource.slug + '.png') }}"
+                                    <img src="{{ url_for('static', filename='images/resources/' + deposit.resource.slug + '.webp') }}"
                                          alt="{{ deposit.resource.name }}" class="resource-img">
                                 </div>
                                 <div class="resource-info">

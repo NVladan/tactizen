@@ -23,7 +23,7 @@ if not fort:
     fort = Resource(
         name='Fort',
         description='Military fortification for defense',
-        icon_path='images/resources/fort.png',
+        icon_path='images/resources/fort.webp',
         category='military',
         base_price=5000.00
     )
@@ -36,7 +36,7 @@ if not hospital:
     hospital = Resource(
         name='Hospital',
         description='Healthcare facility for treating citizens',
-        icon_path='images/resources/hospital.png',
+        icon_path='images/resources/hospital.webp',
         category='infrastructure',
         base_price=8000.00
     )
@@ -49,7 +49,7 @@ if not house:
     house = Resource(
         name='House',
         description='Residential building for citizens',
-        icon_path='images/resources/house.png',
+        icon_path='images/resources/house.webp',
         category='infrastructure',
         base_price=2000.00
     )
