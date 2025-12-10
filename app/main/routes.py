@@ -5,7 +5,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import current_user, login_required
 from app.main import bp
 from app.extensions import db
-from app.models import PartyElection, ElectionStatus, Referral, ReferralStatus, Country, Region, Article, NewspaperSubscription, ArticleVote, GovernmentElection, GovernmentElectionStatus, ElectionType
+from app.models import PartyElection, ElectionStatus, Referral, ReferralStatus, Country, Region, Article, NewspaperSubscription, ArticleVote, GovernmentElection, GovernmentElectionStatus, ElectionType, Resource
 from app.models.government import Law, LawStatus, War, WarStatus
 from app.models.battle import Battle, BattleStatus
 from app.services.mission_service import MissionService
@@ -384,7 +384,12 @@ def index():
                              international_wars=international_wars,
                              dashboard_missions=dashboard_missions)
     else:
-        return render_template('index.html', title='Welcome')
+        # Get stats for landing page
+        country_count = db.session.query(func.count(Country.id)).scalar() or 0
+        resource_count = db.session.query(func.count(Resource.id)).scalar() or 0
+        return render_template('index.html', title='Welcome',
+                             country_count=country_count,
+                             resource_count=resource_count)
 
 @bp.route('/referral')
 @login_required
