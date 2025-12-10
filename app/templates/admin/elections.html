@@ -2,8 +2,15 @@
 
 {% block app_content %}
 <div class="admin-container">
-    <h2><i class="fas fa-vote-yea"></i> Elections Management</h2>
-    <p class="text-muted">Manage government elections, advance phases, and close voting</p>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-vote-yea"></i> Elections Management</h2>
+            <p class="text-muted">Manage government elections, advance phases, and close voting</p>
+        </div>
+        <a href="{{ url_for('admin.create_government_election') }}" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i> Create Election
+        </a>
+    </div>
     <hr>
 
     <!-- Filter Tabs -->
