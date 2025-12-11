@@ -178,35 +178,19 @@
             box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
         }
 
-        .game-day-counter {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(245, 158, 11, 0.15);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            border-radius: 8px;
-            padding: 0.4rem 0.85rem;
-            margin-left: 1rem;
+        .game-day-footer {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 6px;
+            padding: 0.35rem 0.75rem;
             color: #f59e0b;
             font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .game-day-counter i {
             font-size: 0.85rem;
         }
 
-        .game-day-counter-mobile {
-            display: flex;
-            align-items: center;
-            background: rgba(245, 158, 11, 0.15);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            border-radius: 6px;
-            padding: 0.25rem 0.6rem;
-            margin-right: 0.5rem;
-            color: #f59e0b;
-            font-weight: 600;
-            font-size: 0.75rem;
+        .game-day-footer i {
+            font-size: 0.8rem;
+            opacity: 0.9;
         }
 
         .wallet-connect {
@@ -679,15 +663,6 @@
         <a class="navbar-brand" href="{{ url_for('main.index') }}">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="" onerror="this.style.display='none'">Tactizen
         </a>
-        {# Game Day Counter - Desktop #}
-        <div class="game-day-counter d-none d-lg-flex">
-            <i class="fas fa-calendar-day"></i>
-            <span>Day {{ game_day }}</span>
-        </div>
-        {# Game Day Counter - Mobile (before toggler) #}
-        <div class="game-day-counter-mobile d-flex d-lg-none">
-            <span>Day {{ game_day }}</span>
-        </div>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMainContent" aria-controls="navbarMainContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -1001,24 +976,30 @@
     {% block footer %}
     <footer class="container mt-4 py-3" style="border-top: 1px solid rgba(34, 197, 94, 0.2);">
         <div class="row align-items-center">
-            <div class="col-md-4 text-center text-md-start mb-2 mb-md-0">
+            <div class="col-md-3 text-center text-md-start mb-2 mb-md-0">
                 <p class="text-muted small mb-0">
                     Copyright © {{ current_year }} Tactizen Recreation. All rights reserved.
                 </p>
             </div>
-            <div class="col-md-4 text-center mb-2 mb-md-0">
-                <a href="{{ url_for('main.about') }}" class="text-muted small me-3 text-decoration-none">About</a>
-                <a href="{{ url_for('main.faq') }}" class="text-muted small me-3 text-decoration-none">FAQ</a>
-                <a href="{{ url_for('main.terms_of_service') }}" class="text-muted small me-3 text-decoration-none">Terms</a>
+            <div class="col-md-3 text-center mb-2 mb-md-0">
+                <a href="{{ url_for('main.about') }}" class="text-muted small me-2 text-decoration-none">About</a>
+                <a href="{{ url_for('main.faq') }}" class="text-muted small me-2 text-decoration-none">FAQ</a>
+                <a href="{{ url_for('main.terms_of_service') }}" class="text-muted small me-2 text-decoration-none">Terms</a>
                 <a href="{{ url_for('main.privacy_policy') }}" class="text-muted small text-decoration-none">Privacy</a>
             </div>
-            <div class="col-md-4 text-center text-md-end">
+            <div class="col-md-3 text-center mb-2 mb-md-0">
                 <a href="{{ url_for('support.my_tickets') }}" class="text-muted small me-3 text-decoration-none">
                     <i class="fas fa-ticket-alt me-1"></i>Support
                 </a>
                 <a href="{{ url_for('support.create_ticket') }}" class="text-muted small text-decoration-none">
                     <i class="fas fa-question-circle me-1"></i>Help
                 </a>
+            </div>
+            <div class="col-md-3 text-center text-md-end">
+                <div class="game-day-footer d-inline-flex align-items-center">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    <span>Day {{ game_day }}</span>
+                </div>
             </div>
         </div>
     </footer>
