@@ -109,6 +109,60 @@
         cursor: not-allowed;
     }
 
+    /* Skill Selection Cards */
+    .skill-selection {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .skill-option {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .skill-option:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+        background: rgba(34, 197, 94, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .skill-option.selected {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.15);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .skill-option-img {
+        width: 64px;
+        height: 64px;
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+        object-fit: cover;
+    }
+
+    .skill-option-name {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .skill-option-gain {
+        font-size: 0.8rem;
+        color: #22c55e;
+    }
+
+    .skill-option input[type="radio"] {
+        display: none;
+    }
+
     /* =====================================================
        MOBILE RESPONSIVE DESIGN - Training Page
        ===================================================== */
@@ -213,6 +267,28 @@
             font-size: 0.75rem;
         }
 
+        /* Skill Selection Mobile */
+        .skill-selection {
+            gap: 0.5rem;
+        }
+
+        .skill-option {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .skill-option-img {
+            width: 48px;
+            height: 48px;
+        }
+
+        .skill-option-name {
+            font-size: 0.8rem;
+        }
+
+        .skill-option-gain {
+            font-size: 0.7rem;
+        }
+
         /* Hour Display */
         .hour-display {
             font-size: 2.25rem;
@@ -221,11 +297,6 @@
         /* Form Elements */
         .form-label {
             font-size: 0.9rem;
-        }
-
-        .form-select {
-            font-size: 0.9rem;
-            padding: 0.6rem 0.75rem;
         }
 
         /* Cost Summary */
@@ -391,21 +462,21 @@
                     <div class="row text-center">
                         <div class="col-4">
                             <div class="mb-2">
-                                <i class="fas fa-fist-raised fa-2x" style="color: #22c55e;"></i>
+                                <img src="{{ url_for('static', filename='images/skills/infantry.webp') }}" alt="Infantry" style="width: 48px; height: 48px; border-radius: 8px;">
                             </div>
                             <div class="text-white fw-bold">{{ skills.infantry|round(2) }}</div>
                             <div class="text-muted small">Infantry</div>
                         </div>
                         <div class="col-4">
                             <div class="mb-2">
-                                <i class="fas fa-shield-alt fa-2x" style="color: #22c55e;"></i>
+                                <img src="{{ url_for('static', filename='images/skills/armoured.webp') }}" alt="Armoured" style="width: 48px; height: 48px; border-radius: 8px;">
                             </div>
                             <div class="text-white fw-bold">{{ skills.armoured|round(2) }}</div>
                             <div class="text-muted small">Armoured</div>
                         </div>
                         <div class="col-4">
                             <div class="mb-2">
-                                <i class="fas fa-crosshairs fa-2x" style="color: #22c55e;"></i>
+                                <img src="{{ url_for('static', filename='images/skills/heli.webp') }}" alt="Aviation" style="width: 48px; height: 48px; border-radius: 8px;">
                             </div>
                             <div class="text-white fw-bold">{{ skills.aviation|round(2) }}</div>
                             <div class="text-muted small">Aviation</div>
@@ -435,13 +506,27 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <!-- Skill Selection -->
                         <div class="mb-4">
-                            <label class="form-label text-white">Select Skill to Train</label>
-                            <select name="skill_type" class="form-select" required>
-                                <option value="">Choose skill...</option>
-                                <option value="infantry">Infantry (+0.01 per hour)</option>
-                                <option value="armoured">Armoured (+0.01 per hour)</option>
-                                <option value="aviation">Aviation (+0.01 per hour)</option>
-                            </select>
+                            <label class="form-label text-white mb-3">Select Skill to Train</label>
+                            <div class="skill-selection">
+                                <label class="skill-option" data-skill="infantry">
+                                    <input type="radio" name="skill_type" value="infantry" required>
+                                    <img src="{{ url_for('static', filename='images/skills/infantry.webp') }}" alt="Infantry" class="skill-option-img">
+                                    <div class="skill-option-name">Infantry</div>
+                                    <div class="skill-option-gain">+0.01/hr</div>
+                                </label>
+                                <label class="skill-option" data-skill="armoured">
+                                    <input type="radio" name="skill_type" value="armoured" required>
+                                    <img src="{{ url_for('static', filename='images/skills/armoured.webp') }}" alt="Armoured" class="skill-option-img">
+                                    <div class="skill-option-name">Armoured</div>
+                                    <div class="skill-option-gain">+0.01/hr</div>
+                                </label>
+                                <label class="skill-option" data-skill="aviation">
+                                    <input type="radio" name="skill_type" value="aviation" required>
+                                    <img src="{{ url_for('static', filename='images/skills/heli.webp') }}" alt="Aviation" class="skill-option-img">
+                                    <div class="skill-option-name">Aviation</div>
+                                    <div class="skill-option-gain">+0.01/hr</div>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Hours Slider -->
@@ -501,6 +586,17 @@
         hourDisplay.textContent = hours;
         energyCost.textContent = hours * 2;  // 2 energy per hour
         skillGain.textContent = '+' + (hours * 0.01).toFixed(2);
+    });
+
+    // Skill selection visual feedback
+    const skillOptions = document.querySelectorAll('.skill-option');
+    skillOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            skillOptions.forEach(opt => opt.classList.remove('selected'));
+            // Add selected class to clicked option
+            this.classList.add('selected');
+        });
     });
 </script>
 {% endblock %}
