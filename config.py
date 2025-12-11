@@ -278,12 +278,13 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
 
-    # Production: Larger connection pool for handling more concurrent users
+    # Production: Connection pool sized for 4 Gunicorn workers
+    # 4 workers × 15 max connections = 60 total, well under MySQL's 200 limit
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 20,           # More persistent connections for production load
-        'max_overflow': 40,        # Allow up to 60 total connections under heavy load
+        'pool_size': 5,            # Persistent connections per worker
+        'max_overflow': 10,        # Additional connections under heavy load
         'pool_timeout': 30,        # Seconds to wait for a connection
-        'pool_recycle': 1800,      # Recycle connections after 30 minutes
+        'pool_recycle': 300,       # Recycle connections every 5 minutes (prevent stale)
         'pool_pre_ping': True,     # Check connection health before use
     }
 

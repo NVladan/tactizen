@@ -8,7 +8,10 @@ bind = "127.0.0.1:5000"  # Only listen locally (Nginx will proxy)
 backlog = 2048
 
 # Worker processes
-workers = multiprocessing.cpu_count() * 2 + 1  # Recommended formula
+# Limit workers to avoid exhausting database connections
+# With pool_size=5 and max_overflow=10, each worker uses up to 15 connections
+# 4 workers × 15 = 60 connections max, well under MySQL's 200 limit
+workers = 4  # Fixed number instead of CPU-based formula
 worker_class = "sync"  # Use "gevent" or "eventlet" for async if needed
 worker_connections = 1000
 timeout = 120  # Increased for long-running requests
