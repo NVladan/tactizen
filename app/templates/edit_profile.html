@@ -371,10 +371,12 @@ function selectBackground(value) {
     });
 }
 
-// Client-side image resizing to prevent 413 errors
+// Client-side image resizing to prevent 413 errors and convert unsupported formats
 document.addEventListener('DOMContentLoaded', function() {
     const avatarInput = document.getElementById('avatar');
     if (!avatarInput) return;
+
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
 
     avatarInput.addEventListener('change', async function(e) {
         const file = e.target.files[0];
@@ -383,18 +385,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if it's an image
         if (!file.type.startsWith('image/')) return;
 
-        // If file is larger than 500KB, resize it
+        // Check file extension
+        const ext = file.name.split('.').pop().toLowerCase();
+        const needsConversion = !allowedExtensions.includes(ext);
         const maxSize = 500 * 1024; // 500KB
-        if (file.size > maxSize) {
+
+        // Resize if too large OR if format needs conversion (webp, heic, etc.)
+        if (file.size > maxSize || needsConversion) {
             try {
                 const resizedFile = await resizeImage(file, 800, 800, 0.85);
                 // Create a new FileList-like object with the resized file
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(resizedFile);
                 avatarInput.files = dataTransfer.files;
-                console.log(`Image resized from ${(file.size/1024).toFixed(1)}KB to ${(resizedFile.size/1024).toFixed(1)}KB`);
+                console.log(`Image processed: ${(file.size/1024).toFixed(1)}KB -> ${(resizedFile.size/1024).toFixed(1)}KB`);
             } catch (err) {
-                console.error('Error resizing image:', err);
+                console.error('Error processing image:', err);
             }
         }
     });
@@ -431,8 +437,9 @@ function resizeImage(file, maxWidth, maxHeight, quality) {
 
                 canvas.toBlob(function(blob) {
                     if (blob) {
-                        // Create a new File object with the original name
-                        const resizedFile = new File([blob], file.name, {
+                        // Create a new File object with .jpg extension for Flask validation
+                        const baseName = file.name.replace(/\.[^/.]+$/, '');
+                        const resizedFile = new File([blob], baseName + '.jpg', {
                             type: 'image/jpeg',
                             lastModified: Date.now()
                         });
