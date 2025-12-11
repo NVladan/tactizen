@@ -389,7 +389,11 @@
                                 <img src="{{ url_for('static', filename='images/default_avatar_placeholder.png') }}" class="player-avatar" alt="{{ player.username }}">
                             {% endif %}
                             <div>
+                                {% if player.username %}
                                 <a href="{{ url_for('main.view_profile', username=player.username) }}" class="player-name">{{ player.username }}</a>
+                                {% else %}
+                                <span class="player-name text-muted">Anonymous</span>
+                                {% endif %}
                                 <div class="stat-label">Level {{ player.level }}</div>
                             </div>
                         </div>
