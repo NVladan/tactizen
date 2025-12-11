@@ -35,7 +35,13 @@ def reset_all_market_items(app):
         )
         print(f"\nExisting market items: {existing_count}")
 
-        # Step 2: Delete ALL existing market items
+        # Step 2: Delete price history first (foreign key constraint)
+        print("\nDeleting market price history...")
+        db.session.execute(db.text("DELETE FROM market_price_history"))
+        db.session.commit()
+        print("  Price history deleted.")
+
+        # Step 3: Delete ALL existing market items
         print("\nDeleting all existing market items...")
         db.session.execute(db.delete(CountryMarketItem))
         db.session.commit()
