@@ -1498,14 +1498,17 @@
                                 <i class="fas fa-briefcase me-2"></i>Work Skills
                             </div>
                             <div class="skill-row">
+                                <img src="{{ url_for('static', filename='images/skills/resource_extraction.webp') }}" alt="Resource Extraction" class="skill-icon">
                                 <span class="skill-name">Resource Extraction</span>
                                 <span class="skill-value work">{{ user.skill_resource_extraction|round(2) }}</span>
                             </div>
                             <div class="skill-row">
+                                <img src="{{ url_for('static', filename='images/skills/manufacture.webp') }}" alt="Manufacture" class="skill-icon">
                                 <span class="skill-name">Manufacture</span>
                                 <span class="skill-value work">{{ user.skill_manufacture|round(2) }}</span>
                             </div>
                             <div class="skill-row">
+                                <img src="{{ url_for('static', filename='images/skills/construction.webp') }}" alt="Construction" class="skill-icon">
                                 <span class="skill-name">Construction</span>
                                 <span class="skill-value work">{{ user.skill_construction|round(2) }}</span>
                             </div>
