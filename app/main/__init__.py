@@ -51,4 +51,4 @@ bp.add_app_template_filter(timesince)
 # Remove the old market_routes and import the new ones
 from app.main import routes, profile_routes, my_places_routes, location_routes, company_routes # noqa
 from app.main import resource_market_routes, currency_market_routes, zen_market_routes, zen_market_api, messaging_routes # noqa
-from app.main import newspaper_routes, newspaper_image_upload, achievement_routes, battle_routes, mission_routes # noqa
+from app.main import newspaper_routes, newspaper_image_upload, achievement_routes, battle_routes, mission_routes, seo_routes # noqa
