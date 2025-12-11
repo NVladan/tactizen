@@ -93,11 +93,13 @@ class EditProfileForm(FlaskForm):
         self.original_username = original_username
 
     def validate_username(self, username):
-        # Skip validation if username hasn't changed (already set)
-        if username.data == self.original_username:
+        # Skip validation if username hasn't changed (already set and not empty)
+        if self.original_username and username.data == self.original_username:
             return
 
         # Check for reserved usernames (case-insensitive, ignoring spaces/underscores/hyphens)
+        if not username.data:
+            return  # Let DataRequired handle empty username
         username_normalized = username.data.lower().replace(' ', '').replace('_', '').replace('-', '')
         for reserved in RESERVED_USERNAMES:
             if reserved in username_normalized:
