@@ -48,6 +48,7 @@ class User(SoftDeleteMixin, UserMixin, db.Model):
     username = db.Column(db.String(30), index=True, unique=True, nullable=True)
     description = db.Column(db.Text, nullable=True)
     avatar = db.Column(db.Boolean, default=False)
+    profile_background = db.Column(db.String(20), default='default', nullable=False)  # military, political, economic, default
     experience = db.Column(db.Integer, default=0, nullable=False, index=True)
 
     # Military Skills

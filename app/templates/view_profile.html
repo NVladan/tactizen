@@ -194,11 +194,28 @@
     margin-bottom: 1rem;
 }
 
+/* Profile Banner */
+.profile-banner {
+    height: 180px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px 12px 0 0;
+    position: relative;
+    margin-bottom: -1px;
+}
+
+.profile-banner-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(15, 20, 25, 0.9) 100%);
+    border-radius: 12px 12px 0 0;
+}
+
 /* Main Content Area */
 .profile-header-bar {
     background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
     border: 1px solid rgba(34, 197, 94, 0.2);
-    border-radius: 12px;
+    border-radius: 0 0 12px 12px;
     padding: 1rem 1.5rem;
     margin-bottom: 1rem;
     display: flex;
@@ -927,6 +944,10 @@
         gap: 1rem;
     }
 
+    .profile-banner {
+        height: 120px;
+    }
+
     .profile-header-bar {
         padding: 1rem;
         flex-direction: column;
@@ -1335,6 +1356,11 @@
 
     <!-- Main Content -->
     <div class="profile-main">
+        <!-- Profile Background Banner -->
+        <div class="profile-banner" style="background-image: url('{{ url_for('static', filename='images/profile_backgrounds/' ~ (user.profile_background or 'default') ~ '.png') }}');">
+            <div class="profile-banner-overlay"></div>
+        </div>
+
         <!-- Profile Header Bar -->
         <div class="profile-header-bar">
             <div class="profile-title">

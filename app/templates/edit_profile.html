@@ -138,6 +138,81 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         margin-bottom: 0.75rem;
     }
+
+    /* Background Selector */
+    .background-selector {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .background-option {
+        position: relative;
+        cursor: pointer;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .background-option:hover {
+        border-color: rgba(34, 197, 94, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .background-option.selected {
+        border-color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+    }
+
+    .background-preview {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .background-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        color: #fff;
+        padding: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .background-check {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        background: #22c55e;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .background-option.selected .background-check {
+        display: flex;
+    }
+
+    @media (max-width: 576px) {
+        .background-selector {
+            grid-template-columns: 1fr;
+        }
+        .background-preview {
+            height: 80px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -203,7 +278,7 @@
         <div class="col-md-8">
             <div class="form-section">
                 <h4><i class="fas fa-edit me-2"></i>Edit Your Profile</h4>
-                <form method="POST" action="{{ url_for('main.edit_profile') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ url_for('main.edit_profile') }}" enctype="multipart/form-data" id="editProfileForm">
                     {{ form.hidden_tag() }}
 
                     {# Username field - locked after first setup #}
@@ -240,9 +315,35 @@
                         {% endfor %}
                     </div>
 
+                    {# Profile background selector #}
+                    <div class="mb-4">
+                        <label class="form-label">{{ form.profile_background.label.text }}</label>
+                        <div class="background-selector">
+                            {% for value, label in [('default', 'Default'), ('military', 'Military'), ('political', 'Political'), ('economic', 'Economic')] %}
+                            <div class="background-option{% if form.profile_background.data == value %} selected{% endif %}"
+                                 onclick="selectBackground('{{ value }}')"
+                                 data-value="{{ value }}">
+                                <img src="{{ url_for('static', filename='images/profile_backgrounds/' ~ value ~ '.png') }}"
+                                     alt="{{ label }}" class="background-preview">
+                                <div class="background-label">{{ label }}</div>
+                                <div class="background-check"><i class="fas fa-check"></i></div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {{ form.profile_background(class="d-none", id="profile_background") }}
+                        {% for error in form.profile_background.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
                     {# Submit button #}
-                    <div class="d-grid">
-                        {{ form.submit(class="btn btn-primary w-100") }}
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('main.view_profile', username=current_user.username) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Profile
+                        </a>
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
                     </div>
                 </form>
             </div>
@@ -251,6 +352,24 @@
 </div>
 
 {# Modal for feedback #}
+<script>
+function selectBackground(value) {
+    // Update the hidden select field
+    const selectEl = document.getElementById('profile_background');
+    if (selectEl) {
+        selectEl.value = value;
+    }
+
+    // Update visual selection
+    document.querySelectorAll('.background-option').forEach(option => {
+        option.classList.remove('selected');
+        if (option.dataset.value === value) {
+            option.classList.add('selected');
+        }
+    });
+}
+</script>
+
 {% if message %}
 <div class="modal fade" id="profileMessageModal" tabindex="-1" aria-labelledby="profileMessageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

@@ -80,6 +80,12 @@ class EditProfileForm(FlaskForm):
     avatar = FileField('Update Profile Picture (Optional, Max 2MB)', validators=[
         FileAllowed(ALLOWED_EXTENSIONS, 'Images only!')
     ])
+    profile_background = SelectField('Profile Background', choices=[
+        ('default', 'Default'),
+        ('military', 'Military'),
+        ('political', 'Political'),
+        ('economic', 'Economic')
+    ])
     submit = SubmitField('Save Changes')
 
     def __init__(self, original_username, *args, **kwargs):
@@ -87,16 +93,19 @@ class EditProfileForm(FlaskForm):
         self.original_username = original_username
 
     def validate_username(self, username):
+        # Skip validation if username hasn't changed (already set)
+        if username.data == self.original_username:
+            return
+
         # Check for reserved usernames (case-insensitive, ignoring spaces/underscores/hyphens)
         username_normalized = username.data.lower().replace(' ', '').replace('_', '').replace('-', '')
         for reserved in RESERVED_USERNAMES:
             if reserved in username_normalized:
                 raise ValidationError('This username is reserved and cannot be used.')
 
-        if username.data != self.original_username:
-            user = db.session.scalar(db.select(User).where(User.username == username.data, User.is_deleted == False))
-            if user is not None:
-                raise ValidationError('This username is already taken. Please choose a different one.')
+        user = db.session.scalar(db.select(User).where(User.username == username.data, User.is_deleted == False))
+        if user is not None:
+            raise ValidationError('This username is already taken. Please choose a different one.')
 
 class TrainForm(FlaskForm):
     skill_choice = SelectField('Choose Skill to Train', choices=[

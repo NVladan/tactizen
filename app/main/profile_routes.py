@@ -87,10 +87,11 @@ def edit_profile():
         if not username_locked:
             current_user.username = form.username.data
         current_user.description = InputSanitizer.sanitize_description(form.description.data)
+        current_user.profile_background = form.profile_background.data
         try:
             db.session.commit()
-            flash('Your profile has been updated.', 'success')
-            return redirect(url_for('main.index')) # Redirect to dashboard after saving
+            flash('Your profile has been updated successfully!', 'success')
+            return redirect(url_for('main.view_profile', username=current_user.username)) # Redirect to profile view
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error updating profile for {current_user.wallet_address}: {e}", exc_info=True)
@@ -99,6 +100,7 @@ def edit_profile():
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.description.data = current_user.description
+        form.profile_background.data = current_user.profile_background
 
     avatar_url = None
     if current_user.avatar:
