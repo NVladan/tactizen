@@ -445,13 +445,23 @@
 
 .skill-row {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     padding: 0.4rem 0;
+    gap: 0.5rem;
+}
+
+.skill-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    object-fit: cover;
 }
 
 .skill-name {
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.85rem;
+    flex: 1;
 }
 
 .skill-value {
@@ -1468,14 +1478,17 @@
                                 <i class="fas fa-crosshairs me-2"></i>Military Skills
                             </div>
                             <div class="skill-row">
+                                <img src="{{ url_for('static', filename='images/skills/infantry.webp') }}" alt="Infantry" class="skill-icon">
                                 <span class="skill-name">Infantry</span>
                                 <span class="skill-value military">{{ user.skill_infantry|round(2) }}</span>
                             </div>
                             <div class="skill-row">
+                                <img src="{{ url_for('static', filename='images/skills/armoured.webp') }}" alt="Armoured" class="skill-icon">
                                 <span class="skill-name">Armoured</span>
                                 <span class="skill-value military">{{ user.skill_armoured|round(2) }}</span>
                             </div>
                             <div class="skill-row">
+                                <img src="{{ url_for('static', filename='images/skills/heli.webp') }}" alt="Aviation" class="skill-icon">
                                 <span class="skill-name">Aviation</span>
                                 <span class="skill-value military">{{ user.skill_aviation|round(2) }}</span>
                             </div>
