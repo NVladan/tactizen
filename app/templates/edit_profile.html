@@ -376,21 +376,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const avatarInput = document.getElementById('avatar');
     if (!avatarInput) return;
 
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const unsupportedFormats = ['heic', 'heif'];
 
     avatarInput.addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Check file extension
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        // Check for HEIC/HEIF - browsers can't process these
+        if (unsupportedFormats.includes(ext)) {
+            alert('HEIC/HEIF format is not supported. Please convert your image to JPG or PNG first.\n\nOn iPhone: Open the image in Photos, tap Share, then "Save to Files" and choose JPEG format.');
+            avatarInput.value = '';
+            return;
+        }
+
         // Check if it's an image
         if (!file.type.startsWith('image/')) return;
 
-        // Check file extension
-        const ext = file.name.split('.').pop().toLowerCase();
-        const needsConversion = !allowedExtensions.includes(ext);
+        const needsConversion = !['jpg', 'jpeg', 'png', 'gif'].includes(ext);
         const maxSize = 500 * 1024; // 500KB
 
-        // Resize if too large OR if format needs conversion (webp, heic, etc.)
+        // Resize if too large OR if format needs conversion (webp, etc.)
         if (file.size > maxSize || needsConversion) {
             try {
                 const resizedFile = await resizeImage(file, 800, 800, 0.85);
@@ -401,6 +410,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`Image processed: ${(file.size/1024).toFixed(1)}KB -> ${(resizedFile.size/1024).toFixed(1)}KB`);
             } catch (err) {
                 console.error('Error processing image:', err);
+                alert('Could not process this image. Please try a different file or convert it to JPG/PNG.');
+                avatarInput.value = '';
             }
         }
     });
