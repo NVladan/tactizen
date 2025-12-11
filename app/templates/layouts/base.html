@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}{{ title | default('Tactizen') }}{% endblock %}</title>
+
+    {# --- SEO Meta Tags --- #}
+    <meta name="description" content="{% block meta_description %}Tactizen is a free-to-play browser-based strategy MMO game. Build companies, lead armies, govern nations, and shape the world through politics and warfare.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}Tactizen, strategy game, MMO, browser game, political simulation, war game, economy simulation, multiplayer, free to play{% endblock %}">
+    <meta name="author" content="Tactizen Recreation">
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+    <link rel="canonical" href="{{ request.url }}">
+
+    {# --- Open Graph Tags (Facebook, LinkedIn, etc.) --- #}
+    <meta property="og:title" content="{% block og_title %}{{ title | default('Tactizen - Strategic Nation Simulation Game') }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Build your empire, lead armies, govern nations. A free-to-play browser-based strategy MMO.{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/logo.png', _external=True) }}{% endblock %}">
+    <meta property="og:site_name" content="Tactizen">
+    <meta property="og:locale" content="en_US">
+
+    {# --- Twitter Card Tags --- #}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ self.og_title() }}">
+    <meta name="twitter:description" content="{{ self.og_description() }}">
+    <meta name="twitter:image" content="{{ self.og_image() }}">
+
     {# --- Favicon --- #}
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">

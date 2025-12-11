@@ -1,0 +1,43 @@
+# Robots.txt for Tactizen
+# https://tactizen.com
+
+User-agent: *
+
+# Allow public pages
+Allow: /
+Allow: /game-guide
+Allow: /about
+Allow: /faq
+Allow: /terms
+Allow: /privacy
+Allow: /profile/
+Allow: /country/
+Allow: /region/
+
+# Disallow protected/private areas
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /edit-profile
+Disallow: /choose-citizenship
+Disallow: /messages/
+Disallow: /storage
+Disallow: /training
+Disallow: /study
+Disallow: /travel
+Disallow: /residence
+Disallow: /missions
+Disallow: /wallet/
+Disallow: /nft/
+Disallow: /nft-marketplace/
+Disallow: /support/
+Disallow: /company/create
+Disallow: /party/create
+Disallow: /military-unit/create
+Disallow: /static/uploads/
+
+# Crawl delay (be nice to server)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://tactizen.com/sitemap.xml
