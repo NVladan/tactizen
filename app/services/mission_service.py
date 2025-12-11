@@ -639,15 +639,18 @@ class MissionService:
         Mark expired missions. Called by scheduler.
         Unclaimed rewards are lost on expiration.
         """
+        from app.models import User
         now = datetime.utcnow()
 
-        # Get expired unclaimed missions
+        # Get expired unclaimed missions, only for valid (non-deleted) users
         expired_missions = db.session.scalars(
             select(UserMission)
+            .join(User, UserMission.user_id == User.id)
             .where(
                 UserMission.is_claimed == False,
                 UserMission.expires_at.isnot(None),
-                UserMission.expires_at <= now
+                UserMission.expires_at <= now,
+                User.is_deleted == False
             )
         ).all()
 
