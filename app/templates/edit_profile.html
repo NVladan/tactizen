@@ -370,6 +370,85 @@ function selectBackground(value) {
         }
     });
 }
+
+// Client-side image resizing to prevent 413 errors
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('avatar');
+    if (!avatarInput) return;
+
+    avatarInput.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Check if it's an image
+        if (!file.type.startsWith('image/')) return;
+
+        // If file is larger than 500KB, resize it
+        const maxSize = 500 * 1024; // 500KB
+        if (file.size > maxSize) {
+            try {
+                const resizedFile = await resizeImage(file, 800, 800, 0.85);
+                // Create a new FileList-like object with the resized file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(resizedFile);
+                avatarInput.files = dataTransfer.files;
+                console.log(`Image resized from ${(file.size/1024).toFixed(1)}KB to ${(resizedFile.size/1024).toFixed(1)}KB`);
+            } catch (err) {
+                console.error('Error resizing image:', err);
+            }
+        }
+    });
+});
+
+function resizeImage(file, maxWidth, maxHeight, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Calculate new dimensions maintaining aspect ratio
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round(height * maxWidth / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round(width * maxHeight / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(function(blob) {
+                    if (blob) {
+                        // Create a new File object with the original name
+                        const resizedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        resolve(resizedFile);
+                    } else {
+                        reject(new Error('Canvas toBlob failed'));
+                    }
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 </script>
 
 {% if message %}
