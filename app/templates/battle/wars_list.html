@@ -5,12 +5,41 @@
 {% block head_extra %}
 {% include '_dashboard_styles.html' %}
 <style>
+    /* Wars Header */
+    .wars-header {
+        background: linear-gradient(rgba(15, 20, 25, 0.6), rgba(15, 20, 25, 0.75)), url('{{ url_for("static", filename="images/buildings/wars.webp") }}');
+        background-size: cover;
+        background-position: center 40%;
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .wars-header h2 {
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .wars-header p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
     /* Wars content section - styled like dashboard content */
     .wars-content-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 2rem;
-        background: #0a0e1a;
+        padding: 0;
     }
 
     .page-header {
@@ -702,11 +731,10 @@
 
 <!-- Wars Content Section -->
 <div class="wars-content-container">
-    <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-icon"><i class="fas fa-crosshairs"></i></span>
-            Wars
-        </h1>
+    <!-- Wars Header -->
+    <div class="wars-header text-center">
+        <h2><i class="fas fa-crosshairs me-2"></i>Wars</h2>
+        <p>Strategic conflicts between nations</p>
     </div>
 
     <!-- Stats Bar -->

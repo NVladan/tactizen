@@ -379,6 +379,33 @@
         background: rgba(34, 197, 94, 0.2);
         color: #22c55e;
     }
+
+    /* Elections Header */
+    .elections-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)),
+                    url('{{ url_for("static", filename="images/buildings/elections.webp") }}') center 40% / cover no-repeat;
+        padding: 3rem 2rem;
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .elections-header h2 {
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .elections-header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+        margin: 0;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
 </style>
 {% include 'government/_government_mobile_styles.html' %}
 {% endblock %}
@@ -387,6 +414,12 @@
 {% include '_dashboard_wrapper.html' %}
 
 <div class="elections-container">
+    <!-- Elections Header -->
+    <div class="elections-header">
+        <h2><i class="fas fa-vote-yea me-2"></i>Elections</h2>
+        <p>Your voice shapes the future of our nation</p>
+    </div>
+
     <div class="page-header">
         <h1 class="page-title">Elections</h1>
         <div class="country-badge">{{ current_user.citizenship.name }}</div>
