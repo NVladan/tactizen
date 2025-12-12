@@ -271,6 +271,12 @@
     display: flex;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.tab-nav::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
 }
 
 .tab-btn {
